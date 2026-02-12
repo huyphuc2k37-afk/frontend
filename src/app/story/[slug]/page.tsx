@@ -36,7 +36,7 @@ interface StoryDetail {
   description: string;
   coverImage: string | null;
   genre: string;
-  tags: string[];
+  tags: string | null;
   status: string;
   views: number;
   likes: number;
@@ -217,7 +217,7 @@ export default function StoryDetailPage() {
                   >
                     {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
                   </span>
-                  {story.tags?.map((tag) => (
+                  {story.tags && story.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
                     <span
                       key={tag}
                       className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300"
