@@ -144,7 +144,16 @@ export default function Header() {
                     <BellIcon className="h-5 w-5" />
                   </button>
 
-                  {/* CTA button — different per role */}
+                  {/* CTA buttons */}
+                  {!isAdmin && (
+                    <Link
+                      href="/wallet"
+                      className="hidden items-center gap-1.5 rounded-full bg-amber-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 hover:shadow-md sm:inline-flex"
+                    >
+                      <CurrencyDollarIcon className="h-4 w-4" />
+                      Nạp xu
+                    </Link>
+                  )}
                   {isAdmin ? (
                     <Link
                       href="/admin"
@@ -161,15 +170,7 @@ export default function Header() {
                       <PencilSquareIcon className="h-4 w-4" />
                       Studio
                     </Link>
-                  ) : (
-                    <Link
-                      href="/wallet"
-                      className="hidden items-center gap-1.5 rounded-full bg-amber-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 hover:shadow-md sm:inline-flex"
-                    >
-                      <CurrencyDollarIcon className="h-4 w-4" />
-                      Nạp xu
-                    </Link>
-                  )}
+                  ) : null}
 
                   {/* User avatar dropdown */}
                   <div className="relative hidden md:block" ref={userMenuRef}>
@@ -251,6 +252,16 @@ export default function Header() {
                                 Quản trị Admin
                               </Link>
                             )}
+                            {!isAdmin && (
+                              <Link
+                                href="/wallet"
+                                onClick={() => setUserMenuOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                <CurrencyDollarIcon className="h-4 w-4" />
+                                Nạp xu
+                              </Link>
+                            )}
                             {!isAuthor && !isAdmin && (
                               <>
                                 <Link
@@ -260,14 +271,6 @@ export default function Header() {
                                 >
                                   <ClockIcon className="h-4 w-4" />
                                   Lịch sử đọc
-                                </Link>
-                                <Link
-                                  href="/wallet"
-                                  onClick={() => setUserMenuOpen(false)}
-                                  className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                  <CurrencyDollarIcon className="h-4 w-4" />
-                                  Nạp xu
                                 </Link>
                                 <Link
                                   href="/author/register"
@@ -419,13 +422,15 @@ export default function Header() {
                         Quản trị Admin
                       </Link>
                     )}
+                    {!isAdmin && (
+                      <Link href="/wallet" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Nạp xu
+                      </Link>
+                    )}
                     {!isAuthor && !isAdmin && (
                       <>
                         <Link href="/history" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                           Lịch sử đọc
-                        </Link>
-                        <Link href="/wallet" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
-                          Nạp xu
                         </Link>
                         <Link href="/author/register" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-primary-600 hover:bg-primary-50">
                           Trở thành tác giả
