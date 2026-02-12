@@ -53,6 +53,7 @@ export default function StoryDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
@@ -130,6 +131,49 @@ export default function StoryDetailPage() {
   }
 
   const totalWords = story.chapters.reduce((sum, ch) => sum + ch.wordCount, 0);
+
+  // Format description into styled paragraphs
+  const renderDescription = (text: string) => {
+    const lines = text.split(/\n/).map((l) => l.trimEnd());
+    const paragraphs: { type: "narration" | "dialogue" | "ellipsis"; text: string }[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      // Dialogue lines start with – — - 「 or quotation marks
+      if (/^[–—\-「]/.test(trimmed) || /^[""]/.test(trimmed)) {
+        paragraphs.push({ type: "dialogue", text: trimmed });
+      } else if (/^\.{2,}$|^…+$/.test(trimmed)) {
+        paragraphs.push({ type: "ellipsis", text: trimmed });
+      } else {
+        paragraphs.push({ type: "narration", text: trimmed });
+      }
+    }
+
+    return paragraphs.map((p, i) => {
+      if (p.type === "dialogue") {
+        return (
+          <p key={i} className="pl-4 border-l-2 border-primary-300/50 text-gray-700 italic">
+            {p.text}
+          </p>
+        );
+      }
+      if (p.type === "ellipsis") {
+        return (
+          <p key={i} className="text-center text-gray-400 tracking-widest select-none">
+            {p.text}
+          </p>
+        );
+      }
+      return (
+        <p key={i} className="text-gray-600 text-justify">
+          {p.text}
+        </p>
+      );
+    });
+  };
+
+  const descriptionLong = (story.description?.length ?? 0) > 500;
 
   return (
     <>
@@ -257,10 +301,36 @@ export default function StoryDetailPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Description */}
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h2 className="mb-3 text-heading-sm font-bold text-gray-900">Giới thiệu</h2>
-                <div className="whitespace-pre-line text-body-md leading-relaxed text-gray-600">
-                  {story.description}
+                <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">
+                  <BookOpenIcon className="h-5 w-5 text-primary-500" />
+                  Giới thiệu
+                </h2>
+                <div
+                  className={`relative space-y-3 text-[15px] leading-[1.8] transition-all duration-300 ${
+                    !descExpanded && descriptionLong ? "max-h-[280px] overflow-hidden" : ""
+                  }`}
+                >
+                  {renderDescription(story.description || "")}
+                  {!descExpanded && descriptionLong && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
+                  )}
                 </div>
+                {descriptionLong && (
+                  <button
+                    onClick={() => setDescExpanded(!descExpanded)}
+                    className="mt-3 inline-flex items-center gap-1 text-body-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  >
+                    {descExpanded ? "Thu gọn" : "Xem thêm"}
+                    <svg
+                      className={`h-4 w-4 transition-transform ${descExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* Chapter list */}
