@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description:
     "Đọc truyện đa thể loại và ủng hộ tác giả. Nền tảng truyện dành cho người Việt.",
   keywords: ["truyện", "đọc truyện", "truyện chữ", "tiểu thuyết", "VStory"],
+  icons: {
+    icon: "/favicon.ico?v=20260212",
+  },
 };
 
 export default function RootLayout({
