@@ -2,7 +2,7 @@ export interface Story {
   id: string;
   title: string;
   slug: string;
-  coverImage: string | null;
+  coverImage?: string | null;
   description: string | null;
   genre: string;
   status: string;

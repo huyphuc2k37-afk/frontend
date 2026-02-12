@@ -16,7 +16,6 @@ interface ApiStory {
   id: string;
   title: string;
   slug: string;
-  coverImage: string | null;
   description: string | null;
   genre: string;
   status: string;
@@ -36,7 +35,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/stories?limit=50`)
+    fetch(`${API_BASE_URL}/api/stories?limit=20`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.stories) setAllStories(data.stories);

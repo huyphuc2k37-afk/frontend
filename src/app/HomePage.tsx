@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ChevronLeftIcon,
@@ -23,7 +22,6 @@ interface ApiStory {
   id: string;
   title: string;
   slug: string;
-  coverImage: string | null;
   description: string | null;
   genre: string;
   status: string;
@@ -38,22 +36,17 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 /* ── Story Card (simple — cover + title + author) ── */
 function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
+  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
   return (
     <Link href={`/story/${story.slug}`} className="group block">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.05, duration: 0.3 }}
-      >
+      <div>
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
-          <Image
-            src={story.coverImage || PLACEHOLDER_COVER}
+          <img
+            src={coverUrl}
             alt={story.title}
-            fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 180px"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_COVER; }}
           />
           {/* Status badge */}
           {story.status === "completed" && (
@@ -68,7 +61,7 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
         <p className="mt-0.5 text-caption text-gray-500">
           {story.author?.name}
         </p>
-      </motion.div>
+      </div>
     </Link>
   );
 }
@@ -132,7 +125,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/stories?limit=50`)
+    fetch(`${API_BASE_URL}/api/stories?limit=12`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.stories) setAllStories(data.stories);
@@ -164,8 +157,8 @@ export default function HomePage() {
     }
   }, [activeTab, allStories]);
 
-  const hotStories = [...allStories].sort((a, b) => b.views - a.views);
-  const completedStories = allStories.filter((s) => s.status === "completed");
+  const hotStories = useMemo(() => [...allStories].sort((a, b) => b.views - a.views), [allStories]);
+  const completedStories = useMemo(() => allStories.filter((s) => s.status === "completed"), [allStories]);
 
   return (
     <>
@@ -324,7 +317,13 @@ export default function HomePage() {
 
                     {/* Cover mini */}
                     <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
-                      <Image src={story.coverImage || PLACEHOLDER_COVER} alt="" fill className="object-cover" sizes="40px" />
+                      <img
+                        src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
                     </div>
 
                     {/* Info */}

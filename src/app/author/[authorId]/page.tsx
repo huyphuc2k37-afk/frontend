@@ -149,10 +149,13 @@ export default function AuthorProfilePage() {
                           className="flex items-center gap-4 rounded-xl border border-gray-100 p-4 hover:bg-gray-50"
                         >
                           <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                            {s.coverImage ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={s.coverImage} alt="" className="h-full w-full object-cover" />
-                            ) : null}
+                            <img
+                              src={`${API_BASE_URL}/api/stories/${s.id}/cover`}
+                              alt=""
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-body-md font-semibold text-gray-900">{s.title}</p>

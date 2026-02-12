@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   TrophyIcon,
   EyeIcon,
   HeartIcon,
   BookOpenIcon,
-  FireIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -19,7 +16,6 @@ interface RankedStory {
   id: string;
   title: string;
   slug: string;
-  coverImage: string | null;
   genre: string;
   status: string;
   views: number;
@@ -56,7 +52,7 @@ export default function RankingPage() {
       <main className="min-h-screen bg-gray-50">
         <div className="section-container py-8">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <div className="flex items-center gap-3">
               <TrophyIcon className="h-8 w-8 text-yellow-500" />
               <h1 className="text-display-sm font-bold text-gray-900">
@@ -66,7 +62,7 @@ export default function RankingPage() {
             <p className="mt-2 text-body-md text-gray-500">
               Những tác phẩm được yêu thích nhất trên VStory
             </p>
-          </motion.div>
+          </div>
 
           {/* Tabs */}
           <div className="mt-8 flex gap-2">
@@ -94,12 +90,7 @@ export default function RankingPage() {
           ) : (
             <div className="mt-6 space-y-3">
               {stories.map((story, index) => (
-                <motion.div
-                  key={story.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
+                <div key={story.id}>
                   <Link
                     href={`/story/${story.slug}`}
                     className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
@@ -121,19 +112,14 @@ export default function RankingPage() {
                     </div>
 
                     {/* Cover */}
-                    <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg">
-                      {story.coverImage ? (
-                        <Image
-                          src={story.coverImage}
-                          alt={story.title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-primary">
-                          <BookOpenIcon className="h-6 w-6 text-white/50" />
-                        </div>
-                      )}
+                    <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      <img
+                        src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                        alt={story.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
                     </div>
 
                     {/* Info */}
@@ -181,7 +167,7 @@ export default function RankingPage() {
                       </span>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}

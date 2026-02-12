@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import type { Story } from "@/types";
+import { API_BASE_URL } from "@/lib/api";
 
 interface StoryCardProps {
   story: Story;
@@ -15,25 +14,23 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 export default function StoryCard({ story, variant = "default" }: StoryCardProps) {
   const isFeatured = variant === "featured";
+  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
 
   return (
     <Link href={`/story/${story.slug}`} className="block">
-      <motion.article
-        className={`card-hover group overflow-hidden rounded-2xl border border-gray-100 bg-white ${
+      <article
+        className={`group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-transform duration-200 hover:-translate-y-1 hover:shadow-md ${
           isFeatured ? "w-[260px] flex-shrink-0 sm:w-[280px]" : ""
         }`}
-        whileHover={{ y: -4 }}
-        transition={{ duration: 0.25 }}
       >
         {/* Cover */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
-          <Image
-            src={story.coverImage || PLACEHOLDER_COVER}
+          <img
+            src={coverUrl}
             alt={`Bia truyện ${story.title}`}
-            fill
-            sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 25vw"}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_COVER; }}
           />
 
           {/* Gradient overlay at bottom */}
@@ -71,7 +68,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             )}
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }

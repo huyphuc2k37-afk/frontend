@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { motion } from "framer-motion";
 import StoryCard from "./StoryCard";
 import type { Story } from "@/types";
 
@@ -27,12 +26,8 @@ export default function Carousel({ title, stories }: CarouselProps) {
     <section className="py-10 sm:py-14" aria-label={title}>
       <div className="section-container">
         {/* Section heading */}
-        <motion.div
+        <div
           className="mb-6 flex items-center justify-between"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
         >
           <h2 className="text-display-sm text-gray-900">
             {title}
@@ -53,7 +48,7 @@ export default function Carousel({ title, stories }: CarouselProps) {
               <ChevronRightIcon className="h-5 w-5" />
             </button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Horizontal scroll container */}
         <div
@@ -62,18 +57,14 @@ export default function Carousel({ title, stories }: CarouselProps) {
           role="list"
           aria-label={`Danh sách ${title}`}
         >
-          {stories.map((story, index) => (
-            <motion.div
+          {stories.map((story) => (
+            <div
               key={story.id}
               className="snap-start"
-              initial={{ opacity: 0, x: 40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.08 }}
               role="listitem"
             >
               <StoryCard story={story} variant="featured" />
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

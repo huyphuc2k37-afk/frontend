@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpenIcon,
   BookmarkIcon,
@@ -23,7 +21,6 @@ interface BookmarkItem {
     id: string;
     title: string;
     slug: string;
-    coverImage: string | null;
     genre: string;
     status: string;
     views: number;
@@ -85,7 +82,7 @@ export default function BookshelfPage() {
       <Header />
       <main className="min-h-screen bg-gray-50">
         <div className="section-container py-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <div className="flex items-center gap-3">
               <BookmarkIcon className="h-8 w-8 text-primary-500" />
               <h1 className="text-display-sm font-bold text-gray-900">
@@ -95,12 +92,10 @@ export default function BookshelfPage() {
             <p className="mt-2 text-body-md text-gray-500">
               {bookmarks.length} truyện đã lưu
             </p>
-          </motion.div>
+          </div>
 
           {bookmarks.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+            <div
               className="mt-16 text-center"
             >
               <BookOpenIcon className="mx-auto h-16 w-16 text-gray-300" />
@@ -113,33 +108,23 @@ export default function BookshelfPage() {
               <Link href="/explore" className="btn-primary mt-6 inline-block">
                 Khám phá ngay
               </Link>
-            </motion.div>
+            </div>
           ) : (
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <AnimatePresence>
-                {bookmarks.map((bm, i) => (
-                  <motion.div
+                {bookmarks.map((bm) => (
+                  <div
                     key={bm.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.05 }}
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-card transition-shadow hover:shadow-card-hover"
                   >
                     <Link href={`/story/${bm.story.slug}`} className="flex gap-4 p-4">
-                      <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl">
-                        {bm.story.coverImage ? (
-                          <Image
-                            src={bm.story.coverImage}
-                            alt={bm.story.title}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center bg-gradient-primary">
-                            <BookOpenIcon className="h-8 w-8 text-white/50" />
-                          </div>
-                        )}
+                      <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                        <img
+                          src={`${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
+                          alt={bm.story.title}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-body-md font-semibold text-gray-900 line-clamp-2">
@@ -179,9 +164,8 @@ export default function BookshelfPage() {
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
-                  </motion.div>
+                  </div>
                 ))}
-              </AnimatePresence>
             </div>
           )}
         </div>
