@@ -40,30 +40,42 @@ export default function BookshelfPage() {
       router.push("/login");
       return;
     }
-    if (status === "authenticated") {
+    if (status === "authenticated" && session) {
       const token = (session as any).accessToken;
       fetch(`${API_BASE_URL}/api/bookmarks`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then((data) => {
           if (Array.isArray(data)) setBookmarks(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching bookmarks:", err);
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   const handleRemove = async (storyId: string) => {
     const token = (session as any).accessToken;
-    await fetch(`${API_BASE_URL}/api/bookmarks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ storyId }),
-    });
-    setBookmarks((prev) => prev.filter((b) => b.story.id !== storyId));
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/${storyId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        setBookmarks((prev) => prev.filter((b) => b.story.id !== storyId));
+      }
+    } catch (err) {
+      console.error("Error removing bookmark:", err);
+    }
   };
 
   if (loading) {

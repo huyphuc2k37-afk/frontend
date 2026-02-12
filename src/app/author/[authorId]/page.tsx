@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, authFetch } from "@/lib/api";
 
 export default function AuthorProfilePage() {
   const params = useParams();
@@ -24,6 +24,9 @@ export default function AuthorProfilePage() {
   const [giftError, setGiftError] = useState<string | null>(null);
   const [gifting, setGifting] = useState(false);
   const [giftDone, setGiftDone] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
     if (!authorId) return;
@@ -37,6 +40,48 @@ export default function AuthorProfilePage() {
       })
       .catch(() => setLoading(false));
   }, [authorId]);
+
+  // Follower count (public)
+  useEffect(() => {
+    if (!authorId) return;
+    fetch(`${API_BASE_URL}/api/follows/count?authorId=${authorId}`)
+      .then((r) => r.json())
+      .then((data) => setFollowerCount(data.count || 0))
+      .catch(() => {});
+  }, [authorId]);
+
+  // Check follow status
+  useEffect(() => {
+    if (!token || !authorId) return;
+    authFetch(`/api/follows/check?authorId=${authorId}`, token)
+      .then((r) => r.json())
+      .then((data) => setIsFollowing(data.following === true))
+      .catch(() => {});
+  }, [token, authorId]);
+
+  const toggleFollow = async () => {
+    if (!token) {
+      router.push(`/login?callbackUrl=/author/${encodeURIComponent(authorId)}`);
+      return;
+    }
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await authFetch(`/api/follows/${authorId}`, token, { method: "DELETE" });
+        setIsFollowing(false);
+        setFollowerCount((c) => Math.max(0, c - 1));
+      } else {
+        await authFetch("/api/follows", token, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ authorId }),
+        });
+        setIsFollowing(true);
+        setFollowerCount((c) => c + 1);
+      }
+    } catch {}
+    setFollowLoading(false);
+  };
 
   const handleGift = async () => {
     setGiftError(null);
@@ -104,6 +149,20 @@ export default function AuthorProfilePage() {
 
                   <h1 className="mt-4 text-heading-md font-bold text-gray-900">{author.name}</h1>
                   {author.bio ? <p className="mt-2 text-body-sm text-gray-600">{author.bio}</p> : null}
+
+                  <p className="mt-2 text-caption text-gray-500">{followerCount} người theo dõi</p>
+
+                  <button
+                    onClick={toggleFollow}
+                    disabled={followLoading}
+                    className={`mt-3 w-full rounded-xl px-5 py-2.5 text-body-sm font-semibold transition-colors ${
+                      isFollowing
+                        ? "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        : "bg-primary-500 text-white hover:bg-primary-600"
+                    } disabled:opacity-60`}
+                  >
+                    {followLoading ? "Đang xử lý..." : isFollowing ? "Đang theo dõi ✓" : "Theo dõi"}
+                  </button>
 
                   <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4 text-left">
                     <p className="text-body-sm font-semibold text-gray-900">Tặng xu ủng hộ tác giả</p>

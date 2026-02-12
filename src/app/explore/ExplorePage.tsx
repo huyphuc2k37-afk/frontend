@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
@@ -35,34 +35,31 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/stories?limit=20`)
+    const params = new URLSearchParams();
+    params.set("limit", "40");
+    if (activeCategory) params.set("genre", activeCategory);
+    if (activeStatus !== "all") params.set("status", activeStatus);
+
+    setLoading(true);
+    fetch(`${API_BASE_URL}/api/stories?${params.toString()}`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.stories) setAllStories(data.stories);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [activeCategory, activeStatus]);
 
-  // Filter stories based on active filters
-  const filteredStories = useMemo(() => {
-    return allStories.filter((s) => {
-      const matchCategory = !activeCategory || s.genre === activeCategory;
-      const matchStatus =
-        activeStatus === "all" || s.status === activeStatus;
-      return matchCategory && matchStatus;
-    });
-  }, [activeCategory, activeStatus, allStories]);
-
+  // Since backend already filters by genre/status, allStories IS the filtered result
   const featured = allStories.slice(0, 8);
-  const newUpdated = [...filteredStories]
+  const newUpdated = [...allStories]
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )
     .slice(0, 4);
-  const recommended = [...filteredStories].reverse().slice(0, 4);
-  const weeklyHot = [...filteredStories]
+  const recommended = [...allStories].reverse().slice(0, 4);
+  const weeklyHot = [...allStories]
     .sort((a, b) => b.views - a.views)
     .slice(0, 4);
 
@@ -109,7 +106,7 @@ export default function ExplorePage() {
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
         )}
 
-        {filteredStories.length === 0 && (
+        {!loading && allStories.length === 0 && (
           <div className="section-container py-20 text-center">
             <p className="text-body-lg text-gray-400">
               Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
