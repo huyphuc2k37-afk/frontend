@@ -264,13 +264,13 @@ export default function LoginPage() {
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  placeholder="Nhập mã 6 số"
-                  maxLength={6}
+                  placeholder="Nhập mã 8 số"
+                  maxLength={8}
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-heading-sm font-bold tracking-[0.5em] text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
                 <button
                   type="submit"
-                  disabled={loading || code.length < 6}
+                  disabled={loading || code.length < 8}
                   className="w-full rounded-xl bg-primary-500 px-6 py-3 text-body-md font-semibold text-white shadow-sm hover:bg-primary-600 disabled:opacity-60"
                 >
                   {loading ? "Đang xác nhận..." : "Xác nhận"}
