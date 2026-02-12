@@ -57,6 +57,7 @@ export default function AuthorRegisterPage() {
   const [bio, setBio] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (status === "loading") {
@@ -79,6 +80,20 @@ export default function AuthorRegisterPage() {
     setSelectedGenres((prev) =>
       prev.includes(g) ? prev.filter((x) => x !== g) : prev.length < 5 ? [...prev, g] : prev
     );
+  };
+
+  const openPolicyToAccept = () => {
+    setPolicyOpen(true);
+  };
+
+  const acceptPolicy = () => {
+    setAgreed(true);
+    setPolicyOpen(false);
+  };
+
+  const declinePolicy = () => {
+    setAgreed(false);
+    setPolicyOpen(false);
   };
 
   const handleSubmit = async () => {
@@ -323,16 +338,34 @@ export default function AuthorRegisterPage() {
 
                     {/* Agreement */}
                     <div className="rounded-xl bg-gray-50 p-4">
-                      <label className="flex items-start gap-3 cursor-pointer">
+                      <label
+                        className="flex cursor-pointer items-start gap-3"
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          const clickedLink = target.closest("a");
+                          if (clickedLink) return;
+                          if (!agreed) openPolicyToAccept();
+                        }}
+                      >
                         <input
                           type="checkbox"
                           checked={agreed}
-                          onChange={(e) => setAgreed(e.target.checked)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              openPolicyToAccept();
+                            } else {
+                              setAgreed(false);
+                            }
+                          }}
                           className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                         <span className="text-body-sm text-gray-600">
                           Tôi đồng ý với{" "}
-                          <Link href="/about" className="text-primary-600 underline hover:text-primary-500">
+                          <Link
+                            href="/author-policy"
+                            className="text-primary-600 underline hover:text-primary-500"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             Điều khoản dành cho tác giả
                           </Link>{" "}
                           của VStory, bao gồm quy định về nội dung, bản quyền và
@@ -399,6 +432,201 @@ export default function AuthorRegisterPage() {
                 </Link>
               </div>
             </motion.div>
+          </div>
+        )}
+
+        {/* Author policy modal */}
+        {policyOpen && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Chính sách dành cho tác giả"
+          >
+            <div className="absolute inset-0 bg-black/30" onClick={declinePolicy} />
+
+            <div className="relative z-10 w-full max-w-3xl overflow-hidden rounded-3xl border border-[#f0e6d0]/80 bg-white shadow-2xl">
+              <div className="border-b border-[#f0e6d0]/60 bg-[#fdf9f0] p-5 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-heading-md font-bold text-gray-900">
+                      CHÍNH SÁCH DÀNH CHO TÁC GIẢ (AUTHOR POLICY) — VSTORY
+                    </h3>
+                    <p className="mt-1 text-caption text-gray-600">
+                      Hiệu lực từ: 12/02/2026 — Phiên bản: 1.0
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={declinePolicy}
+                    className="rounded-xl border border-[#f0e6d0]/80 bg-white px-4 py-2 text-body-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Đóng
+                  </button>
+                </div>
+
+                <p className="mt-3 text-body-sm leading-relaxed text-gray-600">
+                  Chính sách này áp dụng cho mọi người dùng đăng ký và hoạt động với tư cách Tác giả trên nền tảng VStory.
+                  Việc đăng tải nội dung và tham gia kiếm tiền trên VStory đồng nghĩa với việc bạn đồng ý tuân thủ các điều khoản dưới đây.
+                </p>
+              </div>
+
+              <div className="max-h-[65vh] overflow-y-auto p-5 sm:p-6">
+                <div className="space-y-4 text-body-md leading-relaxed text-gray-700">
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">1. Tư cách Tác giả</h4>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Người dùng có thể đăng ký trở thành Tác giả thông qua hệ thống của VStory.</li>
+                      <li>Tác giả phải cung cấp thông tin chính xác và đầy đủ khi yêu cầu rút tiền.</li>
+                      <li>VStory có quyền từ chối hoặc hủy tư cách Tác giả nếu phát hiện vi phạm.</li>
+                    </ul>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">2. Quyền sở hữu tác phẩm</h4>
+                    <p className="mt-2">
+                      Tác giả giữ toàn bộ quyền sở hữu trí tuệ đối với tác phẩm của mình, trừ khi có thỏa thuận độc quyền riêng bằng văn bản.
+                    </p>
+                    <p className="mt-2">Khi đăng tải nội dung lên VStory, Tác giả cấp cho VStory quyền:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Hiển thị nội dung trên nền tảng</li>
+                      <li>Lưu trữ, sao lưu và xử lý kỹ thuật phục vụ vận hành</li>
+                      <li>Phân phối nội dung đến người dùng trong phạm vi hệ thống</li>
+                    </ul>
+                    <p className="mt-2">Quyền này là không độc quyền và không làm mất quyền sở hữu của Tác giả.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">3. Trách nhiệm về nội dung</h4>
+                    <p className="mt-2">Tác giả cam kết:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Nội dung do mình sáng tạo hoặc có quyền sử dụng hợp pháp</li>
+                      <li>Không sao chép trái phép</li>
+                      <li>Không vi phạm pháp luật</li>
+                      <li>Không chứa nội dung bị cấm theo quy định của VStory</li>
+                    </ul>
+                    <p className="mt-3">VStory có quyền:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Gỡ bỏ nội dung vi phạm</li>
+                      <li>Tạm ẩn nội dung khi có khiếu nại</li>
+                      <li>Tạm giữ doanh thu liên quan đến nội dung đang tranh chấp</li>
+                    </ul>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">4. Cơ chế kiếm tiền</h4>
+                    <p className="mt-2 font-semibold text-gray-900">4.1 Mở khóa chương bằng Xu</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Tác giả có thể thiết lập chương truyện là miễn phí hoặc trả phí.</li>
+                      <li>Người đọc sử dụng Xu để mở khóa chương trả phí.</li>
+                      <li>Xu là đơn vị ảo chỉ có giá trị trong hệ thống VStory.</li>
+                    </ul>
+                    <p className="mt-3 font-semibold text-gray-900">4.2 Chia doanh thu</p>
+                    <p className="mt-2">Khi một chương trả phí được mở khóa:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>70% doanh thu thuộc về Tác giả</li>
+                      <li>30% thuộc về VStory (phí nền tảng)</li>
+                      <li>Doanh thu được ghi nhận minh bạch trong Dashboard của Tác giả.</li>
+                    </ul>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">5. Rút tiền và thanh toán</h4>
+                    <p className="mt-2 font-semibold text-gray-900">5.1 Điều kiện rút tiền</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Ngưỡng rút tối thiểu: 50.000 VNĐ</li>
+                      <li>Chỉ số dư khả dụng (không tranh chấp, không bị tạm giữ) mới được rút.</li>
+                    </ul>
+                    <p className="mt-3 font-semibold text-gray-900">5.2 Quy trình rút tiền</p>
+                    <p className="mt-2">Tác giả gửi yêu cầu rút tiền qua Dashboard. Cung cấp:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Họ và tên chủ tài khoản</li>
+                      <li>Số tài khoản ngân hàng</li>
+                      <li>Tên ngân hàng</li>
+                      <li>Thông tin cá nhân cần thiết (CMND/CCCD hoặc mã số thuế nếu có)</li>
+                    </ul>
+                    <p className="mt-3">VStory tiến hành kiểm tra:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Xác minh tính hợp lệ</li>
+                      <li>Kiểm tra gian lận</li>
+                      <li>Kiểm tra tranh chấp bản quyền</li>
+                    </ul>
+                    <p className="mt-3">Sau khi xác nhận hợp lệ, VStory xử lý thanh toán trong vòng 4–8 giờ làm việc.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">6. Khấu trừ thuế thu nhập cá nhân (TNCN)</h4>
+                    <p className="mt-2">Khi thực hiện rút tiền, VStory sẽ khấu trừ 5% thuế thu nhập cá nhân trên phần doanh thu của Tác giả theo quy định.</p>
+                    <p className="mt-2 font-semibold text-gray-900">Cách tính:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      <li>Doanh thu Tác giả được hưởng = Tổng doanh thu × 70%</li>
+                      <li>Thuế TNCN = 5% × Doanh thu Tác giả</li>
+                      <li>Số tiền thực nhận = Doanh thu Tác giả − Thuế TNCN − (phí chuyển khoản nếu có)</li>
+                    </ul>
+                    <p className="mt-3">Hệ thống sẽ hiển thị rõ tổng tiền được hưởng, số thuế bị khấu trừ, phí (nếu có), số tiền thực nhận, thời gian xử lý dự kiến. Tác giả cần xác nhận trước khi hoàn tất yêu cầu rút tiền.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">7. Tạm giữ và từ chối thanh toán</h4>
+                    <p className="mt-2">VStory có quyền tạm giữ hoặc từ chối thanh toán trong các trường hợp: phát hiện gian lận, nội dung bị khiếu nại bản quyền, vi phạm điều khoản, cung cấp thông tin sai lệch. VStory sẽ thông báo lý do nếu có tạm giữ.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">8. Nghĩa vụ thuế của Tác giả</h4>
+                    <p className="mt-2">Việc khấu trừ 5% chỉ nhằm hỗ trợ thực hiện nghĩa vụ thuế theo quy định. Tác giả vẫn chịu trách nhiệm tự kê khai và hoàn thành nghĩa vụ thuế cá nhân theo pháp luật Việt Nam.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">9. Chấm dứt hợp tác</h4>
+                    <p className="mt-2">VStory có quyền tạm khóa hoặc khóa vĩnh viễn tài khoản Tác giả, gỡ bỏ nội dung vi phạm, ngừng hợp tác nếu Tác giả vi phạm nghiêm trọng. Trong trường hợp chấm dứt, doanh thu hợp lệ còn lại sẽ được xử lý theo quy định.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">10. Trách nhiệm pháp lý</h4>
+                    <p className="mt-2">VStory là nền tảng trung gian cung cấp dịch vụ phân phối nội dung. Tác giả chịu trách nhiệm pháp lý đối với nội dung do mình đăng tải.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">11. Thay đổi chính sách</h4>
+                    <p className="mt-2">VStory có thể cập nhật chính sách này khi cần thiết. Việc tiếp tục sử dụng nền tảng đồng nghĩa với việc Tác giả chấp nhận các thay đổi.</p>
+                  </section>
+
+                  <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
+                    <h4 className="text-body-md font-semibold text-gray-900">12. Liên hệ</h4>
+                    <p className="mt-2">Mọi thắc mắc liên quan đến Doanh thu, Rút tiền, Bản quyền, Hỗ trợ kỹ thuật:</p>
+                    <p className="mt-2">
+                      📧{" "}
+                      <a className="underline" href="mailto:support@vstory.vn">
+                        support@vstory.vn
+                      </a>
+                    </p>
+                  </section>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-[#f0e6d0]/60 bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <p className="text-caption text-gray-500">
+                  Bằng việc bấm “Tôi đồng ý”, bạn xác nhận đã đọc và chấp nhận chính sách.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={declinePolicy}
+                    className="rounded-2xl border border-[#f0e6d0]/80 bg-white px-5 py-3 text-body-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Không đồng ý
+                  </button>
+                  <button
+                    type="button"
+                    onClick={acceptPolicy}
+                    className="btn-primary px-5 py-3 text-body-sm font-semibold"
+                  >
+                    Tôi đồng ý
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
