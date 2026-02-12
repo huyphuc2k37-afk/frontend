@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -18,6 +18,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { API_BASE_URL } from "@/lib/api";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 
 const benefits = [
   {
@@ -52,6 +53,7 @@ const genres = [
 export default function AuthorRegisterPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { profile, loading: profileLoading, refresh } = useUserProfile();
   const [step, setStep] = useState(1); // 1: intro, 2: form, 3: success
   const [penName, setPenName] = useState("");
   const [bio, setBio] = useState("");
@@ -60,7 +62,21 @@ export default function AuthorRegisterPage() {
   const [policyOpen, setPolicyOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    if (profileLoading) return;
+    if (!profile) return;
+
+    if (profile.role === "admin") {
+      router.replace("/admin");
+      return;
+    }
+    if (profile.role === "author") {
+      router.replace("/write");
+    }
+  }, [status, profileLoading, profile, router]);
+
+  if (status === "loading" || (status === "authenticated" && profileLoading)) {
     return (
       <>
         <Header />
@@ -102,7 +118,7 @@ export default function AuthorRegisterPage() {
 
     try {
       const token = (session as any).accessToken;
-      await fetch(`${API_BASE_URL}/api/profile`, {
+      const res = await fetch(`${API_BASE_URL}/api/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -114,6 +130,24 @@ export default function AuthorRegisterPage() {
           role: "author",
         }),
       });
+
+      if (!res.ok) {
+        try {
+          const data = await res.json();
+          if (data?.error === "Already an author") {
+            router.replace("/write");
+            return;
+          }
+          if (data?.error === "Already an admin") {
+            router.replace("/admin");
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      refresh();
       setStep(3);
     } catch {
       alert("Có lỗi xảy ra. Vui lòng thử lại.");
