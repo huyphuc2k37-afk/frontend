@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { motion } from "framer-motion";
+
 import {
   BookOpenIcon,
   EyeIcon,
@@ -34,7 +34,6 @@ interface StoryDetail {
   title: string;
   slug: string;
   description: string;
-  coverImage: string | null;
   genre: string;
   tags: string | null;
   status: string;
@@ -73,10 +72,10 @@ export default function StoryDetailPage() {
   // Check bookmark status
   useEffect(() => {
     if (!session || !story || !token) return;
-    authFetch("/api/bookmarks", token)
+    authFetch(`/api/bookmarks/check?storyId=${story.id}`, token)
       .then((r) => r.json())
-      .then((bookmarks: any[]) => {
-        setIsBookmarked(bookmarks.some((b: any) => b.storyId === story.id));
+      .then((data) => {
+        setIsBookmarked(data.bookmarked === true);
       })
       .catch(() => {});
   }, [session, story, token]);
@@ -139,27 +138,16 @@ export default function StoryDetailPage() {
         {/* Hero section */}
         <div className="bg-gradient-to-b from-gray-900 to-gray-800">
           <div className="section-container py-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col gap-8 md:flex-row"
-            >
+            <div className="flex flex-col gap-8 md:flex-row">
               {/* Cover */}
               <div className="flex-shrink-0">
-                <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56">
-                  {story.coverImage ? (
-                    <Image
-                      src={story.coverImage}
-                      alt={story.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-primary">
-                      <BookOpenIcon className="h-16 w-16 text-white/50" />
-                    </div>
-                  )}
+                <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56 bg-gray-700">
+                  <img
+                    src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                    alt={story.title}
+                    className="h-full w-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                 </div>
               </div>
 
@@ -258,7 +246,7 @@ export default function StoryDetailPage() {
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
@@ -268,25 +256,15 @@ export default function StoryDetailPage() {
             {/* Main content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Description */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-              >
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-3 text-heading-sm font-bold text-gray-900">Giới thiệu</h2>
                 <div className="whitespace-pre-line text-body-md leading-relaxed text-gray-600">
                   {story.description}
                 </div>
-              </motion.div>
+              </div>
 
               {/* Chapter list */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-              >
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-heading-sm font-bold text-gray-900">
                     Danh sách chương ({story.chapters.length})
@@ -332,18 +310,13 @@ export default function StoryDetailPage() {
                     ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Author card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-              >
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Tác giả</h3>
                 <Link
                   href={`/author/${story.author.id}`}
@@ -372,15 +345,10 @@ export default function StoryDetailPage() {
                     )}
                   </div>
                 </Link>
-              </motion.div>
+              </div>
 
               {/* Story stats */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
-              >
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Thông tin</h3>
                 <div className="space-y-3 text-body-sm">
                   <div className="flex justify-between">
@@ -416,7 +384,7 @@ export default function StoryDetailPage() {
                     </span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
