@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   HomeIcon,
   BookOpenIcon,
@@ -17,13 +16,14 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
+  BellAlertIcon,
   ArrowRightOnRectangleIcon,
   ChevronLeftIcon,
   CurrencyDollarIcon,
   BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, authFetch } from "@/lib/api";
 
 /* ── Types ── */
 
@@ -51,6 +51,7 @@ const sidebarItems = [
   { id: "stats", label: "Thống kê", href: "/write/stats", icon: ChartBarIcon },
   { id: "revenue", label: "Doanh thu", href: "/write/revenue", icon: CurrencyDollarIcon },
   { id: "withdraw", label: "Rút tiền", href: "/write/withdraw", icon: BanknotesIcon },
+  { id: "notifications", label: "Thông báo", href: "/write/notifications", icon: BellAlertIcon },
 ];
 
 const sidebarBottom = [
@@ -67,6 +68,10 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
   const [profile, setProfile] = useState<AuthorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   const token = (session as any)?.accessToken || null;
 
@@ -97,6 +102,52 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Fetch unread count on mount
+  useEffect(() => {
+    if (!token) return;
+    authFetch("/api/notifications?limit=5", token)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data.unreadCount === "number") {
+          setUnreadCount(data.unreadCount);
+          if (Array.isArray(data.notifications)) setNotifications(data.notifications);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await authFetch("/api/notifications?limit=10", token);
+      const data = await res.json();
+      if (res.ok) {
+        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+        setUnreadCount(typeof data.unreadCount === "number" ? data.unreadCount : 0);
+      }
+    } catch {}
+  };
+
+  const markAsRead = async (id: string) => {
+    if (!token) return;
+    try {
+      await authFetch(`/api/notifications/${id}/read`, token, { method: "PUT" });
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch {}
+  };
+
   if (loading || status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -117,17 +168,12 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
     <StudioContext.Provider value={{ profile, token }}>
       <div className="flex min-h-screen bg-gray-100">
         {/* ─── Mobile overlay ─── */}
-        <AnimatePresence>
-          {sidebarOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
-        </AnimatePresence>
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* ─── Sidebar ─── */}
         <aside
@@ -250,10 +296,79 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100">
-                <BellIcon className="h-5 w-5" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
-              </button>
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => {
+                    setNotifOpen((o) => !o);
+                    if (!notifOpen) fetchNotifications();
+                  }}
+                  className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                >
+                  <BellIcon className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-gray-100 bg-white shadow-xl z-50">
+                    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                      <h3 className="text-body-sm font-bold text-gray-900">Thông báo</h3>
+                      {unreadCount > 0 && (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-caption font-medium text-red-600">
+                          {unreadCount} chưa đọc
+                        </span>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <BellIcon className="mx-auto h-8 w-8 text-gray-300" />
+                          <p className="mt-2 text-caption text-gray-400">Chưa có thông báo</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              if (!n.isRead) markAsRead(n.id);
+                              if (n.link) router.push(n.link);
+                              setNotifOpen(false);
+                            }}
+                            className={`cursor-pointer border-b border-gray-50 px-4 py-3 transition-colors hover:bg-gray-50 ${
+                              !n.isRead ? "bg-primary-50/40" : ""
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              {!n.isRead && (
+                                <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary-500" />
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-body-sm font-medium text-gray-900">{n.title}</p>
+                                <p className="mt-0.5 text-caption text-gray-500 line-clamp-2">{n.message}</p>
+                                <p className="mt-1 text-[11px] text-gray-400">
+                                  {new Date(n.createdAt).toLocaleDateString("vi-VN", {
+                                    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <Link
+                      href="/write/notifications"
+                      onClick={() => setNotifOpen(false)}
+                      className="block border-t border-gray-100 px-4 py-2.5 text-center text-caption font-medium text-primary-600 hover:bg-gray-50"
+                    >
+                      Xem tất cả thông báo
+                    </Link>
+                  </div>
+                )}
+              </div>
               {profile && (
                 <div className="ml-1 hidden items-center gap-2 sm:flex">
                   {profile.image ? (
