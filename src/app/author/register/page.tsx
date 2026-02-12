@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import RegisterPage from "./RegisterPage";
 
 export const metadata: Metadata = {
-  title: "�ang k� t�c gi? | VStory",
-  description: "Tr? th�nh t�c gi? tr�n VStory � Chia s? c�u chuy?n v� ki?m thu nh?p t? dam m� vi?t l�ch.",
+  title: "Đăng ký tác giả | VStory",
+  description: "Trở thành tác giả trên VStory – Chia sẻ câu chuyện và kiếm thu nhập từ đam mê viết lách.",
 };
 
 export default function Page() {

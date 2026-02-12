@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import WritePage from "./WritePage";
 
 export const metadata: Metadata = {
-  title: "Vi?t truy?n � VStory",
+  title: "Viết truyện – VStory",
 };
 
 export default function Page() {

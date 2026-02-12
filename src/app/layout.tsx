@@ -5,10 +5,10 @@ import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
 
 export const metadata: Metadata = {
-  title: "VStory � C�u chuy?n c?a ngu?i Vi?t",
+  title: "VStory – Câu chuyện của người Việt",
   description:
-    "�?c truy?n da th? lo?i v� ?ng h? t�c gi?. N?n t?ng truy?n d�nh cho ngu?i Vi?t.",
-  keywords: ["truy?n", "d?c truy?n", "truy?n ch?", "ti?u thuy?t", "VStory"],
+    "Đọc truyện đa thể loại và ủng hộ tác giả. Nền tảng truyện dành cho người Việt.",
+  keywords: ["truyện", "đọc truyện", "truyện chữ", "tiểu thuyết", "VStory"],
 };
 
 export default function RootLayout({
