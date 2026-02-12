@@ -1,192 +1,317 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
-  TrophyIcon,
-  EyeIcon,
-  HeartIcon,
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   BookOpenIcon,
-  FireIcon,
+  LockClosedIcon,
+  CurrencyDollarIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, authFetch } from "@/lib/api";
 
-interface RankedStory {
+interface ChapterData {
   id: string;
   title: string;
-  slug: string;
-  coverImage: string | null;
-  genre: string;
-  status: string;
-  views: number;
-  likes: number;
-  author: { id: string; name: string; image: string | null };
-  _count: { chapters: number };
+  number: number;
+  content: string;
+  wordCount: number;
+  authorNote: string | null;
+  isLocked: boolean;
+  price: number;
+  createdAt: string;
+  story: { id: string; title: string; slug: string; authorId: string };
+  prev: { id: string; title: string; number: number } | null;
+  next: { id: string; title: string; number: number } | null;
 }
 
-const tabs = [
-  { key: "views", label: "Lượt đọc", icon: EyeIcon },
-  { key: "likes", label: "Yêu thích", icon: HeartIcon },
-];
+export default function ReadChapterPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const slug = params.slug as string;
+  const chapterId = params.chapterId as string;
 
-const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-700"];
-
-export default function RankingPage() {
-  const [stories, setStories] = useState<RankedStory[]>([]);
+  const [chapter, setChapter] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("views");
+  const [needsPurchase, setNeedsPurchase] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState("");
+  const [userBalance, setUserBalance] = useState(0);
+  const token = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
+    if (!chapterId) return;
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/ranking?sort=${activeTab}&limit=20`)
-      .then((r) => r.json())
-      .then((data) => {
-        setStories(data);
+    setNeedsPurchase(false);
+    setPurchaseError("");
+
+    fetch(`${API_BASE_URL}/api/chapters/${chapterId}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
+      .then((data: ChapterData) => {
+        if (data.isLocked) {
+          // Check if user has purchased this chapter
+          if (session && token) {
+            authFetch(`/api/wallet`, token)
+              .then((r) => r.json())
+              .then((wallet) => {
+                setUserBalance(wallet.coinBalance || wallet.balance || 0);
+                // Check purchase status
+                const purchasedIds: string[] = wallet.purchasedChapterIds || [];
+                if (purchasedIds.includes(data.id) || data.story.authorId === wallet.userId) {
+                  // Already purchased or is author
+                  setChapter(data);
+                  setNeedsPurchase(false);
+                } else {
+                  setChapter(data);
+                  setNeedsPurchase(true);
+                }
+                setLoading(false);
+              })
+              .catch(() => {
+                setChapter(data);
+                setNeedsPurchase(true);
+                setLoading(false);
+              });
+          } else {
+            // Not logged in, show locked
+            setChapter({ ...data, content: "" });
+            setNeedsPurchase(true);
+            setLoading(false);
+          }
+        } else {
+          setChapter(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
         setLoading(false);
       });
-  }, [activeTab]);
+  }, [chapterId, session, token]);
+
+  const handlePurchase = async () => {
+    if (!session || !chapter || purchasing || !token) return;
+    setPurchasing(true);
+    setPurchaseError("");
+    try {
+      const res = await authFetch("/api/wallet/purchase", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterId: chapter.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPurchaseError(data.error === "Insufficient balance"
+          ? `Không đủ xu. Bạn cần ${data.required} xu, hiện có ${data.balance} xu.`
+          : data.error === "Already purchased"
+          ? "Bạn đã mua chương này rồi."
+          : data.error || "Không thể mua chương"
+        );
+        // If already purchased, reload to show content
+        if (data.error === "Already purchased") {
+          window.location.reload();
+        }
+        setPurchasing(false);
+        return;
+      }
+      // Purchase success — reload chapter content
+      setUserBalance(data.newBalance);
+      window.location.reload();
+    } catch {
+      setPurchaseError("Lỗi kết nối server");
+      setPurchasing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-gray-50">
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (!chapter) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-gray-50">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+            <BookOpenIcon className="h-16 w-16 text-gray-300" />
+            <h2 className="text-heading-md font-bold text-gray-600">Không tìm thấy chương</h2>
+            <Link href={`/story/${slug}`} className="text-primary-600 hover:underline">
+              ← Quay lại truyện
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-gray-50">
-        <div className="section-container py-8">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-3">
-              <TrophyIcon className="h-8 w-8 text-yellow-500" />
-              <h1 className="text-display-sm font-bold text-gray-900">
-                Bảng xếp hạng
-              </h1>
-            </div>
-            <p className="mt-2 text-body-md text-gray-500">
-              Những tác phẩm được yêu thích nhất trên VStory
-            </p>
-          </motion.div>
-
-          {/* Tabs */}
-          <div className="mt-8 flex gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-body-sm font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? "bg-primary-600 text-white shadow-lg"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
+        {/* Chapter header */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="section-container flex items-center justify-between py-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link
+                href={`/story/${slug}`}
+                className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Ranking list */}
-          {loading ? (
-            <div className="mt-16 flex justify-center">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-            </div>
-          ) : (
-            <div className="mt-6 space-y-3">
-              {stories.map((story, index) => (
-                <motion.div
-                  key={story.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
+                <ArrowLeftIcon className="h-5 w-5" />
+              </Link>
+              <div className="min-w-0">
+                <Link
+                  href={`/story/${slug}`}
+                  className="block text-caption text-gray-500 hover:text-primary-600 truncate"
                 >
-                  <Link
-                    href={`/story/${story.slug}`}
-                    className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
-                  >
-                    {/* Rank number */}
-                    <div className="flex w-12 flex-shrink-0 items-center justify-center">
-                      {index < 3 ? (
-                        <div className="relative">
-                          <TrophyIcon className={`h-8 w-8 ${rankColors[index]}`} />
-                          <span className="absolute inset-0 flex items-center justify-center text-caption font-bold text-gray-800">
-                            {index + 1}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-heading-md font-bold text-gray-300">
-                          {index + 1}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Cover */}
-                    <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg">
-                      {story.coverImage ? (
-                        <Image
-                          src={story.coverImage}
-                          alt={story.title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-primary">
-                          <BookOpenIcon className="h-6 w-6 text-white/50" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-body-md font-semibold text-gray-900 line-clamp-1">
-                        {story.title}
-                      </h3>
-                      <p className="mt-0.5 text-caption text-gray-500">
-                        <Link href={`/author/${story.author.id}`} className="hover:underline">
-                          {story.author.name}
-                        </Link>
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-3">
-                        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-caption text-primary-700">
-                          {story.genre}
-                        </span>
-                        <span className="flex items-center gap-1 text-caption text-gray-400">
-                          <BookOpenIcon className="h-3 w-3" />
-                          {story._count.chapters}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="hidden flex-shrink-0 text-right sm:block">
-                      <div className="flex items-center gap-1.5 text-body-sm font-semibold text-gray-900">
-                        {activeTab === "views" ? (
-                          <>
-                            <EyeIcon className="h-4 w-4 text-primary-500" />
-                            {story.views.toLocaleString()}
-                          </>
-                        ) : (
-                          <>
-                            <HeartIcon className="h-4 w-4 text-red-500" />
-                            {story.likes.toLocaleString()}
-                          </>
-                        )}
-                      </div>
-                      <span
-                        className={`mt-1 inline-block rounded-full px-2 py-0.5 text-caption font-medium ${
-                          story.status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                  {chapter.story.title}
+                </Link>
+                <h1 className="text-body-md font-bold text-gray-900 truncate">
+                  Chương {chapter.number}: {chapter.title}
+                </h1>
+              </div>
             </div>
-          )}
+            <div className="flex items-center gap-2 text-caption text-gray-400">
+              <span>{chapter.wordCount.toLocaleString()} chữ</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content area */}
+        <div className="section-container py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto max-w-3xl"
+          >
+            {needsPurchase ? (
+              /* Locked chapter purchase prompt */
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+                <LockClosedIcon className="mx-auto h-16 w-16 text-amber-500" />
+                <h2 className="mt-4 text-heading-md font-bold text-gray-900">
+                  Chương trả phí
+                </h2>
+                <p className="mt-2 text-body-md text-gray-600">
+                  Chương này cần <span className="font-bold text-amber-600">{chapter.price} xu</span> để đọc
+                </p>
+
+                {!session ? (
+                  <div className="mt-6">
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-body-sm font-semibold text-white hover:bg-primary-600"
+                    >
+                      Đăng nhập để mua chương
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-3">
+                    <p className="text-body-sm text-gray-500">
+                      Số dư hiện tại: <span className="font-semibold text-gray-700">{userBalance} xu</span>
+                    </p>
+                    <button
+                      onClick={handlePurchase}
+                      disabled={purchasing}
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-amber-600 disabled:opacity-50"
+                    >
+                      <CurrencyDollarIcon className="h-5 w-5" />
+                      {purchasing ? "Đang mua..." : `Mua chương (${chapter.price} xu)`}
+                    </button>
+                    {userBalance < chapter.price && (
+                      <div className="mt-2">
+                        <Link
+                          href="/wallet"
+                          className="text-body-sm text-primary-600 hover:underline"
+                        >
+                          Nạp thêm xu →
+                        </Link>
+                      </div>
+                    )}
+                    {purchaseError && (
+                      <p className="text-body-sm text-red-600">{purchaseError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Chapter content */
+              <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm md:p-12">
+                <div className="prose prose-lg max-w-none">
+                  <div className="whitespace-pre-line text-body-md leading-[1.9] text-gray-800">
+                    {chapter.content}
+                  </div>
+                </div>
+
+                {/* Author note */}
+                {chapter.authorNote && (
+                  <div className="mt-8 rounded-xl border border-primary-100 bg-primary-50 p-5">
+                    <p className="mb-2 text-caption font-semibold text-primary-700">Lời tác giả</p>
+                    <p className="whitespace-pre-line text-body-sm text-primary-900/80">
+                      {chapter.authorNote}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="mt-8 flex items-center justify-between gap-4">
+              {chapter.prev ? (
+                <Link
+                  href={`/story/${slug}/chapter/${chapter.prev.id}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-body-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Chương {chapter.prev.number}</span>
+                  <span className="sm:hidden">Trước</span>
+                </Link>
+              ) : (
+                <div />
+              )}
+
+              <Link
+                href={`/story/${slug}`}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-body-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              >
+                <ListBulletIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Mục lục</span>
+              </Link>
+
+              {chapter.next ? (
+                <Link
+                  href={`/story/${slug}/chapter/${chapter.next.id}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-primary-600"
+                >
+                  <span className="hidden sm:inline">Chương {chapter.next.number}</span>
+                  <span className="sm:hidden">Tiếp</span>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Link>
+              ) : (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-3 text-body-sm text-gray-400">
+                  Hết truyện
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       </main>
       <Footer />

@@ -1,192 +1,424 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
-  TrophyIcon,
+  BookOpenIcon,
   EyeIcon,
   HeartIcon,
-  BookOpenIcon,
-  FireIcon,
+  BookmarkIcon,
+  ChatBubbleLeftRightIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
+import { BookmarkIcon as BookmarkSolidIcon } from "@heroicons/react/24/solid";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, authFetch } from "@/lib/api";
 
-interface RankedStory {
+interface Chapter {
+  id: string;
+  title: string;
+  number: number;
+  wordCount: number;
+  isLocked: boolean;
+  price: number;
+  createdAt: string;
+}
+
+interface StoryDetail {
   id: string;
   title: string;
   slug: string;
+  description: string;
   coverImage: string | null;
   genre: string;
+  tags: string[];
   status: string;
   views: number;
   likes: number;
-  author: { id: string; name: string; image: string | null };
-  _count: { chapters: number };
+  author: { id: string; name: string; image: string | null; bio: string | null };
+  chapters: Chapter[];
+  _count: { bookmarks: number; comments: number };
 }
 
-const tabs = [
-  { key: "views", label: "Lượt đọc", icon: EyeIcon },
-  { key: "likes", label: "Yêu thích", icon: HeartIcon },
-];
+export default function StoryDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const { data: session } = useSession();
 
-const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-700"];
-
-export default function RankingPage() {
-  const [stories, setStories] = useState<RankedStory[]>([]);
+  const [story, setStory] = useState<StoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("views");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarking, setBookmarking] = useState(false);
+  const token = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`${API_BASE_URL}/api/ranking?sort=${activeTab}&limit=20`)
-      .then((r) => r.json())
+    if (!slug) return;
+    fetch(`${API_BASE_URL}/api/stories/${slug}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
       .then((data) => {
-        setStories(data);
+        setStory(data);
         setLoading(false);
-      });
-  }, [activeTab]);
+      })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  // Check bookmark status
+  useEffect(() => {
+    if (!session || !story || !token) return;
+    authFetch("/api/bookmarks", token)
+      .then((r) => r.json())
+      .then((bookmarks: any[]) => {
+        setIsBookmarked(bookmarks.some((b: any) => b.storyId === story.id));
+      })
+      .catch(() => {});
+  }, [session, story, token]);
+
+  const toggleBookmark = async () => {
+    if (!session || !story || bookmarking) return;
+    setBookmarking(true);
+    try {
+      if (isBookmarked) {
+        await authFetch(`/api/bookmarks/${story.id}`, token!, { method: "DELETE" });
+        setIsBookmarked(false);
+      } else {
+        await authFetch("/api/bookmarks", token!, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storyId: story.id }),
+        });
+        setIsBookmarked(true);
+      }
+    } catch {}
+    setBookmarking(false);
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-gray-50">
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (!story) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-gray-50">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+            <BookOpenIcon className="h-16 w-16 text-gray-300" />
+            <h2 className="text-heading-md font-bold text-gray-600">Không tìm thấy truyện</h2>
+            <Link href="/explore" className="text-primary-600 hover:underline">
+              Khám phá truyện khác
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const totalWords = story.chapters.reduce((sum, ch) => sum + ch.wordCount, 0);
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-gray-50">
-        <div className="section-container py-8">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-3">
-              <TrophyIcon className="h-8 w-8 text-yellow-500" />
-              <h1 className="text-display-sm font-bold text-gray-900">
-                Bảng xếp hạng
-              </h1>
-            </div>
-            <p className="mt-2 text-body-md text-gray-500">
-              Những tác phẩm được yêu thích nhất trên VStory
-            </p>
-          </motion.div>
+        {/* Hero section */}
+        <div className="bg-gradient-to-b from-gray-900 to-gray-800">
+          <div className="section-container py-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col gap-8 md:flex-row"
+            >
+              {/* Cover */}
+              <div className="flex-shrink-0">
+                <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56">
+                  {story.coverImage ? (
+                    <Image
+                      src={story.coverImage}
+                      alt={story.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-primary">
+                      <BookOpenIcon className="h-16 w-16 text-white/50" />
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {/* Tabs */}
-          <div className="mt-8 flex gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-body-sm font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? "bg-primary-600 text-white shadow-lg"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Ranking list */}
-          {loading ? (
-            <div className="mt-16 flex justify-center">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
-            </div>
-          ) : (
-            <div className="mt-6 space-y-3">
-              {stories.map((story, index) => (
-                <motion.div
-                  key={story.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
+              {/* Info */}
+              <div className="flex-1 text-white">
+                <h1 className="text-display-sm font-bold">{story.title}</h1>
+                <Link
+                  href={`/author/${story.author.id}`}
+                  className="mt-2 inline-flex items-center gap-2 text-body-md text-gray-300 hover:text-white"
                 >
-                  <Link
-                    href={`/story/${story.slug}`}
-                    className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
+                  {story.author.image && (
+                    <Image
+                      src={story.author.image}
+                      alt={story.author.name}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                      unoptimized
+                    />
+                  )}
+                  {story.author.name}
+                </Link>
+
+                {/* Stats */}
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-body-sm text-gray-300">
+                  <span className="flex items-center gap-1.5">
+                    <EyeIcon className="h-4 w-4" />
+                    {story.views.toLocaleString()} lượt đọc
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <HeartIcon className="h-4 w-4" />
+                    {story.likes.toLocaleString()} yêu thích
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <BookOpenIcon className="h-4 w-4" />
+                    {story.chapters.length} chương
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                    {story._count.comments} bình luận
+                  </span>
+                </div>
+
+                {/* Tags */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200">
+                    {story.genre}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-caption font-medium ${
+                      story.status === "completed"
+                        ? "bg-green-600/30 text-green-200"
+                        : "bg-amber-600/30 text-amber-200"
+                    }`}
                   >
-                    {/* Rank number */}
-                    <div className="flex w-12 flex-shrink-0 items-center justify-center">
-                      {index < 3 ? (
-                        <div className="relative">
-                          <TrophyIcon className={`h-8 w-8 ${rankColors[index]}`} />
-                          <span className="absolute inset-0 flex items-center justify-center text-caption font-bold text-gray-800">
-                            {index + 1}
+                    {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
+                  </span>
+                  {story.tags?.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {story.chapters.length > 0 && (
+                    <Link
+                      href={`/story/${story.slug}/chapter/${story.chapters[0].id}`}
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-primary-600"
+                    >
+                      <BookOpenIcon className="h-5 w-5" />
+                      Đọc từ đầu
+                    </Link>
+                  )}
+                  {session && (
+                    <button
+                      onClick={toggleBookmark}
+                      disabled={bookmarking}
+                      className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-body-sm font-semibold transition-colors ${
+                        isBookmarked
+                          ? "bg-amber-500 text-white hover:bg-amber-600"
+                          : "bg-white/10 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      {isBookmarked ? (
+                        <BookmarkSolidIcon className="h-5 w-5" />
+                      ) : (
+                        <BookmarkIcon className="h-5 w-5" />
+                      )}
+                      {isBookmarked ? "Đã lưu" : "Lưu truyện"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="section-container py-8">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Main content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Description */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
+                <h2 className="mb-3 text-heading-sm font-bold text-gray-900">Giới thiệu</h2>
+                <div className="whitespace-pre-line text-body-md leading-relaxed text-gray-600">
+                  {story.description}
+                </div>
+              </motion.div>
+
+              {/* Chapter list */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-heading-sm font-bold text-gray-900">
+                    Danh sách chương ({story.chapters.length})
+                  </h2>
+                  <span className="text-caption text-gray-400">
+                    {totalWords.toLocaleString()} chữ
+                  </span>
+                </div>
+
+                {story.chapters.length === 0 ? (
+                  <p className="py-8 text-center text-body-md text-gray-400">
+                    Truyện chưa có chương nào
+                  </p>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {story.chapters.map((ch) => (
+                      <Link
+                        key={ch.id}
+                        href={`/story/${story.slug}/chapter/${ch.id}`}
+                        className="flex items-center justify-between py-3 transition-colors hover:bg-gray-50 px-3 -mx-3 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="flex-shrink-0 text-caption font-bold text-gray-400 w-8">
+                            {ch.number}
+                          </span>
+                          <span className="text-body-sm font-medium text-gray-800 truncate">
+                            {ch.title}
+                          </span>
+                          {ch.isLocked && (
+                            <LockClosedIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
+                          )}
+                        </div>
+                        <div className="flex-shrink-0 flex items-center gap-3 text-caption text-gray-400">
+                          {ch.isLocked && (
+                            <span className="text-amber-600 font-medium">{ch.price} xu</span>
+                          )}
+                          <span>{ch.wordCount.toLocaleString()} chữ</span>
+                          <span className="hidden sm:inline">
+                            {new Date(ch.createdAt).toLocaleDateString("vi-VN")}
                           </span>
                         </div>
-                      ) : (
-                        <span className="text-heading-md font-bold text-gray-300">
-                          {index + 1}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Cover */}
-                    <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg">
-                      {story.coverImage ? (
-                        <Image
-                          src={story.coverImage}
-                          alt={story.title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-primary">
-                          <BookOpenIcon className="h-6 w-6 text-white/50" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-body-md font-semibold text-gray-900 line-clamp-1">
-                        {story.title}
-                      </h3>
-                      <p className="mt-0.5 text-caption text-gray-500">
-                        <Link href={`/author/${story.author.id}`} className="hover:underline">
-                          {story.author.name}
-                        </Link>
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-3">
-                        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-caption text-primary-700">
-                          {story.genre}
-                        </span>
-                        <span className="flex items-center gap-1 text-caption text-gray-400">
-                          <BookOpenIcon className="h-3 w-3" />
-                          {story._count.chapters}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="hidden flex-shrink-0 text-right sm:block">
-                      <div className="flex items-center gap-1.5 text-body-sm font-semibold text-gray-900">
-                        {activeTab === "views" ? (
-                          <>
-                            <EyeIcon className="h-4 w-4 text-primary-500" />
-                            {story.views.toLocaleString()}
-                          </>
-                        ) : (
-                          <>
-                            <HeartIcon className="h-4 w-4 text-red-500" />
-                            {story.likes.toLocaleString()}
-                          </>
-                        )}
-                      </div>
-                      <span
-                        className={`mt-1 inline-block rounded-full px-2 py-0.5 text-caption font-medium ${
-                          story.status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
             </div>
-          )}
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Author card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
+                <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Tác giả</h3>
+                <Link
+                  href={`/author/${story.author.id}`}
+                  className="flex items-center gap-3 rounded-xl p-2 -m-2 transition-colors hover:bg-gray-50"
+                >
+                  {story.author.image ? (
+                    <Image
+                      src={story.author.image}
+                      alt={story.author.name}
+                      width={48}
+                      height={48}
+                      className="rounded-full"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-heading-sm font-bold text-primary-600">
+                      {story.author.name.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-body-sm font-semibold text-gray-900">{story.author.name}</p>
+                    {story.author.bio && (
+                      <p className="mt-0.5 text-caption text-gray-500 line-clamp-2">
+                        {story.author.bio}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              </motion.div>
+
+              {/* Story stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
+                <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Thông tin</h3>
+                <div className="space-y-3 text-body-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Thể loại</span>
+                    <span className="font-medium text-gray-800">{story.genre}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Trạng thái</span>
+                    <span className="font-medium text-gray-800">
+                      {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Số chương</span>
+                    <span className="font-medium text-gray-800">{story.chapters.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Tổng chữ</span>
+                    <span className="font-medium text-gray-800">
+                      {totalWords.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Lượt đọc</span>
+                    <span className="font-medium text-gray-800">
+                      {story.views.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Đã lưu</span>
+                    <span className="font-medium text-gray-800">
+                      {story._count.bookmarks}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </main>
       <Footer />
