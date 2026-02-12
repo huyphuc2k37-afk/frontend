@@ -301,13 +301,14 @@ export default function Header() {
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
                       className="flex items-center rounded-full transition-opacity hover:opacity-80"
                     >
-                      {session.user.image ? (
+                      {(profile?.image || session.user.image) ? (
                         <Image
-                          src={session.user.image}
+                          src={(profile?.image || session.user.image) as string}
                           alt=""
                           width={34}
                           height={34}
                           className="rounded-full ring-2 ring-gray-100"
+                          unoptimized
                         />
                       ) : (
                         <UserCircleIcon className="h-9 w-9 text-gray-400" />

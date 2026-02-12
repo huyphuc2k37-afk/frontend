@@ -64,6 +64,8 @@ export default function StoryDetailPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editStatus, setEditStatus] = useState("");
+  const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -86,6 +88,7 @@ export default function StoryDetailPage() {
         setEditTitle(data.title);
         setEditDesc(data.description);
         setEditStatus(data.status);
+        setEditCoverImage(data.coverImage || null);
         setLoading(false);
       })
       .catch(() => {
@@ -108,6 +111,7 @@ export default function StoryDetailPage() {
           title: editTitle,
           description: editDesc,
           status: editStatus,
+          coverImage: editCoverImage,
         }),
       });
       if (res.ok) {
@@ -202,6 +206,8 @@ export default function StoryDetailPage() {
                   setEditTitle(story.title);
                   setEditDesc(story.description);
                   setEditStatus(story.status);
+                  setEditCoverImage(story.coverImage || null);
+                  setCoverError(null);
                 }}
                 className="rounded-lg px-3 py-1.5 text-caption font-medium text-gray-500 hover:bg-gray-50"
               >
@@ -218,7 +224,54 @@ export default function StoryDetailPage() {
           )}
         </div>
 
-        {editingInfo ? (
+        <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
+          <div>
+            <p className="mb-2 text-body-sm font-semibold text-gray-700">Ảnh bìa</p>
+            <div className="overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+              {editCoverImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={editCoverImage} alt="" className="h-60 w-full object-cover" />
+              ) : (
+                <div className="flex h-60 w-full items-center justify-center text-caption text-gray-400">
+                  Chưa có ảnh bìa
+                </div>
+              )}
+            </div>
+
+            {editingInfo ? (
+              <div className="mt-3">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-caption font-medium text-gray-700 hover:bg-gray-50">
+                  Tải ảnh bìa
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setCoverError(null);
+                      if (file.size > 2 * 1024 * 1024) {
+                        setCoverError("Ảnh bìa tối đa 2MB");
+                        return;
+                      }
+                      try {
+                        const reader = new FileReader();
+                        reader.onload = () => setEditCoverImage(String(reader.result));
+                        reader.onerror = () => setCoverError("Không thể đọc file ảnh");
+                        reader.readAsDataURL(file);
+                      } catch {
+                        setCoverError("Không thể đọc file ảnh");
+                      }
+                    }}
+                  />
+                </label>
+                {coverError ? <p className="mt-2 text-caption text-red-500">{coverError}</p> : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="min-w-0">
+            {editingInfo ? (
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-caption font-medium text-gray-700">Tên truyện</label>
@@ -251,7 +304,7 @@ export default function StoryDetailPage() {
               </select>
             </div>
           </div>
-        ) : (
+            ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-gray-100 px-2.5 py-1 text-caption font-medium text-gray-600">
@@ -293,7 +346,9 @@ export default function StoryDetailPage() {
               </span>
             </div>
           </div>
-        )}
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Chapters List */}

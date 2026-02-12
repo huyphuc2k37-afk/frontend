@@ -86,6 +86,8 @@ export default function CreateStoryPage() {
   // Tab 1: Info
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [genre, setGenre] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeTagCat, setActiveTagCat] = useState("Phân loại");
@@ -178,6 +180,7 @@ export default function CreateStoryPage() {
 
     const body = {
       title, slug, description, genre,
+      coverImage: coverImage || undefined,
       tags: selectedTags.join(","),
       theme: theme || undefined,
       expectedChapters: expectedChapters || undefined,
@@ -300,13 +303,43 @@ export default function CreateStoryPage() {
                         <label className="mb-2 block text-body-sm font-semibold text-gray-700">
                           Ảnh bìa
                         </label>
-                        <div className="flex aspect-[3/4] w-full cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white transition-colors hover:border-primary-400 hover:bg-primary-50/50">
-                          <div className="text-center">
-                            <PhotoIcon className="mx-auto h-10 w-10 text-gray-300" />
-                            <p className="mt-2 text-caption text-gray-400">Tải ảnh lên</p>
-                            <p className="text-caption text-gray-300">3:4, tối đa 2MB</p>
+                        <label className="block cursor-pointer">
+                          <div className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-white transition-colors hover:border-primary-400 hover:bg-primary-50/50">
+                            {coverImage ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                            ) : (
+                              <div className="text-center">
+                                <PhotoIcon className="mx-auto h-10 w-10 text-gray-300" />
+                                <p className="mt-2 text-caption text-gray-400">Tải ảnh lên</p>
+                                <p className="text-caption text-gray-300">3:4, tối đa 2MB</p>
+                              </div>
+                            )}
                           </div>
-                        </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setCoverError(null);
+                              if (file.size > 2 * 1024 * 1024) {
+                                setCoverError("Ảnh bìa tối đa 2MB");
+                                return;
+                              }
+                              try {
+                                const reader = new FileReader();
+                                reader.onload = () => setCoverImage(String(reader.result));
+                                reader.onerror = () => setCoverError("Không thể đọc file ảnh");
+                                reader.readAsDataURL(file);
+                              } catch {
+                                setCoverError("Không thể đọc file ảnh");
+                              }
+                            }}
+                          />
+                        </label>
+                        {coverError ? <p className="mt-2 text-caption text-red-500">{coverError}</p> : null}
                       </div>
 
                       {/* Title + Description */}

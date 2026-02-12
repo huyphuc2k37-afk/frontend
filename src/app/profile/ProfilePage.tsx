@@ -46,6 +46,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [editImage, setEditImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -62,10 +64,19 @@ export default function ProfilePage() {
           setProfile(data);
           setEditName(data.name);
           setEditBio(data.bio || "");
+          setEditImage(data.image || null);
           setLoading(false);
         });
     }
   }, [status, router]);
+
+  const readFileAsDataURL = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const handleSave = async () => {
     const token = (session as any).accessToken;
@@ -75,10 +86,10 @@ export default function ProfilePage() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name: editName, bio: editBio }),
+      body: JSON.stringify({ name: editName, bio: editBio, image: editImage }),
     });
     const updated = await res.json();
-    setProfile((p) => (p ? { ...p, name: updated.name, bio: updated.bio } : p));
+    setProfile((p) => (p ? { ...p, name: updated.name, bio: updated.bio, image: updated.image } : p));
     setEditing(false);
   };
 
@@ -113,6 +124,7 @@ export default function ProfilePage() {
                     width={96}
                     height={96}
                     className="mx-auto rounded-full"
+                    unoptimized
                   />
                 ) : (
                   <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">
@@ -124,6 +136,51 @@ export default function ProfilePage() {
 
                 {editing ? (
                   <div className="mt-4 space-y-3">
+                    <div className="flex flex-col items-center gap-3">
+                      {editImage ? (
+                        <Image
+                          src={editImage}
+                          alt=""
+                          width={96}
+                          height={96}
+                          className="rounded-full"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">
+                          <span className="text-display-sm font-bold text-white">
+                            {editName?.[0] || profile.name[0]}
+                          </span>
+                        </div>
+                      )}
+
+                      <label className="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-body-sm text-gray-700 hover:bg-gray-50">
+                        Tải ảnh đại diện
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setImageError(null);
+
+                            if (file.size > 2 * 1024 * 1024) {
+                              setImageError("Ảnh tối đa 2MB");
+                              return;
+                            }
+
+                            try {
+                              const dataUrl = await readFileAsDataURL(file);
+                              setEditImage(dataUrl);
+                            } catch {
+                              setImageError("Không thể đọc file ảnh");
+                            }
+                          }}
+                        />
+                      </label>
+                      {imageError ? <p className="text-caption text-red-500">{imageError}</p> : null}
+                    </div>
                     <input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}

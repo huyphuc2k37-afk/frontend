@@ -142,7 +142,9 @@ export default function RankingPage() {
                         {story.title}
                       </h3>
                       <p className="mt-0.5 text-caption text-gray-500">
-                        {story.author.name}
+                        <Link href={`/author/${story.author.id}`} className="hover:underline">
+                          {story.author.name}
+                        </Link>
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-3">
                         <span className="rounded-full bg-primary-100 px-2 py-0.5 text-caption text-primary-700">
