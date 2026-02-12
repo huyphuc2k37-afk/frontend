@@ -29,10 +29,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-                <span className="text-sm font-extrabold text-white">V</span>
-              </div>
+            <Link href="/" className="flex items-center">
               <span className="text-heading-md text-gradient">VStory</span>
             </Link>
             <p className="mt-3 max-w-xs text-body-sm text-gray-500">

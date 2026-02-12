@@ -138,10 +138,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
           <div className="flex h-full flex-col">
             {/* Logo */}
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-md">
-                  <span className="text-lg font-extrabold text-white">V</span>
-                </div>
+              <Link href="/" className="flex items-center">
                 <div>
                   <span className="text-heading-sm font-bold text-gradient">VStory</span>
                   <p className="text-[10px] font-medium tracking-wide text-gray-400">AUTHOR STUDIO</p>

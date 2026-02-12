@@ -86,10 +86,7 @@ export default function Header() {
         <div className="section-container">
           <div className="flex h-14 items-center justify-between gap-4 sm:h-16">
             {/* Logo */}
-            <Link href="/" className="flex flex-shrink-0 items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-sm">
-                <span className="text-base font-extrabold text-white">V</span>
-              </div>
+            <Link href="/" className="flex flex-shrink-0 items-center">
               <span className="text-heading-md font-bold text-gradient">VStory</span>
             </Link>
 
