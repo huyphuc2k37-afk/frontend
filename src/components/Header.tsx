@@ -21,6 +21,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useSession, signOut } from "next-auth/react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { authFetch } from "@/lib/api";
 
 const navLinks = [
   { label: "Trang chủ", href: "/" },
@@ -33,14 +34,20 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { data: session } = useSession();
   const { profile } = useUserProfile();
+  const token = (session as any)?.accessToken as string | undefined;
   const isAuthor = profile?.role === "author";
   const isAdmin = profile?.role === "admin";
   const pathname = usePathname();
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,6 +60,9 @@ export default function Header() {
     const handleClick = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -67,7 +77,36 @@ export default function Header() {
   useEffect(() => {
     setIsOpen(false);
     setSearchOpen(false);
+    setNotificationsOpen(false);
   }, [pathname]);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    setNotificationsLoading(true);
+    try {
+      const res = await authFetch("/api/notifications?limit=10", token);
+      const data = await res.json();
+      if (res.ok) {
+        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+        setUnreadCount(typeof data.unreadCount === "number" ? data.unreadCount : 0);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  const markNotificationRead = async (id: string) => {
+    if (!token) return;
+    try {
+      await authFetch(`/api/notifications/${id}/read`, token, { method: "PUT" });
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    } catch {
+      // ignore
+    }
+  };
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -140,9 +179,93 @@ export default function Header() {
               {session?.user ? (
                 <>
                   {/* Notification bell */}
-                  <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100">
-                    <BellIcon className="h-5 w-5" />
-                  </button>
+                  <div className="relative" ref={notificationsRef}>
+                    <button
+                      onClick={async () => {
+                        const next = !notificationsOpen;
+                        setNotificationsOpen(next);
+                        if (next) await fetchNotifications();
+                      }}
+                      className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                      aria-label="Thông báo"
+                    >
+                      <BellIcon className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+                      )}
+                    </button>
+
+                    <AnimatePresence>
+                      {notificationsOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
+                        >
+                          <div className="border-b border-gray-100 px-4 py-3">
+                            <p className="text-body-sm font-semibold text-gray-900">Thông báo</p>
+                            <p className="mt-0.5 text-caption text-gray-500">
+                              {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Không có thông báo mới"}
+                            </p>
+                          </div>
+                          <div className="max-h-80 overflow-auto py-1">
+                            {notificationsLoading ? (
+                              <div className="px-4 py-3 text-body-sm text-gray-500">Đang tải...</div>
+                            ) : notifications.length === 0 ? (
+                              <div className="px-4 py-3 text-body-sm text-gray-500">Chưa có thông báo nào.</div>
+                            ) : (
+                              notifications.map((n) => {
+                                const content = (
+                                  <div
+                                    className={
+                                      "block px-4 py-3 text-left hover:bg-gray-50 " +
+                                      (n.isRead ? "" : "bg-amber-50/40")
+                                    }
+                                  >
+                                    <p className="text-body-sm font-semibold text-gray-900">{n.title}</p>
+                                    <p className="mt-0.5 line-clamp-2 text-caption text-gray-600">{n.message}</p>
+                                    <p className="mt-1 text-[11px] text-gray-400">
+                                      {n.createdAt ? new Date(n.createdAt).toLocaleString("vi-VN") : ""}
+                                    </p>
+                                  </div>
+                                );
+
+                                if (n.link) {
+                                  return (
+                                    <Link
+                                      key={n.id}
+                                      href={n.link}
+                                      onClick={() => {
+                                        setNotificationsOpen(false);
+                                        if (!n.isRead) markNotificationRead(n.id);
+                                      }}
+                                    >
+                                      {content}
+                                    </Link>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    key={n.id}
+                                    className="w-full text-left"
+                                    onClick={() => {
+                                      if (!n.isRead) markNotificationRead(n.id);
+                                      setNotificationsOpen(false);
+                                    }}
+                                  >
+                                    {content}
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
                   {/* CTA buttons */}
                   {!isAdmin && (

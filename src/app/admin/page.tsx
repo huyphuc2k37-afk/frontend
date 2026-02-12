@@ -16,6 +16,10 @@ import Link from "next/link";
 export default function AdminDashboard() {
   const { token } = useAdmin();
   const [stats, setStats] = useState<any>(null);
+  const [noticeTitle, setNoticeTitle] = useState("");
+  const [noticeMessage, setNoticeMessage] = useState("");
+  const [sendingNotice, setSendingNotice] = useState(false);
+  const [noticeResult, setNoticeResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -54,6 +58,68 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-heading-md font-bold text-gray-900">Tổng quan hệ thống</h2>
         <p className="mt-1 text-body-sm text-gray-500">Quản lý toàn bộ dữ liệu VStory</p>
+      </div>
+
+      {/* Broadcast notification */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h3 className="text-body-lg font-semibold text-gray-900">Gửi thông báo đến mọi người</h3>
+        <p className="mt-1 text-body-sm text-gray-500">Thông báo sẽ xuất hiện ở icon chuông của người dùng.</p>
+
+        <div className="mt-4 grid gap-3">
+          <input
+            value={noticeTitle}
+            onChange={(e) => setNoticeTitle(e.target.value)}
+            placeholder="Tiêu đề"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-red-300 focus:outline-none focus:ring-1 focus:ring-red-200"
+          />
+          <textarea
+            value={noticeMessage}
+            onChange={(e) => setNoticeMessage(e.target.value)}
+            placeholder="Nội dung thông báo"
+            rows={4}
+            className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-red-300 focus:outline-none focus:ring-1 focus:ring-red-200"
+          />
+          <div className="flex items-center gap-3">
+            <button
+              disabled={!token || sendingNotice || !noticeTitle.trim() || !noticeMessage.trim()}
+              onClick={async () => {
+                if (!token) return;
+                setSendingNotice(true);
+                setNoticeResult(null);
+                try {
+                  const res = await fetch(`${API_BASE_URL}/api/admin/notifications/broadcast`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      title: noticeTitle.trim(),
+                      message: noticeMessage.trim(),
+                    }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) {
+                    setNoticeResult(data?.error || "Gửi thông báo thất bại");
+                  } else {
+                    setNoticeResult(`Đã gửi thông báo (${data?.count ?? 0} người).`);
+                    setNoticeTitle("");
+                    setNoticeMessage("");
+                  }
+                } catch {
+                  setNoticeResult("Gửi thông báo thất bại");
+                } finally {
+                  setSendingNotice(false);
+                }
+              }}
+              className="inline-flex items-center justify-center rounded-xl bg-red-500 px-4 py-2.5 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sendingNotice ? "Đang gửi..." : "Gửi thông báo"}
+            </button>
+
+            {noticeResult && <p className="text-body-sm text-gray-600">{noticeResult}</p>}
+          </div>
+        </div>
       </div>
 
       {/* Alerts */}
