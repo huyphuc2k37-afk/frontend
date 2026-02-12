@@ -1,19 +1,16 @@
 export interface Story {
   id: string;
-  slug: string;
   title: string;
-  author: string;
-  coverUrl: string;
-  coverQuery?: string;
-  excerpt: string;
-  isPaid: boolean;
-  priceCoins: number;
-  type: "novel";
+  slug: string;
+  coverImage: string | null;
+  description: string | null;
   genre: string;
+  status: string;
+  views: number;
+  likes: number;
   updatedAt: string;
-  readersCount: number;
-  chaptersCount?: number;
-  status?: "ongoing" | "completed";
+  author: { id: string; name: string; image: string | null };
+  _count: { chapters: number; bookmarks: number };
 }
 
 export interface Category {

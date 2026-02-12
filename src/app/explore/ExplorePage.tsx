@@ -1,23 +1,49 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Header from "@/components/Header";
 import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
+import { API_BASE_URL } from "@/lib/api";
 
-import featuredData from "@/data/mock/featured.json";
 import categoriesData from "@/data/mock/categories.json";
 
-import type { Story, Category } from "@/types";
+import type { Category } from "@/types";
 
-const allStories = featuredData as Story[];
+interface ApiStory {
+  id: string;
+  title: string;
+  slug: string;
+  coverImage: string | null;
+  description: string | null;
+  genre: string;
+  status: string;
+  views: number;
+  likes: number;
+  updatedAt: string;
+  author: { id: string; name: string; image: string | null };
+  _count: { chapters: number; bookmarks: number };
+}
+
 const categories = categoriesData as Category[];
 
 export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
+  const [allStories, setAllStories] = useState<ApiStory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/stories?limit=50`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.stories) setAllStories(data.stories);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   // Filter stories based on active filters
   const filteredStories = useMemo(() => {
@@ -27,19 +53,18 @@ export default function ExplorePage() {
         activeStatus === "all" || s.status === activeStatus;
       return matchCategory && matchStatus;
     });
-  }, [activeCategory, activeStatus]);
+  }, [activeCategory, activeStatus, allStories]);
 
   const featured = allStories.slice(0, 8);
-  const newUpdated = filteredStories
+  const newUpdated = [...filteredStories]
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )
     .slice(0, 4);
   const recommended = [...filteredStories].reverse().slice(0, 4);
-  const weeklyHot = filteredStories
-    .filter((s) => s.readersCount > 30000)
-    .sort((a, b) => b.readersCount - a.readersCount)
+  const weeklyHot = [...filteredStories]
+    .sort((a, b) => b.views - a.views)
     .slice(0, 4);
 
   return (

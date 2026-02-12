@@ -36,8 +36,8 @@ export default function WithdrawPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Mock data
-  const availableBalance = 850000;
+  // TODO: Fetch from API
+  const availableBalance = 0;
   const minWithdraw = 50000;
 
   const withdrawHistory: WithdrawRecord[] = [

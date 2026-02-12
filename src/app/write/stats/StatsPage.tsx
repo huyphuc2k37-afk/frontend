@@ -59,17 +59,17 @@ export default function StatsPage() {
 
   const maxViews = Math.max(...stories.map((s) => s.views), 1);
 
-  // 30-day data simulation
+  // Real chart data will come from API — show zeroes for now
   const days30 = Array.from({ length: 30 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (29 - i));
     return {
       day: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-      views: Math.floor(Math.random() * (totalViews / 15 + 5)) + 1,
-      likes: Math.floor(Math.random() * (totalLikes / 15 + 2)),
+      views: 0,
+      likes: 0,
     };
   });
-  const maxDayViews = Math.max(...days30.map((d) => d.views), 1);
+  const maxDayViews = 1;
 
   return (
     <div className="space-y-6">

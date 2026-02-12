@@ -42,7 +42,7 @@ export default function SearchBar({
       .filter(
         (s) =>
           s.title.toLowerCase().includes(q) ||
-          s.author.toLowerCase().includes(q) ||
+          (s.author?.name || "").toLowerCase().includes(q) ||
           s.genre.toLowerCase().includes(q),
       )
       .slice(0, 5);
@@ -116,27 +116,24 @@ export default function SearchBar({
                       }}
                     >
                       <div className="relative h-10 w-8 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                        {s.coverImage && (
                         <Image
-                          src={s.coverUrl}
+                          src={s.coverImage}
                           alt=""
                           fill
                           sizes="32px"
                           className="object-cover"
                         />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-body-sm font-medium text-gray-900">
                           {s.title}
                         </div>
                         <div className="text-caption text-gray-500">
-                          {s.author} &middot; {s.genre}
+                          {s.author?.name} &middot; {s.genre}
                         </div>
                       </div>
-                      {s.isPaid && (
-                        <span className="flex-shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-caption font-medium text-primary-700">
-                          {s.priceCoins}₫
-                        </span>
-                      )}
                     </li>
                   ))}
                 </motion.ul>

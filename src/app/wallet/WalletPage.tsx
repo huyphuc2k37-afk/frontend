@@ -85,23 +85,16 @@ export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Mock data — sẽ được thay bằng API thực tế
-  const balance = 120;
+  // TODO: Fetch from API
+  const balance = 0;
 
-  const transactions: Transaction[] = [
-    { id: "1", type: "deposit", amount: 100, description: "Nạp xu – Gói 20.000đ", date: "11/02/2026" },
-    { id: "2", type: "spend", amount: -20, description: "Mở khóa Chương 15 – Tiên nghịch", date: "10/02/2026" },
-  ];
+  const transactions: Transaction[] = [];
 
   const handleDeposit = () => {
     if (!selectedPack || !selectedMethod) return;
     setProcessing(true);
-    // Mock — sẽ gọi API tạo giao dịch + redirect tới payment gateway
-    setTimeout(() => {
-      setProcessing(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
-    }, 2000);
+    // TODO: gọi API tạo giao dịch
+    setProcessing(false);
   };
 
   if (status === "loading") {

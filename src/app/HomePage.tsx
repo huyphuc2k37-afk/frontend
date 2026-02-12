@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -17,14 +17,27 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import type { Story } from "@/types";
+import { API_BASE_URL } from "@/lib/api";
 
-import featuredData from "@/data/mock/featured.json";
+interface ApiStory {
+  id: string;
+  title: string;
+  slug: string;
+  coverImage: string | null;
+  description: string | null;
+  genre: string;
+  status: string;
+  views: number;
+  likes: number;
+  updatedAt: string;
+  author: { id: string; name: string; image: string | null };
+  _count: { chapters: number; bookmarks: number };
+}
 
-const allStories = featuredData as Story[];
+const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23e5e7eb'%3E%3Crect width='300' height='400'/%3E%3C/svg%3E";
 
 /* ── Story Card (simple — cover + title + author) ── */
-function SimpleCard({ story, index }: { story: Story; index: number }) {
+function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
   return (
     <Link href={`/story/${story.slug}`} className="group block">
       <motion.div
@@ -35,7 +48,7 @@ function SimpleCard({ story, index }: { story: Story; index: number }) {
       >
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
           <Image
-            src={story.coverUrl}
+            src={story.coverImage || PLACEHOLDER_COVER}
             alt={story.title}
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 180px"
@@ -53,7 +66,7 @@ function SimpleCard({ story, index }: { story: Story; index: number }) {
           {story.title}
         </h3>
         <p className="mt-0.5 text-caption text-gray-500">
-          {story.author}
+          {story.author?.name}
         </p>
       </motion.div>
     </Link>
@@ -61,7 +74,7 @@ function SimpleCard({ story, index }: { story: Story; index: number }) {
 }
 
 /* ── Horizontal Carousel ── */
-function StoryCarousel({ title, stories, icon: Icon }: { title: string; stories: Story[]; icon: React.ElementType }) {
+function StoryCarousel({ title, stories, icon: Icon }: { title: string; stories: ApiStory[]; icon: React.ElementType }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
@@ -115,6 +128,18 @@ type Tab = "recent" | "new" | "recommended";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
+  const [allStories, setAllStories] = useState<ApiStory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/stories?limit=50`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.stories) setAllStories(data.stories);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "recent", label: "Vừa cập nhật" },
@@ -133,13 +158,13 @@ export default function HomePage() {
           (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         ).reverse();
       case "recommended":
-        return [...allStories].sort((a, b) => b.readersCount - a.readersCount);
+        return [...allStories].sort((a, b) => b.views - a.views);
       default:
         return allStories;
     }
-  }, [activeTab]);
+  }, [activeTab, allStories]);
 
-  const hotStories = [...allStories].sort((a, b) => b.readersCount - a.readersCount);
+  const hotStories = [...allStories].sort((a, b) => b.views - a.views);
   const completedStories = allStories.filter((s) => s.status === "completed");
 
   return (
@@ -147,6 +172,20 @@ export default function HomePage() {
       <Header />
 
       <main className="min-h-screen">
+        {loading && (
+          <div className="flex min-h-[40vh] items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+          </div>
+        )}
+
+        {!loading && allStories.length === 0 && (
+          <div className="section-container py-20 text-center">
+            <BookOpenIcon className="mx-auto h-12 w-12 text-gray-300" />
+            <p className="mt-4 text-body-lg text-gray-500">Chưa có truyện nào. Hãy quay lại sau!</p>
+          </div>
+        )}
+
+        {!loading && allStories.length > 0 && (<>
         {/* ── Tabs section ── */}
         <section className="border-b border-[#f0e6d0]/50">
           <div className="section-container">
@@ -285,7 +324,7 @@ export default function HomePage() {
 
                     {/* Cover mini */}
                     <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
-                      <Image src={story.coverUrl} alt="" fill className="object-cover" sizes="40px" />
+                      <Image src={story.coverImage || PLACEHOLDER_COVER} alt="" fill className="object-cover" sizes="40px" />
                     </div>
 
                     {/* Info */}
@@ -293,11 +332,11 @@ export default function HomePage() {
                       <h4 className="line-clamp-1 text-body-sm font-semibold text-gray-900">
                         {story.title}
                       </h4>
-                      <p className="text-caption text-gray-500">{story.author}</p>
+                      <p className="text-caption text-gray-500">{story.author?.name}</p>
                       <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
                         <span className="flex items-center gap-0.5">
                           <EyeIcon className="h-3 w-3" />
-                          {(story.readersCount / 1000).toFixed(1)}K
+                          {(story.views / 1000).toFixed(1)}K
                         </span>
                         <span className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium">
                           {story.genre}
@@ -312,6 +351,8 @@ export default function HomePage() {
         </section>
 
         {/* ── CTA banner ── */}
+        </>)}
+
         <section className="py-12">
           <div className="section-container">
             <div className="rounded-2xl bg-gradient-to-r from-amber-600 via-orange-500 to-rose-500 px-6 py-10 text-center text-white sm:px-12">

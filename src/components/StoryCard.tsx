@@ -11,6 +11,8 @@ interface StoryCardProps {
   variant?: "default" | "featured";
 }
 
+const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23e5e7eb'%3E%3Crect width='300' height='400'/%3E%3C/svg%3E";
+
 export default function StoryCard({ story, variant = "default" }: StoryCardProps) {
   const isFeatured = variant === "featured";
 
@@ -26,7 +28,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
         {/* Cover */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
           <Image
-            src={story.coverUrl}
+            src={story.coverImage || PLACEHOLDER_COVER}
             alt={`Bia truyện ${story.title}`}
             fill
             sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 25vw"}
@@ -44,11 +46,13 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             {story.title}
           </h3>
           <p className="mt-0.5 text-caption text-gray-500">
-            {story.author}
+            {story.author?.name}
           </p>
-          <p className="mt-2 line-clamp-2 text-body-sm text-gray-600">
-            {story.excerpt}
-          </p>
+          {story.description && (
+            <p className="mt-2 line-clamp-2 text-body-sm text-gray-600">
+              {story.description}
+            </p>
+          )}
 
           {/* Meta */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-caption text-gray-400">
@@ -56,7 +60,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
               {story.genre}
             </span>
             <span>&middot;</span>
-            <span>{(story.readersCount / 1000).toFixed(1)}K đọc</span>
+            <span>{story.views > 0 ? `${(story.views / 1000).toFixed(1)}K đọc` : "0 đọc"}</span>
             {story.status && (
               <>
                 <span>&middot;</span>

@@ -20,21 +20,17 @@ export default function RevenuePage() {
   const { profile } = useStudio();
   const [period, setPeriod] = useState<Period>("30d");
 
-  // Mock data — sẽ thay bằng API thực tế sau
+  // TODO: Fetch from API
   const stats = {
-    totalRevenue: 1250000,
-    thisMonth: 350000,
-    pendingWithdraw: 850000,
-    totalChaptersSold: 234,
+    totalRevenue: 0,
+    thisMonth: 0,
+    pendingWithdraw: 0,
+    totalChaptersSold: 0,
   };
 
-  const revenueHistory = [
-    { date: "11/02/2026", story: "abc", chapters: 0, amount: 0, reads: 2 },
-  ];
+  const revenueHistory: { date: string; story: string; chapters: number; amount: number; reads: number }[] = [];
 
-  const topStories = [
-    { title: "abc", revenue: 0, chapters: 0, views: 2 },
-  ];
+  const topStories: { title: string; revenue: number; chapters: number; views: number }[] = [];
 
   const formatVND = (n: number) =>
     new Intl.NumberFormat("vi-VN").format(n) + " xu";
