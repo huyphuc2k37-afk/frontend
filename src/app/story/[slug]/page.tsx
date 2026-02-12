@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -46,8 +46,9 @@ interface StoryDetail {
 
 export default function StoryDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const slug = params.slug as string;
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const [story, setStory] = useState<StoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,13 @@ export default function StoryDetailPage() {
   const [bookmarking, setBookmarking] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push(`/login?callbackUrl=/story/${encodeURIComponent(slug)}`);
+    }
+  }, [status, slug, router]);
 
   useEffect(() => {
     if (!slug) return;

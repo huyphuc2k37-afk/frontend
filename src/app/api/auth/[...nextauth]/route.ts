@@ -1,12 +1,52 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import jwt from "jsonwebtoken";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const handler = NextAuth({
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || "Đăng nhập thất bại");
+          }
+
+          // Return user object for NextAuth
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            image: data.user.image,
+          };
+        } catch (error: any) {
+          throw new Error(error.message || "Đăng nhập thất bại");
+        }
+      },
     }),
   ],
   pages: {
@@ -21,6 +61,9 @@ const handler = NextAuth({
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
+        if (account?.provider === "credentials") {
+          token.sub = user.id;
+        }
       }
       return token;
     },
