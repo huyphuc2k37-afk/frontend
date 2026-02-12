@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
@@ -16,8 +16,6 @@ import {
   CheckCircleIcon,
   ShieldCheckIcon,
   SparklesIcon,
-  ArrowRightIcon,
-  QrCodeIcon,
 } from "@heroicons/react/24/outline";
 
 /* ── Coin packages ── */
@@ -31,11 +29,27 @@ const coinPackages = [
 ];
 
 const paymentMethods = [
-  { id: "momo", label: "MoMo", icon: DevicePhoneMobileIcon, color: "bg-pink-50 text-pink-600 border-pink-200" },
   { id: "zalopay", label: "ZaloPay", icon: DevicePhoneMobileIcon, color: "bg-blue-50 text-blue-600 border-blue-200" },
-  { id: "vnpay", label: "VNPay QR", icon: QrCodeIcon, color: "bg-red-50 text-red-600 border-red-200" },
-  { id: "bank", label: "Chuyển khoản NH", icon: BanknotesIcon, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  { id: "bank", label: "Chuyển khoản Agribank", icon: BanknotesIcon, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
 ];
+
+const PAYMENT_INFO = {
+  zalopay: {
+    title: "ZaloPay",
+    qrSrc: "/qr/qrzalopay.jpg",
+    fields: [{ label: "Số điện thoại", value: "0584375253" }],
+  },
+  bank: {
+    title: "Agribank",
+    qrSrc: "/qr/qrnganhang.jpg",
+    fields: [
+      { label: "Ngân hàng", value: "Agribank" },
+      { label: "Số tài khoản", value: "8888584375253" },
+      { label: "Chủ tài khoản", value: "Nguyen Huy Phuc" },
+      { label: "Chi nhánh", value: "Agribank CN Nghi Lộc Nghệ An" },
+    ],
+  },
+} as const;
 
 interface Transaction {
   id: string;
@@ -215,7 +229,7 @@ export default function WalletPage() {
                   </span>
                   Phương thức thanh toán
                 </h2>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
                   {paymentMethods.map((method) => (
                     <button
                       key={method.id}
@@ -242,6 +256,41 @@ export default function WalletPage() {
               {selectedPack && selectedMethod && (
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                   <h3 className="text-body-lg font-semibold text-gray-900">Xác nhận thanh toán</h3>
+
+                  {selectedMethod === "zalopay" || selectedMethod === "bank" ? (
+                    <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="text-body-sm font-semibold text-gray-900">Thông tin thanh toán</p>
+                      <p className="mt-1 text-caption text-gray-500">
+                        Quét QR hoặc nhập thông tin bên dưới để chuyển khoản.
+                      </p>
+
+                      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_220px] sm:items-start">
+                        <div className="space-y-2">
+                          {(PAYMENT_INFO as any)[selectedMethod].fields.map((f: any) => (
+                            <div key={f.label} className="flex items-center justify-between gap-3">
+                              <span className="text-caption text-gray-500">{f.label}</span>
+                              <span className="text-body-sm font-semibold text-gray-900">{f.value}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                          <Image
+                            src={(PAYMENT_INFO as any)[selectedMethod].qrSrc}
+                            alt={
+                              selectedMethod === "bank"
+                                ? "QR chuyển khoản Agribank"
+                                : "QR thanh toán ZaloPay"
+                            }
+                            width={440}
+                            height={440}
+                            className="h-auto w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between text-body-sm">
                       <span className="text-gray-500">Gói xu</span>
@@ -279,7 +328,7 @@ export default function WalletPage() {
                     ) : (
                       <>
                         <CreditCardIcon className="h-5 w-5" />
-                        Thanh toán {selectedPackData?.label}
+                        Tôi đã chuyển khoản {selectedPackData?.label}
                       </>
                     )}
                   </button>

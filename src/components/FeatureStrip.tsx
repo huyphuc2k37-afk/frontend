@@ -17,7 +17,7 @@ const features = [
   {
     icon: CreditCardIcon,
     title: "Thanh toán dễ ở VN",
-    description: "Hỗ trợ MoMo, ZaloPay, ngân hàng nội địa — không cần thẻ quốc tế.",
+    description: "Hỗ trợ ZaloPay và chuyển khoản ngân hàng — không cần thẻ quốc tế.",
   },
   {
     icon: ChartBarIcon,
