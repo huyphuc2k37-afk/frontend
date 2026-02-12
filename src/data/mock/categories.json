@@ -1,0 +1,154 @@
+[
+  {
+    "id": "ngon-tinh",
+    "name": "Ngôn Tình",
+    "slug": "ngon-tinh",
+    "icon": "HeartIcon",
+    "color": "#ec4899",
+    "storyCount": 245
+  },
+  {
+    "id": "dam-my",
+    "name": "Đam Mỹ",
+    "slug": "dam-my",
+    "icon": "SparklesIcon",
+    "color": "#a855f7",
+    "storyCount": 198
+  },
+  {
+    "id": "bach-hop",
+    "name": "Bách Hợp",
+    "slug": "bach-hop",
+    "icon": "HeartIcon",
+    "color": "#f472b6",
+    "storyCount": 87
+  },
+  {
+    "id": "linh-di",
+    "name": "Linh Dị",
+    "slug": "linh-di",
+    "icon": "FireIcon",
+    "color": "#8b5cf6",
+    "storyCount": 112
+  },
+  {
+    "id": "trinh-tham",
+    "name": "Trinh Thám",
+    "slug": "trinh-tham",
+    "icon": "MagnifyingGlassIcon",
+    "color": "#3b82f6",
+    "storyCount": 134
+  },
+  {
+    "id": "do-thi",
+    "name": "Đô Thị",
+    "slug": "do-thi",
+    "icon": "BuildingOffice2Icon",
+    "color": "#64748b",
+    "storyCount": 203
+  },
+  {
+    "id": "co-dai",
+    "name": "Cổ Đại",
+    "slug": "co-dai",
+    "icon": "BookOpenIcon",
+    "color": "#b45309",
+    "storyCount": 176
+  },
+  {
+    "id": "hai-huoc",
+    "name": "Hài Hước",
+    "slug": "hai-huoc",
+    "icon": "FaceSmileIcon",
+    "color": "#eab308",
+    "storyCount": 142
+  },
+  {
+    "id": "xuyen-khong",
+    "name": "Xuyên Không",
+    "slug": "xuyen-khong",
+    "icon": "ArrowPathIcon",
+    "color": "#6366f1",
+    "storyCount": 189
+  },
+  {
+    "id": "trong-sinh",
+    "name": "Trọng Sinh",
+    "slug": "trong-sinh",
+    "icon": "ArrowUturnLeftIcon",
+    "color": "#14b8a6",
+    "storyCount": 163
+  },
+  {
+    "id": "tuong-lai",
+    "name": "Tương Lai",
+    "slug": "tuong-lai",
+    "icon": "RocketLaunchIcon",
+    "color": "#0ea5e9",
+    "storyCount": 78
+  },
+  {
+    "id": "gia-tuong",
+    "name": "Giả Tưởng",
+    "slug": "gia-tuong",
+    "icon": "GlobeAltIcon",
+    "color": "#06b6d4",
+    "storyCount": 156
+  },
+  {
+    "id": "di-gioi",
+    "name": "Dị Giới",
+    "slug": "di-gioi",
+    "icon": "GlobeAltIcon",
+    "color": "#7c3aed",
+    "storyCount": 134
+  },
+  {
+    "id": "di-nang",
+    "name": "Dị Năng",
+    "slug": "di-nang",
+    "icon": "BoltIcon",
+    "color": "#f97316",
+    "storyCount": 98
+  },
+  {
+    "id": "vong-du",
+    "name": "Võng Du",
+    "slug": "vong-du",
+    "icon": "ComputerDesktopIcon",
+    "color": "#10b981",
+    "storyCount": 89
+  },
+  {
+    "id": "he",
+    "name": "HE",
+    "slug": "he",
+    "icon": "SunIcon",
+    "color": "#f59e0b",
+    "storyCount": 267
+  },
+  {
+    "id": "nguoc",
+    "name": "Ngược",
+    "slug": "nguoc",
+    "icon": "CloudIcon",
+    "color": "#ef4444",
+    "storyCount": 145
+  },
+  {
+    "id": "1v1",
+    "name": "1v1",
+    "slug": "1v1",
+    "icon": "HeartIcon",
+    "color": "#e11d48",
+    "storyCount": 312
+  },
+  {
+    "id": "np",
+    "name": "NP",
+    "slug": "np",
+    "icon": "UserGroupIcon",
+    "color": "#9333ea",
+    "storyCount": 95
+  }
+]
