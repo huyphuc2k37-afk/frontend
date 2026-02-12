@@ -17,6 +17,7 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   Cog6ToothIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useSession, signOut } from "next-auth/react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -37,6 +38,7 @@ export default function Header() {
   const { data: session } = useSession();
   const { profile } = useUserProfile();
   const isAuthor = profile?.role === "author";
+  const isAdmin = profile?.role === "admin";
   const pathname = usePathname();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -146,7 +148,15 @@ export default function Header() {
                   </button>
 
                   {/* CTA button — different per role */}
-                  {isAuthor ? (
+                  {isAdmin ? (
+                    <Link
+                      href="/admin"
+                      className="hidden items-center gap-1.5 rounded-full bg-red-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-red-600 hover:shadow-md sm:inline-flex"
+                    >
+                      <ShieldCheckIcon className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  ) : isAuthor ? (
                     <Link
                       href="/write"
                       className="hidden items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow-md sm:inline-flex"
@@ -233,7 +243,18 @@ export default function Header() {
                                 <PencilSquareIcon className="h-4 w-4" />
                                 Studio tác giả
                               </Link>
-                            ) : (
+                            ) : null}
+                            {isAdmin && (
+                              <Link
+                                href="/admin"
+                                onClick={() => setUserMenuOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-red-600 hover:bg-red-50"
+                              >
+                                <ShieldCheckIcon className="h-4 w-4" />
+                                Quản trị Admin
+                              </Link>
+                            )}
+                            {!isAuthor && !isAdmin && (
                               <>
                                 <Link
                                   href="/history"
@@ -391,11 +412,17 @@ export default function Header() {
                     <Link href="/bookshelf" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                       Tủ truyện
                     </Link>
-                    {isAuthor ? (
+                    {isAuthor && (
                       <Link href="/write" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                         Studio tác giả
                       </Link>
-                    ) : (
+                    )}
+                    {isAdmin && (
+                      <Link href="/admin" className="block rounded-lg px-3 py-2.5 text-body-sm font-semibold text-red-600 hover:bg-red-50">
+                        Quản trị Admin
+                      </Link>
+                    )}
+                    {!isAuthor && !isAdmin && (
                       <>
                         <Link href="/history" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                           Lịch sử đọc

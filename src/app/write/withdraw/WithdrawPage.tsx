@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   BanknotesIcon,
   ClockIcon,
@@ -11,23 +11,26 @@ import {
   BuildingLibraryIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
+import { API_BASE_URL } from "@/lib/api";
 import Link from "next/link";
 
-type WithdrawStatus = "pending" | "completed" | "rejected";
+type WithdrawStatus = "pending" | "approved" | "rejected";
 
 interface WithdrawRecord {
   id: string;
   amount: number;
+  moneyAmount: number;
   status: WithdrawStatus;
   bankName: string;
   bankAccount: string;
+  bankHolder: string;
+  adminNote?: string;
   createdAt: string;
-  completedAt?: string;
-  note?: string;
+  updatedAt: string;
 }
 
 export default function WithdrawPage() {
-  const { profile } = useStudio();
+  const { profile, token } = useStudio();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState("");
   const [bankName, setBankName] = useState("");
@@ -35,29 +38,60 @@ export default function WithdrawPage() {
   const [bankHolder, setBankHolder] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  // TODO: Fetch from API
-  const availableBalance = 0;
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
   const minWithdraw = 50000;
 
-  const withdrawHistory: WithdrawRecord[] = [
-    // Will be populated from API
-  ];
+  const fetchData = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/revenue/withdrawals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableBalance(data.balance || 0);
+        setWithdrawHistory(data.withdrawals || []);
+      }
+    } catch {}
+  }, [token]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatVND = (n: number) =>
     new Intl.NumberFormat("vi-VN").format(n);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || Number(amount) < minWithdraw) return;
+    if (!amount || Number(amount) < minWithdraw || !token) return;
     setSubmitting(true);
-    // API call sẽ thêm sau
-    setTimeout(() => {
-      setSubmitting(false);
-      setSuccess(true);
-      setShowForm(false);
-      setAmount("");
-    }, 1500);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/revenue/withdraw`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: Number(amount),
+          bankName,
+          bankAccount,
+          bankHolder,
+        }),
+      });
+      if (res.ok) {
+        setSuccess(true);
+        setShowForm(false);
+        setAmount("");
+        setBankName("");
+        setBankAccount("");
+        setBankHolder("");
+        fetchData();
+      }
+    } catch {}
+    setSubmitting(false);
   };
 
   const statusConfig: Record<WithdrawStatus, { label: string; color: string; icon: any }> = {
@@ -66,7 +100,7 @@ export default function WithdrawPage() {
       color: "text-amber-600 bg-amber-50",
       icon: ClockIcon,
     },
-    completed: {
+    approved: {
       label: "Đã chuyển",
       color: "text-emerald-600 bg-emerald-50",
       icon: CheckCircleIcon,

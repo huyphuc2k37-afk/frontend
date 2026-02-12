@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   CurrencyDollarIcon,
   ChartBarIcon,
@@ -12,25 +12,50 @@ import {
   BookOpenIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
+import { API_BASE_URL } from "@/lib/api";
 import Link from "next/link";
 
 type Period = "7d" | "30d" | "all";
 
 export default function RevenuePage() {
-  const { profile } = useStudio();
+  const { profile, token } = useStudio();
   const [period, setPeriod] = useState<Period>("30d");
 
-  // TODO: Fetch from API
-  const stats = {
+  const [stats, setStats] = useState({
     totalRevenue: 0,
     thisMonth: 0,
     pendingWithdraw: 0,
     totalChaptersSold: 0,
-  };
+    balance: 0,
+  });
 
-  const revenueHistory: { date: string; story: string; chapters: number; amount: number; reads: number }[] = [];
+  const [revenueHistory, setRevenueHistory] = useState<any[]>([]);
+  const [topStories, setTopStories] = useState<any[]>([]);
 
-  const topStories: { title: string; revenue: number; chapters: number; views: number }[] = [];
+  const fetchRevenue = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/revenue`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStats({
+          totalRevenue: data.totalRevenue || 0,
+          thisMonth: data.thisMonthRevenue || 0,
+          pendingWithdraw: data.pendingWithdraw || 0,
+          totalChaptersSold: data.totalChaptersSold || 0,
+          balance: data.balance || 0,
+        });
+        setRevenueHistory(data.recentSales || []);
+        setTopStories(data.topStories || []);
+      }
+    } catch {}
+  }, [token]);
+
+  useEffect(() => {
+    fetchRevenue();
+  }, [fetchRevenue]);
 
   const formatVND = (n: number) =>
     new Intl.NumberFormat("vi-VN").format(n) + " xu";
@@ -71,7 +96,7 @@ export default function RevenuePage() {
           },
           {
             label: "Có thể rút",
-            value: formatVND(stats.pendingWithdraw),
+            value: formatVND(stats.balance),
             icon: BanknotesIcon,
             color: "text-primary-600 bg-primary-50",
           },
@@ -137,20 +162,18 @@ export default function RevenuePage() {
                 <tr className="border-b border-gray-50 text-left">
                   <th className="px-6 py-3 text-caption font-semibold text-gray-500">Ngày</th>
                   <th className="px-6 py-3 text-caption font-semibold text-gray-500">Tác phẩm</th>
-                  <th className="px-6 py-3 text-caption font-semibold text-gray-500 text-center">Chương bán</th>
-                  <th className="px-6 py-3 text-caption font-semibold text-gray-500 text-center">Lượt đọc</th>
+                  <th className="px-6 py-3 text-caption font-semibold text-gray-500">Chương</th>
                   <th className="px-6 py-3 text-caption font-semibold text-gray-500 text-right">Doanh thu</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {revenueHistory.map((row, i) => (
+                {revenueHistory.map((row: any, i: number) => (
                   <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-6 py-3.5 text-body-sm text-gray-600">{row.date}</td>
-                    <td className="px-6 py-3.5 text-body-sm font-medium text-gray-900">{row.story}</td>
-                    <td className="px-6 py-3.5 text-body-sm text-gray-600 text-center">{row.chapters}</td>
-                    <td className="px-6 py-3.5 text-body-sm text-gray-600 text-center">{row.reads}</td>
+                    <td className="px-6 py-3.5 text-body-sm text-gray-600">{new Date(row.createdAt).toLocaleDateString("vi-VN")}</td>
+                    <td className="px-6 py-3.5 text-body-sm font-medium text-gray-900">{row.storyTitle}</td>
+                    <td className="px-6 py-3.5 text-body-sm text-gray-600">{row.chapterTitle}</td>
                     <td className="px-6 py-3.5 text-body-sm font-semibold text-emerald-600 text-right">
-                      {formatVND(row.amount)}
+                      {formatVND(row.coins)}
                     </td>
                   </tr>
                 ))}
@@ -177,10 +200,7 @@ export default function RevenuePage() {
                 <p className="text-body-sm font-medium text-gray-900">{story.title}</p>
                 <div className="mt-0.5 flex items-center gap-3 text-[11px] text-gray-400">
                   <span className="flex items-center gap-1">
-                    <DocumentTextIcon className="h-3 w-3" /> {story.chapters} chương bán
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <EyeIcon className="h-3 w-3" /> {story.views} lượt đọc
+                    <DocumentTextIcon className="h-3 w-3" /> {story.sold} chương bán
                   </span>
                 </div>
               </div>

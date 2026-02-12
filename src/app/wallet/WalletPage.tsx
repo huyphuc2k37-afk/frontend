@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { API_BASE_URL } from "@/lib/api";
 import {
   CurrencyDollarIcon,
   CreditCardIcon,
@@ -84,16 +85,55 @@ export default function WalletPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [balance, setBalance] = useState(0);
+  const [deposits, setDeposits] = useState<any[]>([]);
 
-  // TODO: Fetch from API
-  const balance = 0;
+  const token = (session as any)?.accessToken as string | undefined;
 
-  const transactions: Transaction[] = [];
+  const fetchWallet = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/wallet`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBalance(data.balance);
+        setDeposits(data.deposits || []);
+      }
+    } catch {}
+  }, [token]);
 
-  const handleDeposit = () => {
-    if (!selectedPack || !selectedMethod) return;
+  useEffect(() => {
+    if (token) fetchWallet();
+  }, [token, fetchWallet]);
+
+  const handleDeposit = async () => {
+    if (!selectedPack || !selectedMethod || !token) return;
+    const pack = coinPackages.find((p) => p.id === selectedPack);
+    if (!pack) return;
     setProcessing(true);
-    // TODO: gọi API tạo giao dịch
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/wallet/deposit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: pack.price,
+          coins: pack.coins + pack.bonus,
+          method: selectedMethod,
+          transferNote: `Nap ${pack.label} - ${session?.user?.email}`,
+        }),
+      });
+      if (res.ok) {
+        setShowSuccess(true);
+        setSelectedPack(null);
+        setSelectedMethod(null);
+        fetchWallet();
+      }
+    } catch {}
     setProcessing(false);
   };
 
@@ -431,42 +471,37 @@ export default function WalletPage() {
             /* History tab */
             <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
               <div className="border-b border-gray-100 px-6 py-4">
-                <h3 className="text-body-lg font-semibold text-gray-900">Lịch sử giao dịch</h3>
+                <h3 className="text-body-lg font-semibold text-gray-900">Lịch sử nạp xu</h3>
               </div>
-              {transactions.length === 0 ? (
+              {deposits.length === 0 ? (
                 <div className="px-6 py-16 text-center">
                   <ClockIcon className="mx-auto h-12 w-12 text-gray-200" />
                   <p className="mt-3 text-body-sm text-gray-500">Chưa có giao dịch nào</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="flex items-center gap-4 px-6 py-4">
-                      <div
-                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
-                          tx.type === "deposit" ? "bg-emerald-50" : "bg-orange-50"
-                        }`}
-                      >
-                        {tx.type === "deposit" ? (
+                  {deposits.map((d: any) => {
+                    const statusColor = d.status === "approved" ? "text-emerald-600 bg-emerald-50" : d.status === "rejected" ? "text-red-600 bg-red-50" : "text-amber-600 bg-amber-50";
+                    const statusLabel = d.status === "approved" ? "Đã duyệt" : d.status === "rejected" ? "Từ chối" : "Chờ duyệt";
+                    return (
+                      <div key={d.id} className="flex items-center gap-4 px-6 py-4">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                           <CurrencyDollarIcon className="h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <SparklesIcon className="h-5 w-5 text-orange-500" />
-                        )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-body-sm font-medium text-gray-900">
+                            Nạp {d.coins?.toLocaleString()} xu ({d.method === "zalopay" ? "ZaloPay" : "Agribank"})
+                          </p>
+                          <p className="mt-0.5 text-caption text-gray-400">
+                            {new Date(d.createdAt).toLocaleDateString("vi-VN")} · {new Intl.NumberFormat("vi-VN").format(d.amount)}đ
+                          </p>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${statusColor}`}>
+                          {statusLabel}
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-body-sm font-medium text-gray-900">{tx.description}</p>
-                        <p className="mt-0.5 text-caption text-gray-400">{tx.date}</p>
-                      </div>
-                      <span
-                        className={`text-body-sm font-bold ${
-                          tx.amount > 0 ? "text-emerald-600" : "text-orange-600"
-                        }`}
-                      >
-                        {tx.amount > 0 ? "+" : ""}
-                        {tx.amount} xu
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
