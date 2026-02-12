@@ -69,6 +69,8 @@ export default function StoryDetailPage() {
   const [saving, setSaving] = useState(false);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteStory, setShowDeleteStory] = useState(false);
+  const [deletingStory, setDeletingStory] = useState(false);
 
   useEffect(() => {
     if (!token || !storyId) return;
@@ -141,6 +143,25 @@ export default function StoryDetailPage() {
     setDeleting(false);
   };
 
+  const handleDeleteStory = async () => {
+    if (!token || !story) return;
+    setDeletingStory(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/manage/stories/${story.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        router.push("/write/stories");
+      } else {
+        alert("Không thể xóa truyện");
+      }
+    } catch {
+      alert("Không thể xóa truyện");
+    }
+    setDeletingStory(false);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -190,38 +211,49 @@ export default function StoryDetailPage() {
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-body-lg font-semibold text-gray-900">Thông tin truyện</h3>
-          {!editingInfo ? (
-            <button
-              onClick={() => setEditingInfo(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-caption font-medium text-primary-600 hover:bg-primary-50"
-            >
-              <PencilSquareIcon className="h-3.5 w-3.5" />
-              Chỉnh sửa
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setEditingInfo(false);
-                  setEditTitle(story.title);
-                  setEditDesc(story.description);
-                  setEditStatus(story.status);
-                  setEditCoverImage(story.coverImage || null);
-                  setCoverError(null);
-                }}
-                className="rounded-lg px-3 py-1.5 text-caption font-medium text-gray-500 hover:bg-gray-50"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleSaveInfo}
-                disabled={saving}
-                className="rounded-lg bg-primary-500 px-4 py-1.5 text-caption font-semibold text-white hover:bg-primary-600 disabled:opacity-50"
-              >
-                {saving ? "Đang lưu..." : "Lưu"}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {!editingInfo ? (
+              <>
+                <button
+                  onClick={() => setEditingInfo(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-caption font-medium text-primary-600 hover:bg-primary-50"
+                >
+                  <PencilSquareIcon className="h-3.5 w-3.5" />
+                  Chỉnh sửa
+                </button>
+                <button
+                  onClick={() => setShowDeleteStory(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-caption font-medium text-red-500 hover:bg-red-50"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  Xóa truyện
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setEditingInfo(false);
+                    setEditTitle(story.title);
+                    setEditDesc(story.description);
+                    setEditStatus(story.status);
+                    setEditCoverImage(story.coverImage || null);
+                    setCoverError(null);
+                  }}
+                  className="rounded-lg px-3 py-1.5 text-caption font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSaveInfo}
+                  disabled={saving}
+                  className="rounded-lg bg-primary-500 px-4 py-1.5 text-caption font-semibold text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  {saving ? "Đang lưu..." : "Lưu"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[180px_1fr]">
@@ -465,6 +497,46 @@ export default function StoryDetailPage() {
                   className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
                 >
                   {deleting ? "Đang xóa..." : "Xóa chương"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete story modal */}
+      <AnimatePresence>
+        {showDeleteStory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+            >
+              <h3 className="text-body-lg font-bold text-gray-900">Xác nhận xóa truyện</h3>
+              <p className="mt-2 text-body-sm text-gray-500">
+                Bạn có chắc muốn xóa truyện <strong>{story.title}</strong>? Toàn bộ {story.chapters.length} chương sẽ bị xóa theo. Hành động không thể hoàn tác.
+              </p>
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={() => setShowDeleteStory(false)}
+                  disabled={deletingStory}
+                  className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleDeleteStory}
+                  disabled={deletingStory}
+                  className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+                >
+                  {deletingStory ? "Đang xóa..." : "Xóa truyện"}
                 </button>
               </div>
             </motion.div>
