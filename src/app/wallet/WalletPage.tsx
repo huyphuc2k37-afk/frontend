@@ -16,6 +16,8 @@ import {
   CheckCircleIcon,
   ShieldCheckIcon,
   SparklesIcon,
+  ClipboardDocumentIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 
 /* ── Coin packages ── */
@@ -31,9 +33,23 @@ const coinPackages = [
 const paymentMethods = [
   { id: "zalopay", label: "ZaloPay", icon: DevicePhoneMobileIcon, color: "bg-blue-50 text-blue-600 border-blue-200" },
   { id: "bank", label: "Chuyển khoản Agribank", icon: BanknotesIcon, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-];
+ ] as const;
 
-const PAYMENT_INFO = {
+type PaymentMethodId = (typeof paymentMethods)[number]["id"];
+
+type PaymentField = {
+  label: string;
+  value: string;
+  copyValue?: string;
+};
+
+type PaymentInfo = {
+  title: string;
+  qrSrc: string;
+  fields: PaymentField[];
+};
+
+const PAYMENT_INFO: Record<PaymentMethodId, PaymentInfo> = {
   zalopay: {
     title: "ZaloPay",
     qrSrc: "/qr/qrzalopay.jpg",
@@ -49,7 +65,7 @@ const PAYMENT_INFO = {
       { label: "Chi nhánh", value: "Agribank CN Nghi Lộc Nghệ An" },
     ],
   },
-} as const;
+};
 
 interface Transaction {
   id: string;
@@ -67,6 +83,7 @@ export default function WalletPage() {
   const [processing, setProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Mock data — sẽ được thay bằng API thực tế
   const balance = 120;
@@ -104,6 +121,22 @@ export default function WalletPage() {
   }
 
   const selectedPackData = coinPackages.find((p) => p.id === selectedPack);
+  const selectedMethodInfo =
+    selectedMethod === "zalopay" || selectedMethod === "bank"
+      ? PAYMENT_INFO[selectedMethod]
+      : null;
+
+  const handleCopy = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      window.setTimeout(() => {
+        setCopiedKey((prev) => (prev === key ? null : prev));
+      }, 1600);
+    } catch {
+      // No-op: clipboard may be blocked in some browsers/contexts
+    }
+  };
 
   return (
     <>
@@ -257,7 +290,7 @@ export default function WalletPage() {
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                   <h3 className="text-body-lg font-semibold text-gray-900">Xác nhận thanh toán</h3>
 
-                  {selectedMethod === "zalopay" || selectedMethod === "bank" ? (
+                  {selectedMethodInfo ? (
                     <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
                       <p className="text-body-sm font-semibold text-gray-900">Thông tin thanh toán</p>
                       <p className="mt-1 text-caption text-gray-500">
@@ -266,17 +299,44 @@ export default function WalletPage() {
 
                       <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_220px] sm:items-start">
                         <div className="space-y-2">
-                          {(PAYMENT_INFO as any)[selectedMethod].fields.map((f: any) => (
-                            <div key={f.label} className="flex items-center justify-between gap-3">
-                              <span className="text-caption text-gray-500">{f.label}</span>
-                              <span className="text-body-sm font-semibold text-gray-900">{f.value}</span>
-                            </div>
-                          ))}
+                          {selectedMethodInfo.fields.map((field) => {
+                            const copyValue = field.copyValue ?? field.value;
+                            const key = `${selectedMethod}-${field.label}`;
+                            const isCopied = copiedKey === key;
+
+                            return (
+                              <div key={field.label} className="flex items-center justify-between gap-3">
+                                <span className="text-caption text-gray-500">{field.label}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-body-sm font-semibold text-gray-900">
+                                    {field.value}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopy(key, copyValue)}
+                                    className="rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                                    aria-label={`Sao chép ${field.label}`}
+                                    title={isCopied ? "Đã copy" : "Copy"}
+                                  >
+                                    {isCopied ? (
+                                      <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                                    ) : (
+                                      <ClipboardDocumentIcon className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {copiedKey ? (
+                            <p className="pt-1 text-caption text-emerald-600">Đã copy</p>
+                          ) : null}
                         </div>
 
                         <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
                           <Image
-                            src={(PAYMENT_INFO as any)[selectedMethod].qrSrc}
+                            src={selectedMethodInfo.qrSrc}
                             alt={
                               selectedMethod === "bank"
                                 ? "QR chuyển khoản Agribank"
