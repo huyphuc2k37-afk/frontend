@@ -478,8 +478,8 @@ export default function AuthorRegisterPage() {
           >
             <div className="absolute inset-0 bg-black/30" onClick={declinePolicy} />
 
-            <div className="relative z-10 w-full max-w-3xl overflow-hidden rounded-3xl border border-[#f0e6d0]/80 bg-white shadow-2xl">
-              <div className="border-b border-[#f0e6d0]/60 bg-[#fdf9f0] p-5 sm:p-6">
+            <div className="relative z-10 flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-[#f0e6d0]/80 bg-white shadow-2xl" style={{ maxHeight: "calc(100vh - 2rem)" }}>
+              <div className="flex-shrink-0 border-b border-[#f0e6d0]/60 bg-[#fdf9f0] p-4 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h3 className="text-heading-md font-bold text-gray-900">
@@ -505,7 +505,7 @@ export default function AuthorRegisterPage() {
                 </p>
               </div>
 
-              <div className="max-h-[65vh] overflow-y-auto p-5 sm:p-6">
+              <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
                 <div className="space-y-4 text-body-md leading-relaxed text-gray-700">
                   <section className="rounded-2xl border border-[#f0e6d0]/60 bg-white p-4">
                     <h4 className="text-body-md font-semibold text-gray-900">1. Tư cách Tác giả</h4>
@@ -638,7 +638,7 @@ export default function AuthorRegisterPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-[#f0e6d0]/60 bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-shrink-0 flex-col gap-3 border-t border-[#f0e6d0]/60 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <p className="text-caption text-gray-500">
                   Bằng việc bấm “Tôi đồng ý”, bạn xác nhận đã đọc và chấp nhận chính sách.
                 </p>
