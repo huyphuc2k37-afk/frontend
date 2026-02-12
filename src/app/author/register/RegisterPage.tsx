@@ -38,7 +38,7 @@ const benefits = [
   {
     icon: UserGroupIcon,
     title: "Cộng đồng hỗ trợ",
-    desc: "Kết nối với 2.000+ tác giả, nhận feedback từ độc giả.",
+    desc: "Kết nối với cộng đồng tác giả và nhận phản hồi từ độc giả.",
   },
 ];
 
@@ -147,7 +147,7 @@ export default function AuthorRegisterPage() {
                   </h1>
                   <p className="mx-auto mt-4 max-w-xl text-body-lg text-primary-100/80">
                     Biến đam mê viết lách thành sự nghiệp. Chia sẻ câu chuyện
-                    với hàng trăm nghìn độc giả trên VStory.
+                    với nhiều độc giả trên VStory.
                   </p>
                 </motion.div>
 
@@ -195,17 +195,16 @@ export default function AuthorRegisterPage() {
             {/* Testimonial / social proof */}
             <section className="section-container py-16 text-center">
               <h2 className="text-heading-lg font-bold text-gray-900">
-                2.000+ tác giả đã tin tưởng VStory
+                Trải nghiệm từ cộng đồng tác giả
               </h2>
               <p className="mx-auto mt-3 max-w-lg text-body-md text-gray-500">
-                Hàng nghìn tác giả đã biến đam mê viết lách thành nguồn thu
-                nhập ổn định trên nền tảng của chúng tôi.
+                Một vài chia sẻ thực tế về quá trình đăng truyện, cập nhật chương và tương tác với độc giả.
               </p>
               <div className="mt-10 grid gap-6 sm:grid-cols-3">
                 {[
-                  { name: "Nguyễn Văn A", genre: "Tiên hiệp", quote: "VStory giúp tôi tiếp cận hàng nghìn độc giả mỗi ngày." },
-                  { name: "Trần Thị B", genre: "Ngôn tình", quote: "Thu nhập từ VStory đã thay đổi cuộc sống của tôi." },
-                  { name: "Lê Quang C", genre: "Kiếm hiệp", quote: "Công cụ viết tuyệt vời, cộng đồng thân thiện." },
+                  { name: "Tác giả N.", genre: "Tiên hiệp", quote: "Mình thích chỗ đăng chương nhanh và quản lý bản thảo gọn. Đợt đầu cũng hơi bỡ ngỡ nhưng dùng quen là ổn." },
+                  { name: "Tác giả Ẩn danh", genre: "Ngôn tình", quote: "Có phản hồi từ độc giả giúp mình chỉnh nhịp truyện tốt hơn. Thu nhập thì tùy từng tác phẩm, nhưng cơ chế khá rõ ràng." },
+                  { name: "Tác giả T.Q.", genre: "Kiếm hiệp", quote: "Editor online đủ dùng, nhất là khi viết trên máy tính. Mình ưu tiên đều đặn cập nhật để giữ tương tác." },
                 ].map((t, i) => (
                   <motion.div
                     key={t.name}
