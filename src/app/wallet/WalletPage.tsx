@@ -22,8 +22,8 @@ import {
 const coinPackages = [
   { id: "pack1", coins: 10000, price: 10000, label: "10.000đ", bonus: 0 },
   { id: "pack2", coins: 20000, price: 20000, label: "20.000đ", bonus: 0 },
-  { id: "pack3", coins: 50000, price: 50000, label: "50.000đ", bonus: 0, popular: true },
-  { id: "pack4", coins: 100000, price: 100000, label: "100.000đ", bonus: 3000 },
+  { id: "pack3", coins: 50000, price: 50000, label: "50.000đ", bonus: 0 },
+  { id: "pack4", coins: 100000, price: 100000, label: "100.000đ", bonus: 3000, popular: true },
   { id: "pack5", coins: 200000, price: 200000, label: "200.000đ", bonus: 7000 },
   { id: "pack6", coins: 500000, price: 500000, label: "500.000đ", bonus: 20000 },
 ];
