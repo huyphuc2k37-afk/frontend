@@ -228,12 +228,12 @@ export default function WalletPage() {
             <div className="space-y-6">
               {/* Success message */}
               {showSuccess && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-                  <CheckCircleIcon className="h-6 w-6 flex-shrink-0 text-emerald-500" />
+                <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+                  <ClockIcon className="h-6 w-6 flex-shrink-0 text-amber-600" />
                   <div>
-                    <p className="text-body-sm font-semibold text-emerald-800">Nạp xu thành công!</p>
-                    <p className="text-caption text-emerald-600">
-                      Xu đã được cộng vào tài khoản của bạn.
+                    <p className="text-body-sm font-semibold text-amber-900">Đã gửi yêu cầu nạp xu</p>
+                    <p className="text-caption text-amber-700">
+                      Giao dịch đang chờ duyệt. Xu sẽ được cộng sau khi admin xác nhận.
                     </p>
                   </div>
                 </div>
