@@ -116,11 +116,11 @@ export default function LoginPage() {
           {/* Terms */}
           <p className="mt-6 text-caption leading-relaxed text-gray-400">
             Bằng việc đăng nhập, bạn đồng ý với{" "}
-            <Link href="#" className="underline hover:text-gray-600">
+            <Link href="/terms" className="underline hover:text-gray-600">
               Điều khoản sử dụng
             </Link>{" "}
             và{" "}
-            <Link href="#" className="underline hover:text-gray-600">
+            <Link href="/privacy" className="underline hover:text-gray-600">
               Chính sách bảo mật
             </Link>{" "}
             của VStory.
