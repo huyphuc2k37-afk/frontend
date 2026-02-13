@@ -42,6 +42,7 @@ const handler = NextAuth({
             email: data.user.email,
             name: data.user.name,
             image: data.user.image,
+            role: data.user.role || "reader",
           };
         } catch (error: any) {
           throw new Error(error.message || "Đăng nhập thất bại");
@@ -61,15 +62,29 @@ const handler = NextAuth({
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
+        token.role = (user as any).role || "reader";
         if (account?.provider === "credentials") {
           token.sub = user.id;
         }
+      }
+      // For Google login, fetch role from backend if not set
+      if (!token.role && token.email) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/auth/sync`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: token.email, name: token.name, image: token.picture }),
+          });
+          const data = await res.json();
+          if (data.user?.role) token.role = data.user.role;
+        } catch {}
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.sub;
+        (session.user as any).role = token.role || "reader";
       }
       // Create a JWT token that the frontend can send to the backend
       (session as any).accessToken = jwt.sign(
