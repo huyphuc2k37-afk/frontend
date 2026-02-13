@@ -14,6 +14,8 @@ import {
   CurrencyDollarIcon,
   ListBulletIcon,
   GiftIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -52,7 +54,21 @@ export default function ReadChapterPage() {
   const [tipping, setTipping] = useState(false);
   const [tipSuccess, setTipSuccess] = useState(false);
   const [tipError, setTipError] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
+
+  // Load dark mode preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("reader-dark-mode");
+    if (saved === "true") setDarkMode(true);
+  }, []);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      localStorage.setItem("reader-dark-mode", String(!prev));
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     if (!chapterId) return;
@@ -199,31 +215,38 @@ export default function ReadChapterPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-50">
+      <main className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1a1a2e]' : 'bg-gray-50'}`}>
         {/* Chapter header */}
-        <div className="border-b border-gray-200 bg-white">
+        <div className={`border-b transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#16213e]' : 'border-gray-200 bg-white'}`}>
           <div className="section-container flex items-center justify-between py-4">
             <div className="flex items-center gap-3 min-w-0">
               <Link
                 href={`/story/${slug}`}
-                className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                className={`flex-shrink-0 rounded-lg p-2 transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </Link>
               <div className="min-w-0">
                 <Link
                   href={`/story/${slug}`}
-                  className="block text-caption text-gray-500 hover:text-primary-600 truncate"
+                  className={`block text-caption truncate ${darkMode ? 'text-gray-400 hover:text-primary-400' : 'text-gray-500 hover:text-primary-600'}`}
                 >
                   {chapter.story.title}
                 </Link>
-                <h1 className="text-body-md font-bold text-gray-900 truncate">
+                <h1 className={`text-body-md font-bold truncate ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                   Chương {chapter.number}: {chapter.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                 </h1>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-caption text-gray-400">
-              <span>{chapter.wordCount.toLocaleString()} chữ</span>
+            <div className="flex items-center gap-3">
+              <span className={`text-caption ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>{chapter.wordCount.toLocaleString()} chữ</span>
+              <button
+                onClick={toggleDarkMode}
+                className={`rounded-lg p-2 transition-all duration-300 ${darkMode ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
+                title={darkMode ? 'Chế độ sáng' : 'Chế độ tối'}
+              >
+                {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+              </button>
             </div>
           </div>
         </div>
@@ -286,18 +309,18 @@ export default function ReadChapterPage() {
               </div>
             ) : (
               /* Chapter content */
-              <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm md:p-12">
+              <div className={`rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746]' : 'border-gray-100 bg-white'}`}>
                 <div className="prose prose-lg max-w-none">
-                  <div className="whitespace-pre-line text-body-md leading-[1.9] text-gray-800">
+                  <div className={`whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                     {chapter.content}
                   </div>
                 </div>
 
                 {/* Author note */}
                 {chapter.authorNote && (
-                  <div className="mt-8 rounded-xl border border-primary-100 bg-primary-50 p-5">
-                    <p className="mb-2 text-caption font-semibold text-primary-700">Lời tác giả</p>
-                    <p className="whitespace-pre-line text-body-sm text-primary-900/80">
+                  <div className={`mt-8 rounded-xl border p-5 transition-colors duration-300 ${darkMode ? 'border-primary-800 bg-primary-900/30' : 'border-primary-100 bg-primary-50'}`}>
+                    <p className={`mb-2 text-caption font-semibold ${darkMode ? 'text-primary-400' : 'text-primary-700'}`}>Lời tác giả</p>
+                    <p className={`whitespace-pre-line text-body-sm ${darkMode ? 'text-primary-200/80' : 'text-primary-900/80'}`}>
                       {chapter.authorNote}
                     </p>
                   </div>
@@ -373,7 +396,7 @@ export default function ReadChapterPage() {
               {chapter.prev ? (
                 <Link
                   href={`/story/${slug}/chapter/${chapter.prev.id}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-body-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                  className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
                 >
                   <ChevronLeftIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Chương {chapter.prev.number}</span>
@@ -385,7 +408,7 @@ export default function ReadChapterPage() {
 
               <Link
                 href={`/story/${slug}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-body-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
               >
                 <ListBulletIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Mục lục</span>
@@ -401,7 +424,7 @@ export default function ReadChapterPage() {
                   <ChevronRightIcon className="h-4 w-4" />
                 </Link>
               ) : (
-                <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-3 text-body-sm text-gray-400">
+                <div className={`rounded-xl border px-5 py-3 text-body-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
                   Hết truyện
                 </div>
               )}
