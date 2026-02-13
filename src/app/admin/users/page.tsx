@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, PlusCircleIcon, MinusCircleIcon } from "@heroicons/react/24/outline";
 
 export default function AdminUsersPage() {
   const { token } = useAdmin();
@@ -13,6 +13,13 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Coin adjustment state
+  const [adjustingUserId, setAdjustingUserId] = useState<string | null>(null);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+  const [adjustResult, setAdjustResult] = useState<{ userId: string; msg: string; ok: boolean } | null>(null);
 
   const fetchUsers = useCallback(async () => {
     if (!token) return;
@@ -43,6 +50,32 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ role }),
     });
     fetchUsers();
+  };
+
+  const adjustCoins = async (userId: string, amount: number) => {
+    if (!token || adjusting) return;
+    setAdjusting(true);
+    setAdjustResult(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/adjust-coins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount, reason: adjustReason.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAdjustResult({ userId, msg: `Thành công! Số dư mới: ${data.newBalance?.toLocaleString()} xu`, ok: true });
+        setAdjustingUserId(null);
+        setAdjustAmount("");
+        setAdjustReason("");
+        fetchUsers();
+      } else {
+        setAdjustResult({ userId, msg: data.error || "Lỗi", ok: false });
+      }
+    } catch {
+      setAdjustResult({ userId, msg: "Lỗi kết nối server", ok: false });
+    }
+    setAdjusting(false);
   };
 
   const roleColors: Record<string, string> = {
@@ -100,7 +133,57 @@ export default function AdminUsersPage() {
                   <tr key={u.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-body-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-4 py-3 text-body-sm text-gray-500">{u.email}</td>
-                    <td className="px-4 py-3 text-body-sm text-center text-gray-900 font-semibold">{u.coinBalance?.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-body-sm font-semibold text-gray-900">{u.coinBalance?.toLocaleString()}</span>
+                        <button
+                          onClick={() => {
+                            setAdjustingUserId(adjustingUserId === u.id ? null : u.id);
+                            setAdjustAmount("");
+                            setAdjustReason("");
+                            setAdjustResult(null);
+                          }}
+                          className="ml-1 rounded p-0.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                          title="Cộng/trừ xu"
+                        >
+                          <PlusCircleIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {/* Inline adjust form */}
+                      {adjustingUserId === u.id && (
+                        <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-2 text-left">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="number"
+                              placeholder="VD: 500 hoặc -200"
+                              value={adjustAmount}
+                              onChange={(e) => setAdjustAmount(e.target.value)}
+                              className="w-28 rounded border border-gray-200 px-2 py-1 text-[11px] focus:border-blue-400 focus:outline-none"
+                            />
+                            <button
+                              disabled={!adjustAmount || adjusting}
+                              onClick={() => adjustCoins(u.id, parseInt(adjustAmount))}
+                              className="rounded bg-blue-500 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
+                            >
+                              {adjusting ? "..." : "Xác nhận"}
+                            </button>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Lý do (tùy chọn)"
+                            value={adjustReason}
+                            onChange={(e) => setAdjustReason(e.target.value)}
+                            className="mt-1.5 w-full rounded border border-gray-200 px-2 py-1 text-[11px] focus:border-blue-400 focus:outline-none"
+                          />
+                          <p className="mt-1 text-[10px] text-gray-500">Nhập số dương để cộng, số âm để trừ</p>
+                        </div>
+                      )}
+                      {adjustResult?.userId === u.id && (
+                        <p className={`mt-1 text-[11px] ${adjustResult?.ok ? "text-emerald-600" : "text-red-600"}`}>
+                          {adjustResult?.msg}
+                        </p>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-body-sm text-center text-gray-600">{u._count?.stories || 0}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold ${roleColors[u.role] || "bg-gray-100 text-gray-600"}`}>

@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [noticeMessage, setNoticeMessage] = useState("");
   const [sendingNotice, setSendingNotice] = useState(false);
   const [noticeResult, setNoticeResult] = useState<string | null>(null);
+  const [resettingRevenue, setResettingRevenue] = useState(false);
+  const [revenueResult, setRevenueResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -159,6 +161,51 @@ export default function AdminDashboard() {
             <div key={i}>{inner}</div>
           );
         })}
+      </div>
+
+      {/* Revenue management */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <h3 className="text-body-lg font-semibold text-gray-900">Quản lý doanh thu</h3>
+        <p className="mt-1 text-body-sm text-gray-500">Xóa dữ liệu nạp xu test. Thao tác này không hoàn xu đã cộng.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            disabled={resettingRevenue}
+            onClick={async () => {
+              if (!token) return;
+              if (!confirm("Bạn có chắc muốn xóa TẤT CẢ deposit đã duyệt? Thao tác này không thể hoàn tác.")) return;
+              setResettingRevenue(true);
+              setRevenueResult(null);
+              try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/stats/revenue`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ action: "reset-all" }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  setRevenueResult(data.message || "Đã xóa thành công");
+                  // Re-fetch stats
+                  const statsRes = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  if (statsRes.ok) setStats(await statsRes.json());
+                } else {
+                  setRevenueResult(data.error || "Lỗi");
+                }
+              } catch {
+                setRevenueResult("Lỗi kết nối server");
+              }
+              setResettingRevenue(false);
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2.5 text-body-sm font-semibold text-white transition-all hover:bg-red-600 disabled:opacity-60"
+          >
+            {resettingRevenue ? "Đang xóa..." : "Xóa tất cả deposit đã duyệt"}
+          </button>
+          {revenueResult && <p className="text-body-sm text-gray-600">{revenueResult}</p>}
+        </div>
+        <p className="mt-3 text-caption text-gray-400">
+          Lưu ý: Nếu muốn trừ xu các tài khoản đã test, vào trang Người dùng để điều chỉnh xu từng tài khoản.
+        </p>
       </div>
     </div>
   );
