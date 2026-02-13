@@ -292,7 +292,7 @@ export default function Header() {
                       <CurrencyDollarIcon className="h-4 w-4" />
                       {coinBalance !== null
                         ? `${coinBalance.toLocaleString("vi-VN")} xu`
-                        : "Nạp xu"}
+                        : "... xu"}
                     </Link>
                   )}
                   {isAdmin ? (
