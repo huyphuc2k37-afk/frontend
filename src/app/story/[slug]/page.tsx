@@ -13,8 +13,10 @@ import {
   BookmarkIcon,
   ChatBubbleLeftRightIcon,
   LockClosedIcon,
+  StarIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
-import { BookmarkIcon as BookmarkSolidIcon } from "@heroicons/react/24/solid";
+import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { API_BASE_URL, authFetch } from "@/lib/api";
@@ -39,9 +41,18 @@ interface StoryDetail {
   status: string;
   views: number;
   likes: number;
+  averageRating: number;
+  ratingCount: number;
   author: { id: string; name: string; image: string | null; bio: string | null };
   chapters: Chapter[];
-  _count: { bookmarks: number; comments: number };
+  _count: { bookmarks: number; comments: number; storyLikes: number };
+}
+
+interface CommentData {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: { id: string; name: string; image: string | null };
 }
 
 export default function StoryDetailPage() {
@@ -55,6 +66,16 @@ export default function StoryDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [liking, setLiking] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [comments, setComments] = useState<CommentData[]>([]);
+  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [commentText, setCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
   // Redirect to login if not authenticated
@@ -106,6 +127,98 @@ export default function StoryDetailPage() {
       }
     } catch {}
     setBookmarking(false);
+  };
+
+  // Check like status
+  useEffect(() => {
+    if (!session || !story || !token) return;
+    authFetch(`/api/stories/${story.id}/like`, token)
+      .then((r) => r.json())
+      .then((data) => setIsLiked(data.liked === true))
+      .catch(() => {});
+  }, [session, story, token]);
+
+  // Check user rating
+  useEffect(() => {
+    if (!session || !story || !token) return;
+    authFetch(`/api/stories/${story.id}/rate`, token)
+      .then((r) => r.json())
+      .then((data) => setUserRating(data.userScore || 0))
+      .catch(() => {});
+  }, [session, story, token]);
+
+  // Fetch comments
+  useEffect(() => {
+    if (!story) return;
+    setCommentLoading(true);
+    fetch(`${API_BASE_URL}/api/comments?storyId=${story.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setComments(data.comments || []);
+        setCommentsTotal(data.total || 0);
+      })
+      .catch(() => {})
+      .finally(() => setCommentLoading(false));
+  }, [story]);
+
+  const toggleLike = async () => {
+    if (!session || !story || liking || !token) return;
+    setLiking(true);
+    try {
+      const res = await authFetch(`/api/stories/${story.id}/like`, token, { method: "POST" });
+      const data = await res.json();
+      setIsLiked(data.liked);
+      setStory((prev) => prev ? { ...prev, likes: prev.likes + (data.liked ? 1 : -1) } : prev);
+    } catch {}
+    setLiking(false);
+  };
+
+  const submitRating = async (score: number) => {
+    if (!session || !story || ratingLoading || !token) return;
+    setRatingLoading(true);
+    try {
+      const res = await authFetch(`/api/stories/${story.id}/rate`, token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUserRating(data.userScore);
+        setStory((prev) => prev ? { ...prev, averageRating: data.averageRating, ratingCount: data.ratingCount } : prev);
+      }
+    } catch {}
+    setRatingLoading(false);
+  };
+
+  const postComment = async () => {
+    if (!session || !story || !commentText.trim() || postingComment || !token) return;
+    setPostingComment(true);
+    try {
+      const res = await authFetch("/api/comments", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyId: story.id, content: commentText.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => [data, ...prev]);
+        setCommentsTotal((prev) => prev + 1);
+        setCommentText("");
+      }
+    } catch {}
+    setPostingComment(false);
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!token || !confirm("Xóa bình luận này?")) return;
+    try {
+      const res = await authFetch(`/api/comments/${commentId}`, token, { method: "DELETE" });
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setCommentsTotal((prev) => prev - 1);
+      }
+    } catch {}
   };
 
   if (loading) {
@@ -233,6 +346,12 @@ export default function StoryDetailPage() {
                     <HeartIcon className="h-4 w-4" />
                     {story.likes.toLocaleString()} yêu thích
                   </span>
+                  {story.ratingCount > 0 && (
+                    <span className="flex items-center gap-1.5">
+                      <StarIcon className="h-4 w-4 text-yellow-400" />
+                      {story.averageRating}/5 ({story.ratingCount} đánh giá)
+                    </span>
+                  )}
                   <span className="flex items-center gap-1.5">
                     <BookOpenIcon className="h-4 w-4" />
                     {story.chapters.length} chương
@@ -294,6 +413,24 @@ export default function StoryDetailPage() {
                         <BookmarkIcon className="h-5 w-5" />
                       )}
                       {isBookmarked ? "Đã lưu" : "Lưu truyện"}
+                    </button>
+                  )}
+                  {session && (
+                    <button
+                      onClick={toggleLike}
+                      disabled={liking}
+                      className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-body-sm font-semibold transition-colors ${
+                        isLiked
+                          ? "bg-red-500 text-white hover:bg-red-600"
+                          : "bg-white/10 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      {isLiked ? (
+                        <HeartSolidIcon className="h-5 w-5" />
+                      ) : (
+                        <HeartIcon className="h-5 w-5" />
+                      )}
+                      {isLiked ? "Đã thích" : "Thích"}
                     </button>
                   )}
                 </div>
@@ -389,6 +526,122 @@ export default function StoryDetailPage() {
                   </div>
                 )}
               </div>
+
+              {/* Rating section */}
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">
+                  <StarIcon className="h-5 w-5 text-yellow-500" />
+                  Đánh giá truyện
+                </h2>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <p className="text-display-sm font-bold text-gray-900">{story.averageRating || "—"}</p>
+                    <p className="text-caption text-gray-500">{story.ratingCount} đánh giá</p>
+                  </div>
+                  {session && (
+                    <div className="flex-1">
+                      <p className="mb-2 text-body-sm text-gray-600">
+                        {userRating > 0 ? `Bạn đã đánh giá ${userRating}/5` : "Đánh giá truyện này"}
+                      </p>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => submitRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            disabled={ratingLoading}
+                            className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
+                          >
+                            {(hoverRating || userRating) >= star ? (
+                              <StarSolidIcon className="h-7 w-7 text-yellow-400" />
+                            ) : (
+                              <StarIcon className="h-7 w-7 text-gray-300" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Comments section */}
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">
+                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-primary-500" />
+                  Bình luận ({commentsTotal})
+                </h2>
+
+                {/* Comment form */}
+                {session ? (
+                  <div className="mb-6">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Viết bình luận về truyện này..."
+                      rows={3}
+                      className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={postComment}
+                        disabled={!commentText.trim() || postingComment}
+                        className="rounded-xl bg-primary-500 px-5 py-2 text-body-sm font-semibold text-white hover:bg-primary-600 disabled:opacity-50"
+                      >
+                        {postingComment ? "Đang gửi..." : "Gửi bình luận"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mb-6 text-body-sm text-gray-500">
+                    <Link href="/login" className="text-primary-600 hover:underline">Đăng nhập</Link> để bình luận.
+                  </p>
+                )}
+
+                {/* Comments list */}
+                {commentLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+                  </div>
+                ) : comments.length === 0 ? (
+                  <p className="py-8 text-center text-body-sm text-gray-400">Chưa có bình luận nào</p>
+                ) : (
+                  <div className="space-y-4">
+                    {comments.map((c) => (
+                      <div key={c.id} className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          {c.user.image ? (
+                            <Image src={c.user.image} alt={c.user.name} width={36} height={36} className="rounded-full" unoptimized />
+                          ) : (
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-caption font-bold text-primary-600">
+                              {c.user.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-body-sm font-semibold text-gray-900">{c.user.name}</span>
+                            <span className="text-caption text-gray-400">
+                              {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                            </span>
+                            {session && (session.user as any)?.email && c.user.id && (
+                              <button
+                                onClick={() => deleteComment(c.id)}
+                                className="ml-auto text-gray-300 hover:text-red-500"
+                                title="Xóa"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-1 text-body-sm text-gray-700 whitespace-pre-line">{c.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Sidebar */}
@@ -453,6 +706,12 @@ export default function StoryDetailPage() {
                     <span className="text-gray-500">Lượt đọc</span>
                     <span className="font-medium text-gray-800">
                       {story.views.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Đánh giá</span>
+                    <span className="font-medium text-gray-800">
+                      {story.ratingCount > 0 ? `${story.averageRating}/5 (${story.ratingCount})` : "Chưa có"}
                     </span>
                   </div>
                   <div className="flex justify-between">

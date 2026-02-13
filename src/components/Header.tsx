@@ -96,6 +96,21 @@ export default function Header() {
     setNotificationsOpen(false);
   }, [pathname]);
 
+  // Poll unread notification count
+  useEffect(() => {
+    if (!token) { setUnreadCount(0); return; }
+    const fetchUnread = async () => {
+      try {
+        const res = await authFetch("/api/notifications?limit=1", token);
+        const data = await res.json();
+        if (res.ok) setUnreadCount(typeof data.unreadCount === "number" ? data.unreadCount : 0);
+      } catch { /* ignore */ }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   const fetchNotifications = async () => {
     if (!token) return;
     setNotificationsLoading(true);

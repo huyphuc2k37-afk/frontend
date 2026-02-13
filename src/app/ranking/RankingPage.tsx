@@ -7,6 +7,7 @@ import {
   EyeIcon,
   HeartIcon,
   BookOpenIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,6 +21,8 @@ interface RankedStory {
   status: string;
   views: number;
   likes: number;
+  averageRating: number;
+  ratingCount: number;
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number };
 }
@@ -27,6 +30,7 @@ interface RankedStory {
 const tabs = [
   { key: "views", label: "Lượt đọc", icon: EyeIcon },
   { key: "likes", label: "Yêu thích", icon: HeartIcon },
+  { key: "rating", label: "Đánh giá", icon: StarIcon },
 ];
 
 const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-700"];
@@ -149,10 +153,16 @@ export default function RankingPage() {
                             <EyeIcon className="h-4 w-4 text-primary-500" />
                             {story.views.toLocaleString()}
                           </>
-                        ) : (
+                        ) : activeTab === "likes" ? (
                           <>
                             <HeartIcon className="h-4 w-4 text-red-500" />
                             {story.likes.toLocaleString()}
+                          </>
+                        ) : (
+                          <>
+                            <StarIcon className="h-4 w-4 text-yellow-500" />
+                            {story.averageRating}/5
+                            <span className="text-caption font-normal text-gray-400">({story.ratingCount})</span>
                           </>
                         )}
                       </div>

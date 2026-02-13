@@ -14,10 +14,13 @@ import {
   CurrencyDollarIcon,
   ListBulletIcon,
   GiftIcon,
+  ChatBubbleLeftRightIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { API_BASE_URL, authFetch } from "@/lib/api";
+import Image from "next/image";
 
 interface ChapterData {
   id: string;
@@ -51,6 +54,11 @@ export default function ReadChapterPage() {
   const [tipping, setTipping] = useState(false);
   const [tipSuccess, setTipSuccess] = useState(false);
   const [tipError, setTipError] = useState("");
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [commentText, setCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
@@ -163,6 +171,50 @@ export default function ReadChapterPage() {
       setTipError("Lỗi kết nối server");
     }
     setTipping(false);
+  };
+
+  // Fetch chapter comments
+  useEffect(() => {
+    if (!chapterId) return;
+    setCommentLoading(true);
+    fetch(`${API_BASE_URL}/api/comments?chapterId=${chapterId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setComments(data.comments || []);
+        setCommentsTotal(data.total || 0);
+      })
+      .catch(() => {})
+      .finally(() => setCommentLoading(false));
+  }, [chapterId]);
+
+  const postComment = async () => {
+    if (!session || !commentText.trim() || postingComment || !token) return;
+    setPostingComment(true);
+    try {
+      const res = await authFetch("/api/comments", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterId, content: commentText.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => [data, ...prev]);
+        setCommentsTotal((prev) => prev + 1);
+        setCommentText("");
+      }
+    } catch {}
+    setPostingComment(false);
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!token || !confirm("Xóa bình luận này?")) return;
+    try {
+      const res = await authFetch(`/api/comments/${commentId}`, token, { method: "DELETE" });
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setCommentsTotal((prev) => prev - 1);
+      }
+    } catch {}
   };
 
   if (loading) {
@@ -351,6 +403,83 @@ export default function ReadChapterPage() {
                     {tipError && (
                       <p className="mt-2 text-caption text-red-600">{tipError}</p>
                     )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Chapter comments */}
+            {!needsPurchase && (
+              <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 flex items-center gap-2 text-body-lg font-bold text-gray-900">
+                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-primary-500" />
+                  Bình luận chương ({commentsTotal})
+                </h3>
+
+                {session ? (
+                  <div className="mb-6">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Viết bình luận về chương này..."
+                      rows={3}
+                      className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={postComment}
+                        disabled={!commentText.trim() || postingComment}
+                        className="rounded-xl bg-primary-500 px-5 py-2 text-body-sm font-semibold text-white hover:bg-primary-600 disabled:opacity-50"
+                      >
+                        {postingComment ? "Đang gửi..." : "Gửi bình luận"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mb-6 text-body-sm text-gray-500">
+                    <Link href="/login" className="text-primary-600 hover:underline">Đăng nhập</Link> để bình luận.
+                  </p>
+                )}
+
+                {commentLoading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+                  </div>
+                ) : comments.length === 0 ? (
+                  <p className="py-6 text-center text-body-sm text-gray-400">Chưa có bình luận nào</p>
+                ) : (
+                  <div className="space-y-4">
+                    {comments.map((c) => (
+                      <div key={c.id} className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          {c.user?.image ? (
+                            <Image src={c.user.image} alt={c.user.name} width={36} height={36} className="rounded-full" unoptimized />
+                          ) : (
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-caption font-bold text-primary-600">
+                              {c.user?.name?.charAt(0) || "?"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-body-sm font-semibold text-gray-900">{c.user?.name}</span>
+                            <span className="text-caption text-gray-400">
+                              {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                            </span>
+                            {session && (
+                              <button
+                                onClick={() => deleteComment(c.id)}
+                                className="ml-auto text-gray-300 hover:text-red-500"
+                                title="Xóa"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-1 text-body-sm text-gray-700 whitespace-pre-line">{c.content}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
