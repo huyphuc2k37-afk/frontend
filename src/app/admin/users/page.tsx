@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
-import { MagnifyingGlassIcon, PlusCircleIcon, MinusCircleIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, PlusCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 export default function AdminUsersPage() {
   const { token } = useAdmin();
@@ -20,6 +20,10 @@ export default function AdminUsersPage() {
   const [adjustReason, setAdjustReason] = useState("");
   const [adjusting, setAdjusting] = useState(false);
   const [adjustResult, setAdjustResult] = useState<{ userId: string; msg: string; ok: boolean } | null>(null);
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     if (!token) return;
@@ -78,6 +82,69 @@ export default function AdminUsersPage() {
     setAdjusting(false);
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const nonAdminUsers = users.filter((u) => u.role !== "admin");
+    if (selectedIds.size === nonAdminUsers.length && nonAdminUsers.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(nonAdminUsers.map((u) => u.id)));
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (!token || selectedIds.size === 0 || deleting) return;
+    if (!confirm(`Bạn có chắc muốn xóa ${selectedIds.size} người dùng? Tất cả dữ liệu của họ (truyện, bình luận, xu...) sẽ bị xóa vĩnh viễn.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedIds(new Set());
+        fetchUsers();
+      } else {
+        alert(data.error || "Lỗi xóa người dùng");
+      }
+    } catch {
+      alert("Lỗi kết nối server");
+    }
+    setDeleting(false);
+  };
+
+  const deleteSingle = async (userId: string, userName: string) => {
+    if (deleting) return;
+    if (!confirm(`Xóa người dùng "${userName}"? Tất cả dữ liệu sẽ bị xóa vĩnh viễn.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ids: [userId] }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedIds((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+        fetchUsers();
+      } else {
+        alert(data.error || "Lỗi xóa người dùng");
+      }
+    } catch {
+      alert("Lỗi kết nối server");
+    }
+    setDeleting(false);
+  };
+
   const roleColors: Record<string, string> = {
     reader: "bg-gray-100 text-gray-600",
     author: "bg-blue-100 text-blue-700",
@@ -88,8 +155,8 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <h2 className="text-heading-md font-bold text-gray-900">Quản lý người dùng</h2>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filters + bulk delete */}
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
@@ -107,6 +174,16 @@ export default function AdminUsersPage() {
           <option value="author">Author</option>
           <option value="admin">Admin</option>
         </select>
+        {selectedIds.size > 0 && (
+          <button
+            onClick={deleteSelected}
+            disabled={deleting}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-red-500 px-4 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-red-600 disabled:opacity-50"
+          >
+            <TrashIcon className="h-4 w-4" />
+            {deleting ? "Đang xóa..." : `Xóa ${selectedIds.size} người dùng`}
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -120,6 +197,14 @@ export default function AdminUsersPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="w-10 px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={users.filter((u) => u.role !== "admin").length > 0 && selectedIds.size === users.filter((u) => u.role !== "admin").length}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-400"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Người dùng</th>
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Email</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Xu</th>
@@ -130,7 +215,19 @@ export default function AdminUsersPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50">
+                  <tr key={u.id} className={`hover:bg-gray-50 ${selectedIds.has(u.id) ? "bg-red-50/50" : ""}`}>
+                    <td className="px-3 py-3">
+                      {u.role !== "admin" ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(u.id)}
+                          onChange={() => toggleSelect(u.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-400"
+                        />
+                      ) : (
+                        <span className="inline-block h-4 w-4" />
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-body-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-4 py-3 text-body-sm text-gray-500">{u.email}</td>
                     <td className="px-4 py-3 text-center">
@@ -191,15 +288,27 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <select
-                        value={u.role}
-                        onChange={(e) => updateRole(u.id, e.target.value)}
-                        className="rounded-lg border border-gray-200 px-2 py-1 text-[11px] focus:outline-none"
-                      >
-                        <option value="reader">Reader</option>
-                        <option value="author">Author</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <div className="flex items-center justify-center gap-2">
+                        <select
+                          value={u.role}
+                          onChange={(e) => updateRole(u.id, e.target.value)}
+                          className="rounded-lg border border-gray-200 px-2 py-1 text-[11px] focus:outline-none"
+                        >
+                          <option value="reader">Reader</option>
+                          <option value="author">Author</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        {u.role !== "admin" && (
+                          <button
+                            onClick={() => deleteSingle(u.id, u.name)}
+                            disabled={deleting}
+                            className="rounded p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            title="Xóa người dùng"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
