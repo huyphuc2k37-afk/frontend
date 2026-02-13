@@ -429,7 +429,7 @@ export default function StoryDetailPage() {
                     href={`/write/${story.id}/chapter/${chapter.id}`}
                     className="text-body-sm font-medium text-gray-900 hover:text-primary-600"
                   >
-                    {chapter.title}
+                    {chapter.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                   </Link>
                   <div className="mt-0.5 flex items-center gap-3 text-[11px] text-gray-400">
                     <span>{chapter.wordCount?.toLocaleString() || 0} chữ</span>

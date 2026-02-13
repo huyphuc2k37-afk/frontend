@@ -457,7 +457,7 @@ export default function StoryDetailPage() {
                             {ch.number}
                           </span>
                           <span className="text-body-sm font-medium text-gray-800 truncate">
-                            {ch.title}
+                            {ch.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                           </span>
                           {ch.isLocked && (
                             <LockClosedIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />

@@ -218,7 +218,7 @@ export default function ReadChapterPage() {
                   {chapter.story.title}
                 </Link>
                 <h1 className="text-body-md font-bold text-gray-900 truncate">
-                  Chương {chapter.number}: {chapter.title}
+                  Chương {chapter.number}: {chapter.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                 </h1>
               </div>
             </div>
