@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -196,9 +195,8 @@ export default function HomePage() {
                 >
                   {tab.label}
                   {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="tab-underline"
-                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary-500"
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary-500 transition-all"
                     />
                   )}
                 </button>
@@ -210,17 +208,13 @@ export default function HomePage() {
         {/* ── Tab content grid ── */}
         <section className="py-8">
           <div className="section-container">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
+            <div
               className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
             >
               {tabStories.map((story, i) => (
                 <SimpleCard key={story.id} story={story} index={i} />
               ))}
-            </motion.div>
+            </div>
 
             <div className="mt-8 flex justify-center">
               <Link
@@ -289,13 +283,7 @@ export default function HomePage() {
 
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {hotStories.slice(0, 6).map((story, i) => (
-                <motion.div
-                  key={story.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.04 }}
-                >
+                <div key={story.id}>
                   <Link
                     href={`/story/${story.slug}`}
                     className="flex items-center gap-3 rounded-xl border border-white/50 bg-white/80 p-3 transition-all hover:bg-white hover:shadow-sm"
@@ -343,7 +331,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
