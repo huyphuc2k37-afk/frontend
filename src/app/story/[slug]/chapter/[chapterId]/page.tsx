@@ -13,6 +13,7 @@ import {
   LockClosedIcon,
   CurrencyDollarIcon,
   ListBulletIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -46,6 +47,10 @@ export default function ReadChapterPage() {
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState("");
   const [userBalance, setUserBalance] = useState(0);
+  const [tipAmount, setTipAmount] = useState(100);
+  const [tipping, setTipping] = useState(false);
+  const [tipSuccess, setTipSuccess] = useState(false);
+  const [tipError, setTipError] = useState("");
   const token = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
@@ -132,6 +137,32 @@ export default function ReadChapterPage() {
       setPurchaseError("Lỗi kết nối server");
       setPurchasing(false);
     }
+  };
+
+  const handleTip = async () => {
+    if (!session || !chapter || tipping || !token) return;
+    setTipping(true);
+    setTipError("");
+    setTipSuccess(false);
+    try {
+      const res = await authFetch("/api/wallet/tip", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterId: chapter.id, coins: tipAmount }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTipError(data.error || "Không thể tặng xu");
+        setTipping(false);
+        return;
+      }
+      setUserBalance(data.newBalance);
+      setTipSuccess(true);
+      setTimeout(() => setTipSuccess(false), 4000);
+    } catch {
+      setTipError("Lỗi kết nối server");
+    }
+    setTipping(false);
   };
 
   if (loading) {
@@ -268,6 +299,58 @@ export default function ReadChapterPage() {
                     <p className="whitespace-pre-line text-body-sm text-primary-900/80">
                       {chapter.authorNote}
                     </p>
+                  </div>
+                )}
+
+                {/* Tip / Gift section */}
+                {session && chapter.story.authorId !== (session.user as any)?.id && (
+                  <div className="mt-8 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <GiftIcon className="h-5 w-5 text-amber-600" />
+                      <p className="text-body-sm font-semibold text-amber-800">Ủng hộ tác giả</p>
+                    </div>
+                    <p className="text-caption text-amber-700 mb-3">
+                      Tặng xu để ủng hộ tác giả tiếp tục sáng tác!
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {[100, 200, 500, 1000].map((amt) => (
+                        <button
+                          key={amt}
+                          onClick={() => setTipAmount(amt)}
+                          className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-colors ${
+                            tipAmount === amt
+                              ? "bg-amber-500 text-white"
+                              : "bg-white border border-amber-200 text-amber-700 hover:bg-amber-100"
+                          }`}
+                        >
+                          {amt} xu
+                        </button>
+                      ))}
+                      <input
+                        type="number"
+                        min={100}
+                        max={50000}
+                        value={tipAmount}
+                        onChange={(e) => setTipAmount(Math.max(100, Number(e.target.value)))}
+                        className="w-24 rounded-lg border border-amber-200 px-2 py-1.5 text-caption text-center focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                      />
+                      <button
+                        onClick={handleTip}
+                        disabled={tipping}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-1.5 text-caption font-semibold text-white shadow hover:bg-amber-600 disabled:opacity-50"
+                      >
+                        <GiftIcon className="h-4 w-4" />
+                        {tipping ? "Đang tặng..." : "Tặng xu"}
+                      </button>
+                    </div>
+                    {tipSuccess && (
+                      <p className="mt-2 text-caption font-medium text-emerald-600">
+                        Tặng xu thành công! Cảm ơn bạn đã ủng hộ tác giả ❤️
+                      </p>
+                    )}
+                    {tipError && (
+                      <p className="mt-2 text-caption text-red-600">{tipError}</p>
+                    )}
                   </div>
                 )}
               </div>

@@ -10,6 +10,7 @@ import {
   LockOpenIcon,
   DocumentTextIcon,
   TrashIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
@@ -207,43 +208,59 @@ export default function EditChapterPage() {
       {/* Lock settings */}
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Cài đặt chương</h3>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isLocked ? (
-              <LockClosedIcon className="h-5 w-5 text-amber-500" />
-            ) : (
-              <LockOpenIcon className="h-5 w-5 text-gray-400" />
-            )}
+        {chapter.number <= 10 ? (
+          <div className="flex items-start gap-3 rounded-xl bg-blue-50 px-4 py-3">
+            <InformationCircleIcon className="h-5 w-5 flex-shrink-0 text-blue-500 mt-0.5" />
             <div>
-              <p className="text-body-sm font-medium text-gray-800">Chương trả phí</p>
-              <p className="text-caption text-gray-400">Độc giả cần trả xu để đọc chương này</p>
+              <p className="text-body-sm font-medium text-blue-800">Chương miễn phí</p>
+              <p className="text-caption text-blue-600">
+                Đây là chương {chapter.number}. 10 chương đầu tiên bắt buộc miễn phí để thu hút độc giả.
+              </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsLocked(!isLocked)}
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              isLocked ? "bg-primary-500" : "bg-gray-200"
-            }`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                isLocked ? "translate-x-5" : ""
-              }`}
-            />
-          </button>
-        </div>
-        {isLocked && (
-          <div className="mt-4 border-t border-gray-100 pt-4">
-            <label className="mb-1 block text-caption font-medium text-gray-600">Giá (xu)</label>
-            <input
-              type="number"
-              min="1"
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              className="w-32 rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            />
-          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isLocked ? (
+                  <LockClosedIcon className="h-5 w-5 text-amber-500" />
+                ) : (
+                  <LockOpenIcon className="h-5 w-5 text-gray-400" />
+                )}
+                <div>
+                  <p className="text-body-sm font-medium text-gray-800">Chương trả phí</p>
+                  <p className="text-caption text-gray-400">Độc giả cần trả xu để đọc chương này</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLocked(!isLocked)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  isLocked ? "bg-primary-500" : "bg-gray-200"
+                }`}
+              >
+                <span
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    isLocked ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
+            </div>
+            {isLocked && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <label className="mb-1 block text-caption font-medium text-gray-600">Giá (xu) — từ 100 đến 5,000</label>
+                <input
+                  type="number"
+                  min={100}
+                  max={5000}
+                  step={50}
+                  value={price}
+                  onChange={(e) => setPrice(Math.max(100, Math.min(5000, Number(e.target.value))))}
+                  className="w-32 rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
