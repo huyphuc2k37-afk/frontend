@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import AboutPage from "./AboutPage";
 
 export const metadata: Metadata = {
-  title: "Gi?i thi?u � VStory",
+  title: "Giới thiệu – VStory",
   description:
-    "VStory l� n?n t?ng d?c v� vi?t truy?n ch? d�nh cho ngu?i Vi?t. �u?c s�ng l?p b?i Nguy?n Huy Ph�c.",
+    "VStory là nền tảng đọc và viết truyện chữ dành cho người Việt. Được sáng lập bởi Nguyễn Huy Phúc.",
 };
 
 export default function Page() {

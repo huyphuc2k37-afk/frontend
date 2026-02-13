@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import ExplorePage from "./ExplorePage";
 
 export const metadata: Metadata = {
-  title: "Kh�m ph� truy?n � VStory",
+  title: "Khám phá truyện – VStory",
   description:
-    "T�m v� d?c truy?n ch? da th? lo?i. L?c theo th? lo?i, tr?ng th�i, t�m ki?m t�c gi? v� truy?n y�u th�ch.",
+    "Tìm và đọc truyện chữ đa thể loại. Lọc theo thể loại, trạng thái, tìm kiếm tác giả và truyện yêu thích.",
 };
 
 export default function Page() {
