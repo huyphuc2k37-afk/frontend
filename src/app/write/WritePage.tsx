@@ -16,6 +16,8 @@ import {
   ChartBarIcon,
   BoltIcon,
   FireIcon,
+  CurrencyDollarIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
@@ -33,19 +35,36 @@ interface UserStory {
   _count: { chapters: number; bookmarks: number; comments: number };
 }
 
+interface DashboardData {
+  balance: number;
+  totalViews: number;
+  totalLikes: number;
+  todayEarnings: number;
+  monthEarnings: number;
+  earningsChart: { day: string; value: number }[];
+}
+
 export default function WritePage() {
   const { profile, token } = useStudio();
   const [stories, setStories] = useState<UserStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/api/manage/stories`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.stories) setStories(data.stories);
+
+    // Fetch stories + dashboard in parallel
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/manage/stories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+      fetch(`${API_BASE_URL}/api/manage/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+    ])
+      .then(([storiesData, dashData]) => {
+        if (storiesData?.stories) setStories(storiesData.stories);
+        if (dashData?.balance !== undefined) setDashboard(dashData);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -59,8 +78,8 @@ export default function WritePage() {
     );
   }
 
-  const totalViews = stories.reduce((s, st) => s + st.views, 0);
-  const totalLikes = stories.reduce((s, st) => s + st.likes, 0);
+  const totalViews = dashboard?.totalViews || stories.reduce((s, st) => s + st.views, 0);
+  const totalLikes = dashboard?.totalLikes || stories.reduce((s, st) => s + st.likes, 0);
   const totalChapters = stories.reduce((s, st) => s + (st._count?.chapters || 0), 0);
 
   const greeting = () => {
@@ -70,16 +89,11 @@ export default function WritePage() {
     return "Chào buổi tối";
   };
 
-  // Simulated 14-day view data for chart
-  const viewChartData = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (13 - i));
-    return {
-      day: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-      value: Math.floor(Math.random() * (totalViews / 7 + 10)) + 1,
-    };
-  });
-  const maxView = Math.max(...viewChartData.map((d) => d.value), 1);
+  const formatXu = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
+
+  // Real earnings chart data from API
+  const earningsChart = dashboard?.earningsChart || [];
+  const maxChartValue = Math.max(...earningsChart.map((d) => d.value), 1);
 
   const recentStories = [...stories]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -129,9 +143,9 @@ export default function WritePage() {
       >
         {[
           { icon: BookOpenIcon, label: "Tác phẩm", value: stories.length, color: "text-primary-500", bg: "bg-primary-50" },
-          { icon: DocumentTextIcon, label: "Tổng chương", value: totalChapters, color: "text-blue-500", bg: "bg-blue-50" },
+          { icon: CurrencyDollarIcon, label: "Số dư xu", value: formatXu(dashboard?.balance || 0), color: "text-amber-500", bg: "bg-amber-50" },
           { icon: EyeIcon, label: "Lượt đọc", value: totalViews.toLocaleString(), color: "text-emerald-500", bg: "bg-emerald-50" },
-          { icon: HeartIcon, label: "Lượt thích", value: totalLikes.toLocaleString(), color: "text-rose-500", bg: "bg-rose-50" },
+          { icon: GiftIcon, label: "Thu nhập tháng này", value: formatXu(dashboard?.monthEarnings || 0) + " xu", color: "text-rose-500", bg: "bg-rose-50" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -167,23 +181,27 @@ export default function WritePage() {
             <div className="flex items-center gap-2">
               <ChartBarIcon className="h-5 w-5 text-primary-500" />
               <h3 className="text-body-lg font-bold text-gray-900">
-                Lượt đọc 14 ngày gần nhất
+                Thu nhập 14 ngày gần nhất
               </h3>
             </div>
             <span className="flex items-center gap-1 text-caption font-medium text-emerald-500">
               <ArrowTrendingUpIcon className="h-4 w-4" />
-              {totalViews > 0 ? "Đang tăng" : "Chưa có dữ liệu"}
+              {dashboard?.todayEarnings ? `Hôm nay: ${formatXu(dashboard.todayEarnings)} xu` : "Chưa có dữ liệu"}
             </span>
           </div>
           <div className="mt-6 flex items-end gap-1.5" style={{ height: 160 }}>
-            {viewChartData.map((d, i) => (
+            {earningsChart.map((d, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <motion.div
                   initial={{ height: 0 }}
-                  animate={{ height: `${(d.value / maxView) * 100}%` }}
+                  animate={{ height: `${Math.max((d.value / maxChartValue) * 100, 2)}%` }}
                   transition={{ delay: 0.3 + i * 0.03, duration: 0.5 }}
-                  className="w-full min-h-[4px] rounded-t-md bg-gradient-to-t from-primary-500 to-primary-400 transition-colors hover:from-primary-600 hover:to-primary-500"
-                  title={`${d.day}: ${d.value} lượt đọc`}
+                  className={`w-full min-h-[4px] rounded-t-md transition-colors hover:from-primary-600 hover:to-primary-500 ${
+                    d.value > 0
+                      ? "bg-gradient-to-t from-primary-500 to-primary-400"
+                      : "bg-gray-200"
+                  }`}
+                  title={`${d.day}: ${formatXu(d.value)} xu`}
                 />
                 <span className="hidden text-[9px] text-gray-400 sm:block">
                   {d.day}

@@ -12,6 +12,8 @@ import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  CurrencyDollarIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
@@ -29,15 +31,21 @@ export default function StatsPage() {
   const { token } = useStudio();
   const [stories, setStories] = useState<UserStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revenueData, setRevenueData] = useState<any>(null);
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/api/manage/stories`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.stories) setStories(data.stories);
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/manage/stories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
+      fetch(`${API_BASE_URL}/api/revenue`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()).catch(() => null),
+    ])
+      .then(([storiesData, revenue]) => {
+        if (storiesData?.stories) setStories(storiesData.stories);
+        if (revenue) setRevenueData(revenue);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -57,19 +65,12 @@ export default function StatsPage() {
   const totalBookmarks = stories.reduce((s, st) => s + (st._count?.bookmarks || 0), 0);
   const totalComments = stories.reduce((s, st) => s + (st._count?.comments || 0), 0);
 
+  const formatXu = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
   const maxViews = Math.max(...stories.map((s) => s.views), 1);
 
-  // Real chart data will come from API — show zeroes for now
-  const days30 = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (29 - i));
-    return {
-      day: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-      views: 0,
-      likes: 0,
-    };
-  });
-  const maxDayViews = 1;
+  // Real chart data from revenue API
+  const dailyChart = revenueData?.dailyChart || [];
+  const maxDayViews = Math.max(...dailyChart.map((d: any) => d.total || 0), 1);
 
   return (
     <div className="space-y-6">
@@ -89,7 +90,7 @@ export default function StatsPage() {
           { icon: DocumentTextIcon, label: "Chương", value: totalChapters, color: "text-blue-500", bg: "bg-blue-50" },
           { icon: EyeIcon, label: "Lượt đọc", value: totalViews, color: "text-emerald-500", bg: "bg-emerald-50" },
           { icon: HeartIcon, label: "Lượt thích", value: totalLikes, color: "text-rose-500", bg: "bg-rose-50" },
-          { icon: BookmarkIcon, label: "Lưu truyện", value: totalBookmarks, color: "text-amber-500", bg: "bg-amber-50" },
+          { icon: CurrencyDollarIcon, label: "Tổng doanh thu", value: `${formatXu(revenueData?.totalRevenue || 0)} xu`, color: "text-amber-500", bg: "bg-amber-50" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -124,26 +125,28 @@ export default function StatsPage() {
           <div className="flex items-center gap-2">
             <ChartBarIcon className="h-5 w-5 text-primary-500" />
             <h3 className="text-body-lg font-bold text-gray-900">
-              Lượt đọc 30 ngày gần nhất
+              Doanh thu 30 ngày gần nhất
             </h3>
           </div>
           <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-caption font-medium text-emerald-600">
             <ArrowTrendingUpIcon className="h-3.5 w-3.5" />
-            Tổng: {days30.reduce((s, d) => s + d.views, 0).toLocaleString()}
+            Tổng: {formatXu(dailyChart.reduce((s: number, d: any) => s + (d.total || 0), 0))} xu
           </span>
         </div>
         <div className="mt-6 flex items-end gap-1" style={{ height: 200 }}>
-          {days30.map((d, i) => (
+          {dailyChart.map((d: any, i: number) => (
             <div key={i} className="group flex flex-1 flex-col items-center gap-1 relative">
               {/* Tooltip */}
-              <div className="pointer-events-none absolute -top-10 hidden rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                {d.day}: {d.views}
+              <div className="pointer-events-none absolute -top-10 hidden rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block whitespace-nowrap z-10">
+                {d.day}: {formatXu(d.total || 0)} xu
               </div>
               <motion.div
                 initial={{ height: 0 }}
-                animate={{ height: `${(d.views / maxDayViews) * 100}%` }}
+                animate={{ height: `${Math.max(((d.total || 0) / maxDayViews) * 100, 2)}%` }}
                 transition={{ delay: 0.3 + i * 0.02, duration: 0.4 }}
-                className="w-full min-h-[3px] rounded-t-sm bg-gradient-to-t from-primary-500 to-primary-400 transition-all hover:from-primary-600 hover:to-primary-500"
+                className={`w-full min-h-[3px] rounded-t-sm transition-all hover:from-primary-600 hover:to-primary-500 ${
+                  (d.total || 0) > 0 ? "bg-gradient-to-t from-primary-500 to-primary-400" : "bg-gray-200"
+                }`}
               />
               {i % 5 === 0 && (
                 <span className="hidden text-[8px] text-gray-400 sm:block">{d.day}</span>
