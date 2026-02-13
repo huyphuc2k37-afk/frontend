@@ -40,6 +40,7 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [coinBalance, setCoinBalance] = useState<number | null>(null);
   const { data: session } = useSession();
   const { profile } = useUserProfile();
   const token = (session as any)?.accessToken as string | undefined;
@@ -72,6 +73,21 @@ export default function Header() {
   useEffect(() => {
     if (searchOpen && searchRef.current) searchRef.current.focus();
   }, [searchOpen]);
+
+  // Fetch coin balance
+  useEffect(() => {
+    if (!token) { setCoinBalance(null); return; }
+    const fetchBalance = async () => {
+      try {
+        const res = await authFetch("/api/wallet", token);
+        const data = await res.json();
+        if (res.ok) setCoinBalance(data.coinBalance ?? data.balance ?? 0);
+      } catch { /* ignore */ }
+    };
+    fetchBalance();
+    const interval = setInterval(fetchBalance, 60000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -267,14 +283,16 @@ export default function Header() {
                     </AnimatePresence>
                   </div>
 
-                  {/* CTA buttons */}
+                  {/* Coin balance + CTA buttons */}
                   {!isAdmin && (
                     <Link
                       href="/wallet"
                       className="hidden items-center gap-1.5 rounded-full bg-amber-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 hover:shadow-md sm:inline-flex"
                     >
                       <CurrencyDollarIcon className="h-4 w-4" />
-                      Nạp xu
+                      {coinBalance !== null
+                        ? `${coinBalance.toLocaleString("vi-VN")} xu`
+                        : "Nạp xu"}
                     </Link>
                   )}
                   {isAdmin ? (
@@ -338,6 +356,12 @@ export default function Header() {
                             <p className="truncate text-caption text-gray-500">
                               {session.user.email}
                             </p>
+                            {coinBalance !== null && !isAdmin && (
+                              <div className="mt-1.5 flex items-center gap-1 text-caption font-medium text-amber-600">
+                                <CurrencyDollarIcon className="h-3.5 w-3.5" />
+                                {coinBalance.toLocaleString("vi-VN")} xu
+                              </div>
+                            )}
                           </div>
                           <div className="py-1">
                             <Link
@@ -516,7 +540,7 @@ export default function Header() {
                       ) : (
                         <UserCircleIcon className="h-8 w-8 text-gray-400" />
                       )}
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="truncate text-body-sm font-semibold text-gray-900">
                             {session.user.name}
@@ -530,6 +554,20 @@ export default function Header() {
                         <p className="truncate text-caption text-gray-500">{session.user.email}</p>
                       </div>
                     </div>
+                    {coinBalance !== null && !isAdmin && (
+                      <Link
+                        href="/wallet"
+                        className="mx-3 mb-1 flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2"
+                      >
+                        <span className="flex items-center gap-1.5 text-body-sm font-medium text-amber-700">
+                          <CurrencyDollarIcon className="h-4 w-4" />
+                          Số dư
+                        </span>
+                        <span className="text-body-sm font-bold text-amber-600">
+                          {coinBalance.toLocaleString("vi-VN")} xu
+                        </span>
+                      </Link>
+                    )}
                     <Link href="/profile" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                       Trang cá nhân
                     </Link>
