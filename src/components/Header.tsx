@@ -233,15 +233,27 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 6, scale: 0.97 }}
                           transition={{ duration: 0.12 }}
-                          className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
+                          className="fixed inset-x-3 top-16 z-[60] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:z-auto"
                         >
-                          <div className="border-b border-gray-100 px-4 py-3">
-                            <p className="text-body-sm font-semibold text-gray-900">Thông báo</p>
-                            <p className="mt-0.5 text-caption text-gray-500">
-                              {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Không có thông báo mới"}
-                            </p>
+                          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                            <div>
+                              <p className="text-body-sm font-semibold text-gray-900">Thông báo</p>
+                              <p className="mt-0.5 text-caption text-gray-500">
+                                {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Không có thông báo mới"}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setNotificationsOpen(false)}
+                              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:hidden"
+                              aria-label="Đóng"
+                            >
+                              <XMarkIcon className="h-5 w-5" />
+                            </button>
                           </div>
-                          <div className="max-h-80 overflow-auto py-1">
+                          <div
+                            className="overflow-y-auto overscroll-contain py-1 scrollbar-thin"
+                            style={{ maxHeight: "min(55vh, 320px)" }}
+                          >
                             {notificationsLoading ? (
                               <div className="px-4 py-3 text-body-sm text-gray-500">Đang tải...</div>
                             ) : notifications.length === 0 ? (
