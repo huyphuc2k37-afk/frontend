@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpenIcon,
   BookmarkIcon,
@@ -130,12 +131,16 @@ export default function BookshelfPage() {
                   >
                     <Link href={`/story/${bm.story.slug}`} className="flex gap-4 p-4">
                       <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                        <img
+                        <Image
                           src={`${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
                           alt={bm.story.title}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          fill
+                          sizes="88px"
+                          className="object-cover"
+                          unoptimized
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
                         />
                       </div>
                       <div className="flex-1 min-w-0">

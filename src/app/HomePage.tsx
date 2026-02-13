@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -36,16 +37,19 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 /* ── Story Card (simple — cover + title + author) ── */
 function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
   const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const [coverSrc, setCoverSrc] = useState(coverUrl);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
       <div>
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
-          <img
-            src={coverUrl}
+          <Image
+            src={coverSrc}
             alt={story.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_COVER; }}
+            fill
+            sizes="(max-width: 640px) 50vw, 180px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
+            onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
           {/* Status badge */}
           {story.status === "completed" && (
@@ -112,6 +116,23 @@ function StoryCarousel({ title, stories, icon: Icon }: { title: string; stories:
         </div>
       </div>
     </section>
+  );
+}
+
+function MiniCover({ src, alt }: { src: string; alt: string }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  return (
+    <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+      <Image
+        src={imgSrc}
+        alt={alt}
+        fill
+        sizes="40px"
+        className="object-cover"
+        unoptimized
+        onError={() => setImgSrc(PLACEHOLDER_COVER)}
+      />
+    </div>
   );
 }
 
@@ -304,15 +325,10 @@ export default function HomePage() {
                     </span>
 
                     {/* Cover mini */}
-                    <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
-                      <img
-                        src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </div>
+                    <MiniCover
+                      src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                      alt={story.title}
+                    />
 
                     {/* Info */}
                     <div className="min-w-0 flex-1">

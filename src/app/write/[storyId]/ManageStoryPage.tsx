@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -46,12 +46,7 @@ export default function StoriesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!token) return;
-    fetchStories();
-  }, [token]);
-
-  const fetchStories = () => {
+  const fetchStories = useCallback(() => {
     fetch(`${API_BASE_URL}/api/manage/stories`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -61,7 +56,12 @@ export default function StoriesPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchStories();
+  }, [token, fetchStories]);
 
   const handleDelete = async (id: string) => {
     setDeleting(true);

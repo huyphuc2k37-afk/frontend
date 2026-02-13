@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { Story } from "@/types";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -15,6 +17,7 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 export default function StoryCard({ story, variant = "default" }: StoryCardProps) {
   const isFeatured = variant === "featured";
   const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const [coverSrc, setCoverSrc] = useState(coverUrl);
 
   return (
     <Link href={`/story/${story.slug}`} className="block">
@@ -25,12 +28,14 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
       >
         {/* Cover */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100">
-          <img
-            src={coverUrl}
+          <Image
+            src={coverSrc}
             alt={`Bia truyện ${story.title}`}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_COVER; }}
+            fill
+            sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 180px"}
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
+            onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
 
           {/* Gradient overlay at bottom */}

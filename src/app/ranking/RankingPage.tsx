@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   TrophyIcon,
   EyeIcon,
@@ -117,12 +118,16 @@ export default function RankingPage() {
 
                     {/* Cover */}
                     <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                      <img
+                      <Image
                         src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
                         alt={story.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                        unoptimized
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
                       />
                     </div>
 

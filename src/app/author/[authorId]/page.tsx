@@ -28,6 +28,25 @@ export default function AuthorProfilePage() {
   const [followLoading, setFollowLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
 
+  const StoryCoverThumb = ({ storyId, title }: { storyId: string; title: string }) => {
+    const [visible, setVisible] = useState(true);
+    return (
+      <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+        {visible ? (
+          <Image
+            src={`${API_BASE_URL}/api/stories/${storyId}/cover`}
+            alt={title}
+            width={64}
+            height={80}
+            className="h-full w-full object-cover"
+            unoptimized
+            onError={() => setVisible(false)}
+          />
+        ) : null}
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (!authorId) return;
     setLoading(true);
@@ -207,15 +226,7 @@ export default function AuthorProfilePage() {
                           href={`/story/${s.slug}`}
                           className="flex items-center gap-4 rounded-xl border border-gray-100 p-4 hover:bg-gray-50"
                         >
-                          <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                            <img
-                              src={`${API_BASE_URL}/api/stories/${s.id}/cover`}
-                              alt=""
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          </div>
+                          <StoryCoverThumb storyId={s.id} title={s.title} />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-body-md font-semibold text-gray-900">{s.title}</p>
                             <p className="mt-1 text-caption text-gray-500">{s.genre} · {s.status === "completed" ? "Hoàn thành" : s.status === "paused" ? "Tạm ngưng" : "Đang ra"}</p>

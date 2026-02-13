@@ -71,6 +71,7 @@ export default function StoryDetailPage() {
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
+  const [showCover, setShowCover] = useState(true);
   const token = (session as any)?.accessToken as string | undefined;
 
   // Redirect to login if not authenticated
@@ -82,6 +83,7 @@ export default function StoryDetailPage() {
 
   useEffect(() => {
     if (!slug) return;
+    setShowCover(true);
     fetch(`${API_BASE_URL}/api/stories/${slug}`)
       .then((r) => {
         if (!r.ok) throw new Error("Not found");
@@ -258,12 +260,17 @@ export default function StoryDetailPage() {
               {/* Cover */}
               <div className="flex-shrink-0">
                 <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56 bg-gray-700">
-                  <img
-                    src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
-                    alt={story.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  {showCover && (
+                    <Image
+                      src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                      alt={story.title}
+                      fill
+                      sizes="224px"
+                      className="object-cover"
+                      unoptimized
+                      onError={() => setShowCover(false)}
+                    />
+                  )}
                 </div>
               </div>
 

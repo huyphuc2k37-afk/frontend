@@ -68,7 +68,7 @@ export default function ProfilePage() {
           setLoading(false);
         });
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   const readFileAsDataURL = (file: File) =>
     new Promise<string>((resolve, reject) => {
