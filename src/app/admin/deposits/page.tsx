@@ -103,6 +103,11 @@ export default function AdminDepositsPage() {
                       <span>Xu: <strong>{formatVND(d.coins)}</strong></span>
                       <span>Qua: <strong>{d.method === "zalopay" ? "ZaloPay" : "Agribank"}</strong></span>
                     </div>
+                    {d.transferCode && (
+                      <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-orange-50 px-2 py-1 text-caption font-bold text-orange-700 border border-orange-200">
+                        Mã GD: {d.transferCode}
+                      </p>
+                    )}
                     {d.transferNote && (
                       <p className="mt-1 text-caption text-gray-400">Nội dung CK: {d.transferNote}</p>
                     )}

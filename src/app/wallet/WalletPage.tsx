@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -87,6 +87,16 @@ export default function WalletPage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
   const [deposits, setDeposits] = useState<any[]>([]);
+  const [codeKey, setCodeKey] = useState(0);
+
+  // Generate unique transfer code (VS + 6 alphanumeric)
+  const transferCode = useMemo(() => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "VS";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeKey]);
 
   const token = (session as any)?.accessToken as string | undefined;
 
@@ -124,13 +134,15 @@ export default function WalletPage() {
           amount: pack.price,
           coins: pack.coins + pack.bonus,
           method: selectedMethod,
-          transferNote: `Nap ${pack.label} - ${session?.user?.email}`,
+          transferCode,
+          transferNote: `${transferCode} - Nap ${pack.label} - ${session?.user?.email}`,
         }),
       });
       if (res.ok) {
         setShowSuccess(true);
         setSelectedPack(null);
         setSelectedMethod(null);
+        setCodeKey((k) => k + 1); // regenerate code for next deposit
         fetchWallet();
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -367,7 +379,39 @@ export default function WalletPage() {
                             );
                           })}
 
-                          {copiedKey ? (
+                          {/* Transfer content - unique code */}
+                          <div className="mt-3 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-3">
+                            <p className="text-caption font-semibold text-orange-700">
+                              ⚠ Nội dung chuyển khoản (bắt buộc)
+                            </p>
+                            <div className="mt-1.5 flex items-center justify-between gap-2">
+                              <span className="text-body-md font-bold tracking-wider text-orange-900">
+                                {transferCode}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy("transferCode", transferCode)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-caption font-semibold text-white transition-colors hover:bg-orange-600"
+                              >
+                                {copiedKey === "transferCode" ? (
+                                  <>
+                                    <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                                    Đã copy
+                                  </>
+                                ) : (
+                                  <>
+                                    <ClipboardDocumentIcon className="h-4 w-4" />
+                                    Copy mã
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <p className="mt-1.5 text-[11px] text-orange-600">
+                              Vui lòng ghi đúng nội dung này khi chuyển khoản để admin xác nhận nhanh hơn.
+                            </p>
+                          </div>
+
+                          {copiedKey && copiedKey !== "transferCode" ? (
                             <p className="pt-1 text-caption text-emerald-600">Đã copy</p>
                           ) : null}
                         </div>
