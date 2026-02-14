@@ -340,6 +340,11 @@ export default function StoryDetailPage() {
                   <span className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200">
                     {story.genre}
                   </span>
+                  {story.isAdult && (
+                    <span className="rounded-full bg-red-600/80 px-3 py-1 text-caption font-bold text-white">
+                      18+
+                    </span>
+                  )}
                   <span
                     className={`rounded-full px-3 py-1 text-caption font-medium ${
                       story.status === "completed"

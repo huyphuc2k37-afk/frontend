@@ -17,9 +17,10 @@ import {
   ArrowLeftIcon,
   SparklesIcon,
   TrashIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { API_BASE_URL } from "@/lib/api";
-import { genreGroups } from "@/data/genres";
+import { genreGroups, matureGenres } from "@/data/genres";
 
 /* ────── Constants ────── */
 
@@ -98,6 +99,15 @@ export default function CreateStoryPage() {
   const [postSchedule, setPostSchedule] = useState<string[]>([]);
   const [isAdult, setIsAdult] = useState(false);
   const [storyStatus, setStoryStatus] = useState("ongoing");
+
+  /* Auto-set isAdult when a mature genre is selected */
+  const isMatureGenre = matureGenres.some(
+    (m) => genre.toLowerCase() === m.toLowerCase()
+  );
+
+  useEffect(() => {
+    if (isMatureGenre && !isAdult) setIsAdult(true);
+  }, [genre]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login?callbackUrl=/write/new");
@@ -183,7 +193,7 @@ export default function CreateStoryPage() {
       plotOutline: plotPoints.length ? JSON.stringify(plotPoints) : undefined,
       targetAudience: targetAudience || undefined,
       postSchedule: postSchedule.length ? postSchedule.join(",") : undefined,
-      isAdult,
+      isAdult: isAdult || isMatureGenre,
       status: storyStatus,
     };
 
@@ -377,6 +387,22 @@ export default function CreateStoryPage() {
                         Thể loại chính <span className="text-red-500">*</span>
                       </label>
                       {errors.genre && <p className="mb-2 text-caption text-red-500">{errors.genre}</p>}
+
+                      {/* 18+ warning banner */}
+                      {isMatureGenre && (
+                        <div className="mb-4 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 p-4">
+                          <ExclamationTriangleIcon className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
+                          <div>
+                            <p className="text-body-sm font-semibold text-red-700">
+                              ⚠️ Thể loại này yêu cầu gắn nhãn 18+
+                            </p>
+                            <p className="mt-1 text-caption text-red-600">
+                              Truyện của bạn sẽ tự động được gắn nhãn nội dung người lớn. Người đọc dưới 18 tuổi sẽ cần xác nhận độ tuổi trước khi đọc. Bạn có trách nhiệm đảm bảo nội dung phù hợp với quy định của nền tảng.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                         {genreGroups.map((group) => (
                           <div key={group.label}>
@@ -388,8 +414,12 @@ export default function CreateStoryPage() {
                                   onClick={() => setGenre(g)}
                                   className={`rounded-full px-4 py-2 text-body-sm font-medium transition-all ${
                                     genre === g
-                                      ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
-                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                      ? matureGenres.includes(g)
+                                        ? "bg-red-600 text-white shadow-md ring-2 ring-red-300"
+                                        : "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
+                                      : matureGenres.includes(g)
+                                        ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                   }`}
                                 >
                                   {g}
@@ -634,6 +664,11 @@ export default function CreateStoryPage() {
                           <p className="mt-1 text-caption text-gray-400">
                             Chọn &quot;Có&quot; nếu truyện có bất kỳ tình tiết 18+ liên quan đến tình dục, bạo lực,...
                           </p>
+                          {isMatureGenre && (
+                            <p className="mt-2 text-caption font-medium text-red-500">
+                              ⚠️ Đã tự động bật vì thể loại &quot;{genre}&quot; yêu cầu gắn nhãn 18+
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
