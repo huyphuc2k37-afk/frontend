@@ -369,16 +369,16 @@ export default function HomePage() {
           <div className="section-container">
             <div className="rounded-2xl bg-gradient-to-r from-amber-600 via-orange-500 to-rose-500 px-6 py-10 text-center text-white sm:px-12">
               <SparklesIcon className="mx-auto h-8 w-8 text-white/80" />
-              <h2 className="mt-3 text-heading-lg font-bold">Bạn có câu chuyện muốn kể?</h2>
+              <h2 className="mt-3 text-heading-lg font-bold">Khám phá truyện hay mỗi ngày</h2>
               <p className="mx-auto mt-2 max-w-md text-body-md text-white/80">
-                Trở thành tác giả trên VStory — hoàn toàn miễn phí. Viết, chia sẻ và xây dựng cộng đồng đọc giả.
+                Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.
               </p>
               <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Link
-                  href="/author/register"
+                  href="/explore"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-body-sm font-semibold text-orange-700 shadow-md transition-all hover:shadow-lg"
                 >
-                  Bắt đầu viết ngay
+                  Khám phá ngay
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
                 <Link

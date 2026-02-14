@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Giới thiệu – VStory",
   description:
     "VStory là nền tảng đọc và viết truyện chữ dành cho người Việt. Được sáng lập bởi Nguyễn Huy Phúc.",
+  alternates: {
+    canonical: "https://vstory.vn/about",
+  },
 };
 
 export default function Page() {

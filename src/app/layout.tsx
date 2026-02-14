@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vstory.vn";
+const SITE_URL = "https://vstory.vn";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | VStory",
   },
   description:
-    "Đọc truyện chữ online đa thể loại: tiên hiệp, kiếm hiệp, ngôn tình, đô thị… Ủng hộ tác giả Việt. Nền tảng truyện dành cho người Việt.",
+    "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
   keywords: [
     "đọc truyện",
     "truyện chữ",
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     siteName: "VStory",
     title: "VStory – Đọc truyện online miễn phí",
     description:
-      "Đọc truyện chữ online đa thể loại. Ủng hộ tác giả Việt trên nền tảng VStory.",
+      "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
     title: "VStory – Đọc truyện online miễn phí",
     description:
-      "Đọc truyện chữ online đa thể loại. Ủng hộ tác giả Việt trên nền tảng VStory.",
+      "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
   },
   robots: {
     index: true,

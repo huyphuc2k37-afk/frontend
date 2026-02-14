@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { API_BASE_URL } from "@/lib/api";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vstory.vn";
+const SITE_URL = "https://vstory.vn";
 
 type BackendSitemapResponse = {
   stories: { slug: string; updatedAt: string }[];

@@ -5,6 +5,13 @@ import LoginPage from "./LoginPage";
 export const metadata: Metadata = {
   title: "Đăng nhập – VStory",
   description: "Đăng nhập vào VStory để đọc truyện, theo dõi tác giả yêu thích và quản lý tủ truyện.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+  alternates: {
+    canonical: "https://vstory.vn/login",
+  },
 };
 
 export default function Page() {
