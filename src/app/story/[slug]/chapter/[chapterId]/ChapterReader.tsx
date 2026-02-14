@@ -80,46 +80,34 @@ export default function ReadChapterPage() {
     setNeedsPurchase(false);
     setPurchaseError("");
 
-    fetch(`${API_BASE_URL}/api/chapters/${chapterId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Not found");
-        return r.json();
-      })
-      .then((data: ChapterData) => {
-        if (data.isLocked) {
-          // Check if user has purchased this chapter
-          if (session && token) {
-            authFetch(`/api/wallet`, token)
-              .then((r) => r.json())
-              .then((wallet) => {
-                setUserBalance(wallet.coinBalance || wallet.balance || 0);
-                // Check purchase status
-                const purchasedIds: string[] = wallet.purchasedChapterIds || [];
-                if (purchasedIds.includes(data.id) || data.story.authorId === wallet.userId) {
-                  // Already purchased or is author
-                  setChapter(data);
-                  setNeedsPurchase(false);
-                } else {
-                  setChapter(data);
-                  setNeedsPurchase(true);
-                }
-                setLoading(false);
-              })
-              .catch(() => {
-                setChapter(data);
-                setNeedsPurchase(true);
-                setLoading(false);
-              });
-          } else {
-            // Not logged in, show locked
-            setChapter({ ...data, content: "" });
-            setNeedsPurchase(true);
-            setLoading(false);
+    // Send auth token so backend can check purchase status for locked chapters
+    const fetchChapter = token
+      ? authFetch(`/api/chapters/${chapterId}`, token).then((r) => {
+          if (!r.ok) throw new Error("Not found");
+          return r.json();
+        })
+      : fetch(`${API_BASE_URL}/api/chapters/${chapterId}`).then((r) => {
+          if (!r.ok) throw new Error("Not found");
+          return r.json();
+        });
+
+    fetchChapter
+      .then(async (data: ChapterData & { requiresLogin?: boolean; requiresPurchase?: boolean }) => {
+        setChapter(data);
+
+        // Backend already strips content for unauthorized access
+        if (data.requiresLogin || data.requiresPurchase) {
+          setNeedsPurchase(true);
+          // Fetch balance for purchase UI if logged in
+          if (token) {
+            try {
+              const walletRes = await authFetch(`/api/wallet`, token);
+              const wallet = await walletRes.json();
+              setUserBalance(wallet.coinBalance || wallet.balance || 0);
+            } catch { /* ignore */ }
           }
-        } else {
-          setChapter(data);
-          setLoading(false);
         }
+        setLoading(false);
       })
       .catch(() => {
         setLoading(false);
