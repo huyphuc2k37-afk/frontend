@@ -86,7 +86,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
       })
         .then((r) => r.json())
         .then((data) => {
-          if (data.role !== "author") {
+          if (data.role !== "author" && data.role !== "admin" && data.role !== "moderator") {
             router.push("/author/register");
             return;
           }

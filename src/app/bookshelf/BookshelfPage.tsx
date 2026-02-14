@@ -35,6 +35,7 @@ export default function BookshelfPage() {
   const router = useRouter();
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -55,6 +56,7 @@ export default function BookshelfPage() {
         })
         .catch((err) => {
           console.error("Error fetching bookmarks:", err);
+          setError(true);
         })
         .finally(() => {
           setLoading(false);
@@ -108,6 +110,11 @@ export default function BookshelfPage() {
           </div>
 
           {bookmarks.length === 0 ? (
+            error ? (
+              <div className="mt-16 text-center">
+                <p className="text-body-lg text-gray-500">Không thể tải tủ truyện. Vui lòng thử lại sau.</p>
+              </div>
+            ) : (
             <div
               className="mt-16 text-center"
             >
@@ -122,6 +129,7 @@ export default function BookshelfPage() {
                 Khám phá ngay
               </Link>
             </div>
+            )
           ) : (
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {bookmarks.map((bm) => (

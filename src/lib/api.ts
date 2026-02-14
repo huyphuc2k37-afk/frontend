@@ -8,9 +8,12 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${path}`;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string> || {}),
   };
+  // Only set Content-Type for requests with a body
+  if (options.body) {
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+  }
 
   const res = await fetch(url, {
     ...options,
@@ -27,10 +30,13 @@ export async function authFetch(path: string, token: string, options: RequestIni
   const url = `${API_BASE_URL}${path}`;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
     ...(options.headers as Record<string, string> || {}),
   };
+  // Only set Content-Type for requests with a body
+  if (options.body) {
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+  }
 
   const res = await fetch(url, {
     ...options,
