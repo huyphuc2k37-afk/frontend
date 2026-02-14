@@ -19,6 +19,7 @@ import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIco
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import AgeVerificationModal, { needsAgeVerification, isAgeVerified } from "@/components/AgeVerificationModal";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
@@ -500,6 +501,11 @@ export default function StoryDetailPage() {
                 )}
               </div>
 
+              {/* Ad: between chapters and rating */}
+              <div className="py-2">
+                <AdSenseSlot slot="story-mid" />
+              </div>
+
               {/* Rating section */}
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">
@@ -624,6 +630,11 @@ export default function StoryDetailPage() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Sidebar ad */}
+              <div className="py-2">
+                <AdSenseSlot slot="story-sidebar" />
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@ import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL } from "@/lib/api";
 
 import { genreGroups } from "@/data/genres";
@@ -108,6 +109,11 @@ export default function ExplorePage() {
         {recommended.length > 0 && (
           <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
         )}
+
+        {/* Ad: between sections */}
+        <div className="section-container py-4">
+          <AdSenseSlot slot="explore-mid" />
+        </div>
 
         {weeklyHot.length > 0 && (
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />

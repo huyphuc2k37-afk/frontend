@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiStory {
@@ -257,6 +258,11 @@ export default function HomePage() {
           <StoryCarousel title="Truyện Hot" stories={hotStories} icon={FireIcon} />
         </div>
 
+        {/* ── Ad: between hot & completed ── */}
+        <div className="section-container py-4">
+          <AdSenseSlot slot="home-mid" />
+        </div>
+
         {/* ── Hoàn thành ── */}
         {completedStories.length > 0 && (
           <section className="py-8">
@@ -355,6 +361,11 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── Ad: before CTA ── */}
+        <div className="section-container py-4">
+          <AdSenseSlot slot="home-bottom" />
+        </div>
 
         {/* ── CTA banner ── */}
         </>)}

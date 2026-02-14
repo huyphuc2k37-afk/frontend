@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL } from "@/lib/api";
 
 interface RankedStory {
@@ -106,7 +107,14 @@ export default function RankingPage() {
           ) : (
             <div className="mt-6 space-y-3">
               {stories.map((story, index) => (
-                <div key={story.id}>
+                <>
+                  {/* Ad: after 5th item */}
+                  {index === 5 && (
+                    <div key="ad-mid" className="py-2">
+                      <AdSenseSlot slot="ranking-mid" />
+                    </div>
+                  )}
+                  <div key={story.id}>
                   <Link
                     href={`/story/${story.slug}`}
                     className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
@@ -194,6 +202,7 @@ export default function RankingPage() {
                     </div>
                   </Link>
                 </div>
+                </>
               ))}
             </div>
           )}
