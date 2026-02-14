@@ -436,11 +436,6 @@ export default function ReadChapterPage() {
                 </div>
               )}
             </div>
-
-            {/* Ad: after navigation */}
-            <div className="mt-8">
-              <AdSenseSlot slot="1336707630" />
-            </div>
           </motion.div>
         </div>
       </main>

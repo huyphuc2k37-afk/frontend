@@ -362,11 +362,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Ad: before CTA ── */}
-        <div className="section-container py-4">
-          <AdSenseSlot slot="1336707630" />
-        </div>
-
         {/* ── CTA banner ── */}
         </>)}
 

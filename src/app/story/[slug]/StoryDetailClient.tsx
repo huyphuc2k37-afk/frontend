@@ -501,11 +501,6 @@ export default function StoryDetailPage() {
                 )}
               </div>
 
-              {/* Ad: between chapters and rating */}
-              <div className="py-2">
-                <AdSenseSlot slot="1336707630" />
-              </div>
-
               {/* Rating section */}
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">

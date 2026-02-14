@@ -13,7 +13,6 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL } from "@/lib/api";
 
 interface BookmarkItem {
@@ -192,13 +191,6 @@ export default function BookshelfPage() {
                     </button>
                   </div>
                 ))}
-            </div>
-          )}
-
-          {/* Ad: bottom of bookshelf */}
-          {bookmarks.length > 0 && (
-            <div className="mt-8">
-              <AdSenseSlot slot="1336707630" />
             </div>
           )}
         </div>
