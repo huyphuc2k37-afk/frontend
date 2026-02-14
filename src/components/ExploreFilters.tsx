@@ -18,6 +18,8 @@ interface ExploreFiltersProps {
   onCategoryChange: (category: string | null) => void;
   activeStatus: string;
   onStatusChange: (status: string) => void;
+  initialQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 const statusOptions = [
@@ -33,8 +35,15 @@ export default function ExploreFilters({
   onCategoryChange,
   activeStatus,
   onStatusChange,
+  initialQuery = "",
+  onSearchChange,
 }: ExploreFiltersProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+
+  // Sync when parent initialQuery changes (e.g. from URL)
+  useEffect(() => {
+    if (initialQuery) setQuery(initialQuery);
+  }, [initialQuery]);
   const [isFocused, setIsFocused] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -90,11 +99,18 @@ export default function ExploreFilters({
                 role="combobox"
                 aria-controls="search-listbox"
                 aria-expanded={isFocused && suggestions.length > 0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && query.trim()) {
+                    setIsFocused(false);
+                    onSearchChange?.(query.trim());
+                  }
+                }}
               />
               {query && (
                 <button
                   onClick={() => {
                     setQuery("");
+                    onSearchChange?.("");
                     inputRef.current?.focus();
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -125,6 +141,7 @@ export default function ExploreFilters({
                         onClick={() => {
                           setQuery(s.title);
                           setIsFocused(false);
+                          window.location.href = `/story/${s.slug}`;
                         }}
                       >
                         <div className="relative h-10 w-8 flex-shrink-0 overflow-hidden rounded bg-gray-100">

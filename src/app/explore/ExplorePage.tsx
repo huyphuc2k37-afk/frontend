@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
@@ -25,16 +26,26 @@ interface ApiStory {
 }
 
 export default function ExplorePage() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sync when URL ?q= changes (e.g. from Header search)
+  useEffect(() => {
+    if (urlQuery) setSearchQuery(urlQuery);
+  }, [urlQuery]);
 
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("limit", "40");
     if (activeCategory) params.set("genre", activeCategory);
     if (activeStatus !== "all") params.set("status", activeStatus);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
     setLoading(true);
     fetch(`${API_BASE_URL}/api/stories?${params.toString()}`)
@@ -44,7 +55,7 @@ export default function ExplorePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeCategory, activeStatus]);
+  }, [activeCategory, activeStatus, searchQuery]);
 
   // Since backend already filters by genre/status, allStories IS the filtered result
   const featured = allStories.slice(0, 8);
@@ -84,30 +95,56 @@ export default function ExplorePage() {
           onCategoryChange={setActiveCategory}
           activeStatus={activeStatus}
           onStatusChange={setActiveStatus}
+          initialQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
-        {/* Featured carousel */}
-        <Carousel title="Truyện nổi bật" stories={featured} />
-
-        {/* Story grids */}
-        {newUpdated.length > 0 && (
-          <SectionsGrid title="Mới cập nhật" stories={newUpdated} />
-        )}
-
-        {recommended.length > 0 && (
-          <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
-        )}
-
-        {weeklyHot.length > 0 && (
-          <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
-        )}
-
-        {!loading && allStories.length === 0 && (
-          <div className="section-container py-20 text-center">
-            <p className="text-body-lg text-gray-400">
-              Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
-            </p>
+        {/* Results */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
           </div>
+        ) : searchQuery.trim() ? (
+          /* Search results mode */
+          allStories.length > 0 ? (
+            <SectionsGrid
+              title={`Kết quả tìm kiếm "${searchQuery}" (${allStories.length})`}
+              stories={allStories}
+            />
+          ) : (
+            <div className="section-container py-20 text-center">
+              <p className="text-body-lg text-gray-400">
+                Không tìm thấy truyện hoặc tác giả phù hợp với &ldquo;{searchQuery}&rdquo;
+              </p>
+            </div>
+          )
+        ) : (
+          /* Browse mode */
+          <>
+            {/* Featured carousel */}
+            <Carousel title="Truyện nổi bật" stories={featured} />
+
+            {/* Story grids */}
+            {newUpdated.length > 0 && (
+              <SectionsGrid title="Mới cập nhật" stories={newUpdated} />
+            )}
+
+            {recommended.length > 0 && (
+              <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
+            )}
+
+            {weeklyHot.length > 0 && (
+              <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
+            )}
+
+            {allStories.length === 0 && (
+              <div className="section-container py-20 text-center">
+                <p className="text-body-lg text-gray-400">
+                  Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
+                </p>
+              </div>
+            )}
+          </>
         )}
       </main>
 
