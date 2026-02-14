@@ -27,7 +27,7 @@ interface Story {
   slug: string;
   description: string;
   genre: string;
-  tags: string[];
+  tags: string[] | string | null;
   status: string;
   isAdult: boolean;
   approvalStatus: string;
@@ -56,6 +56,13 @@ const statusTabs = [
 
 export default function ModStoriesPage() {
   const { token } = useMod();
+
+  // Helper to normalize tags (backend sends String? or string[])
+  const parseTags = (tags: string[] | string | null | undefined): string[] => {
+    if (!tags) return [];
+    if (Array.isArray(tags)) return tags;
+    return tags.split(",").map((t) => t.trim()).filter(Boolean);
+  };
   const [stories, setStories] = useState<Story[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -286,13 +293,13 @@ export default function ModStoriesPage() {
                       <span className="text-[10px] text-gray-400">{formatDate(story.createdAt)}</span>
                     </div>
                   </div>
-                  {story.tags && story.tags.length > 0 && (
+                  {parseTags(story.tags).length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {story.tags.slice(0, 5).map((tag) => (
+                      {parseTags(story.tags).slice(0, 5).map((tag) => (
                         <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{tag}</span>
                       ))}
-                      {story.tags.length > 5 && (
-                        <span className="text-[10px] text-gray-400">+{story.tags.length - 5}</span>
+                      {parseTags(story.tags).length > 5 && (
+                        <span className="text-[10px] text-gray-400">+{parseTags(story.tags).length - 5}</span>
                       )}
                     </div>
                   )}
@@ -410,11 +417,11 @@ export default function ModStoriesPage() {
                     )}
 
                     {/* Tags */}
-                    {selectedStory.tags && selectedStory.tags.length > 0 && (
+                    {parseTags(selectedStory.tags).length > 0 && (
                       <div>
                         <p className="text-[11px] font-medium text-gray-400">Tags</p>
                         <div className="mt-1 flex flex-wrap gap-1.5">
-                          {selectedStory.tags.map((tag) => (
+                          {parseTags(selectedStory.tags).map((tag) => (
                             <span key={tag} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-600">{tag}</span>
                           ))}
                         </div>
