@@ -16,6 +16,15 @@ interface AgeVerificationModalProps {
   onDecline: () => void;
 }
 
+/** Genres / tags that require 18+ age verification */
+const ADULT_KEYWORDS = [
+  "18+",
+  "16+",
+  "bdsm",
+  "trưởng thành",
+  "tình cảm người lớn",
+];
+
 /** Check if a story requires age verification */
 export function needsAgeVerification(
   isAdult: boolean,
@@ -24,8 +33,7 @@ export function needsAgeVerification(
 ): boolean {
   if (isAdult) return true;
   const allText = `${genre || ""} ${tags || ""}`.toLowerCase();
-  if (allText.includes("16+") || allText.includes("18+") || allText.includes("bdsm")) return true;
-  return false;
+  return ADULT_KEYWORDS.some((kw) => allText.includes(kw));
 }
 
 /** Check if user has already verified age (sessionStorage) */

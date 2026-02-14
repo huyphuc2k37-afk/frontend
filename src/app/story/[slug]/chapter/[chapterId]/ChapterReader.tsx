@@ -34,7 +34,7 @@ interface ChapterData {
   isLocked: boolean;
   price: number;
   createdAt: string;
-  story: { id: string; title: string; slug: string; authorId: string; isAdult: boolean; genre: string };
+  story: { id: string; title: string; slug: string; authorId: string; isAdult: boolean; genre: string; tags?: string | null };
   prev: { id: string; title: string; number: number } | null;
   next: { id: string; title: string; number: number } | null;
 }
@@ -229,10 +229,11 @@ export default function ReadChapterPage() {
   return (
     <>
       {/* Age verification modal */}
-      {chapter && needsAgeVerification(chapter.story.isAdult, chapter.story.genre) && !isAgeVerified() && !ageBlocked && (
+      {chapter && needsAgeVerification(chapter.story.isAdult, chapter.story.genre, chapter.story.tags) && !isAgeVerified() && !ageBlocked && (
         <AgeVerificationModal
           isAdult={chapter.story.isAdult}
           genre={chapter.story.genre}
+          tags={chapter.story.tags}
           onConfirm={() => {}}
           onDecline={() => { setAgeBlocked(true); router.push("/explore"); }}
         />
