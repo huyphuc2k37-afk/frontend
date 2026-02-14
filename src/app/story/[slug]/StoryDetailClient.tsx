@@ -77,12 +77,7 @@ export default function StoryDetailPage() {
   const [ageBlocked, setAgeBlocked] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push(`/login?callbackUrl=/story/${encodeURIComponent(slug)}`);
-    }
-  }, [status, slug, router]);
+  // No login redirect — story pages are public. Auth is only needed for interactions (like, rate, bookmark).
 
   useEffect(() => {
     if (!slug) return;

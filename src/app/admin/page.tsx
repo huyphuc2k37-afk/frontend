@@ -30,7 +30,7 @@ export default function AdminDashboard() {
     })
       .then((r) => r.json())
       .then(setStats)
-      .catch(() => {});
+      .catch(() => setStats({ totalUsers: 0, totalStories: 0, totalChapters: 0, totalRevenue: 0, totalWithdrawn: 0, pendingDeposits: 0, _error: true }));
   }, [token]);
 
   if (!stats) {

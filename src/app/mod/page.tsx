@@ -29,7 +29,7 @@ export default function ModDashboard() {
     })
       .then((r) => r.json())
       .then(setStats)
-      .catch(() => {});
+      .catch(() => setStats({ pending: 0, approved: 0, rejected: 0, todayReviewed: 0, _error: true } as any));
   }, [token]);
 
   if (!stats) {

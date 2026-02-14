@@ -72,7 +72,10 @@ const handler = NextAuth({
         try {
           const res = await fetch(`${API_BASE_URL}/api/auth/sync`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "x-sync-secret": process.env.NEXTAUTH_SECRET || "",
+            },
             body: JSON.stringify({ email: token.email, name: token.name, image: token.picture }),
           });
           const data = await res.json();

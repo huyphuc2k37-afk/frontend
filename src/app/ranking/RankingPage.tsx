@@ -41,13 +41,20 @@ export default function RankingPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("views");
 
+  const [error, setError] = useState(false);
+
   useEffect(() => {
     setLoading(true);
+    setError(false);
     fetch(`${API_BASE_URL}/api/ranking?sort=${activeTab}&limit=20`)
       .then((r) => r.json())
       .then((data) => {
         setStories(data);
         setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        setError(true);
       });
   }, [activeTab]);
 
@@ -91,6 +98,10 @@ export default function RankingPage() {
           {loading ? (
             <div className="mt-16 flex justify-center">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+            </div>
+          ) : error ? (
+            <div className="mt-16 text-center text-gray-500">
+              <p>Không thể tải bảng xếp hạng. Vui lòng thử lại sau.</p>
             </div>
           ) : (
             <div className="mt-6 space-y-3">

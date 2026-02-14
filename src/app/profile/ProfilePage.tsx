@@ -66,7 +66,8 @@ export default function ProfilePage() {
           setEditBio(data.bio || "");
           setEditImage(data.image || null);
           setLoading(false);
-        });
+        })
+        .catch(() => setLoading(false));
     }
   }, [status, router, session]);
 
@@ -79,18 +80,23 @@ export default function ProfilePage() {
     });
 
   const handleSave = async () => {
-    const token = (session as any).accessToken;
-    const res = await fetch(`${API_BASE_URL}/api/profile`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: editName, bio: editBio, image: editImage }),
-    });
-    const updated = await res.json();
-    setProfile((p) => (p ? { ...p, name: updated.name, bio: updated.bio, image: updated.image } : p));
-    setEditing(false);
+    try {
+      const token = (session as any).accessToken;
+      const res = await fetch(`${API_BASE_URL}/api/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: editName, bio: editBio, image: editImage }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setProfile((p) => (p ? { ...p, name: updated.name, bio: updated.bio, image: updated.image } : p));
+      setEditing(false);
+    } catch {
+      alert("Lưu thất bại, vui lòng thử lại.");
+    }
   };
 
   if (loading || !profile) {
@@ -218,12 +224,16 @@ export default function ProfilePage() {
                     )}
                     <span
                       className={`mt-3 inline-block rounded-full px-3 py-1 text-caption font-semibold ${
-                        profile.role === "author"
+                        profile.role === "admin"
+                          ? "bg-red-100 text-red-700"
+                          : profile.role === "moderator"
+                          ? "bg-indigo-100 text-indigo-700"
+                          : profile.role === "author"
                           ? "bg-primary-100 text-primary-700"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {profile.role === "author" ? "Tác giả" : "Độc giả"}
+                      {profile.role === "admin" ? "Quản trị viên" : profile.role === "moderator" ? "Kiểm duyệt viên" : profile.role === "author" ? "Tác giả" : "Độc giả"}
                     </span>
                     <button
                       onClick={() => setEditing(true)}
