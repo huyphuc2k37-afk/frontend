@@ -46,6 +46,7 @@ export default function Header() {
   const token = (session as any)?.accessToken as string | undefined;
   const isAuthor = profile?.role === "author";
   const isAdmin = profile?.role === "admin";
+  const isMod = profile?.role === "moderator";
   const pathname = usePathname();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -347,6 +348,14 @@ export default function Header() {
                       <ShieldCheckIcon className="h-4 w-4" />
                       Admin
                     </Link>
+                  ) : isMod ? (
+                    <Link
+                      href="/mod"
+                      className="hidden items-center gap-1.5 rounded-full bg-indigo-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-600 hover:shadow-md sm:inline-flex"
+                    >
+                      <ShieldCheckIcon className="h-4 w-4" />
+                      Kiểm duyệt
+                    </Link>
                   ) : isAuthor ? (
                     <Link
                       href="/write"
@@ -442,6 +451,16 @@ export default function Header() {
                               >
                                 <ShieldCheckIcon className="h-4 w-4" />
                                 Quản trị Admin
+                              </Link>
+                            )}
+                            {(isMod || isAdmin) && (
+                              <Link
+                                href="/mod"
+                                onClick={() => setUserMenuOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-indigo-600 hover:bg-indigo-50"
+                              >
+                                <ShieldCheckIcon className="h-4 w-4" />
+                                Kiểm duyệt truyện
                               </Link>
                             )}
                             {!isAdmin && (
@@ -626,6 +645,11 @@ export default function Header() {
                     {isAdmin && (
                       <Link href="/admin" className="block rounded-lg px-3 py-2.5 text-body-sm font-semibold text-red-600 hover:bg-red-50">
                         Quản trị Admin
+                      </Link>
+                    )}
+                    {(isMod || isAdmin) && (
+                      <Link href="/mod" className="block rounded-lg px-3 py-2.5 text-body-sm font-semibold text-indigo-600 hover:bg-indigo-50">
+                        Kiểm duyệt truyện
                       </Link>
                     )}
                     {!isAdmin && (
