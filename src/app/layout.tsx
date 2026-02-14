@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
+import ZaloChatWidget from "@/components/ZaloChatWidget";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vstory.vn";
 
@@ -70,7 +71,10 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <UserProfileProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              {children}
+              <ZaloChatWidget />
+            </ThemeProvider>
           </UserProfileProvider>
         </AuthProvider>
       </body>
