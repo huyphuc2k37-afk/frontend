@@ -30,7 +30,24 @@ export default function AdminDashboard() {
     })
       .then((r) => r.json())
       .then(setStats)
-      .catch(() => setStats({ totalUsers: 0, totalStories: 0, totalChapters: 0, totalRevenue: 0, totalWithdrawn: 0, pendingDeposits: 0, _error: true }));
+      .catch(() =>
+        setStats({
+          totalUsers: 0,
+          totalStories: 0,
+          totalChapters: 0,
+          totalRevenue: 0,
+          approvedDepositsAmount: 0,
+          grossContentRevenue: 0,
+          platformGrossWallet: 0,
+          platformNetIncome: 0,
+          taxTotal: 0,
+          authorNetPaid: 0,
+          totalWithdrawn: 0,
+          pendingDeposits: 0,
+          pendingWithdrawals: 0,
+          _error: true,
+        })
+      );
   }, [token]);
 
   if (!stats) {
@@ -43,11 +60,17 @@ export default function AdminDashboard() {
 
   const formatVND = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
 
+  const approvedDepositsAmount = stats.approvedDepositsAmount ?? stats.totalRevenue ?? 0;
+  const grossContentRevenue = stats.grossContentRevenue ?? 0;
+  const platformNetIncome = stats.platformNetIncome ?? 0;
+
   const cards = [
     { label: "Người dùng", value: stats.totalUsers, icon: UsersIcon, color: "text-blue-600 bg-blue-50", href: "/admin/users" },
     { label: "Truyện", value: stats.totalStories, icon: BookOpenIcon, color: "text-emerald-600 bg-emerald-50", href: "/admin/stories" },
     { label: "Chương", value: stats.totalChapters, icon: DocumentTextIcon, color: "text-purple-600 bg-purple-50", href: null },
-    { label: "Tổng nạp (đã duyệt)", value: formatVND(stats.totalRevenue) + "đ", icon: CurrencyDollarIcon, color: "text-amber-600 bg-amber-50", href: "/admin/deposits" },
+    { label: "Tổng nạp (đã duyệt)", value: formatVND(approvedDepositsAmount) + "đ", icon: CurrencyDollarIcon, color: "text-amber-600 bg-amber-50", href: "/admin/deposits" },
+    { label: "Doanh thu tổng (mua + tặng)", value: formatVND(grossContentRevenue) + "đ", icon: CurrencyDollarIcon, color: "text-indigo-600 bg-indigo-50", href: null },
+    { label: "Thu nhập nền tảng (thực tế)", value: formatVND(platformNetIncome) + "đ", icon: CurrencyDollarIcon, color: "text-emerald-600 bg-emerald-50", href: null },
   ];
 
   const alerts = [
