@@ -54,7 +54,7 @@ export const genreGroups: GenreGroup[] = [
   },
   {
     label: "🔹 Hình thức quan hệ",
-    genres: ["1x1", "NP / Harem", "Không CP", "BDSM"],
+    genres: ["1x1", "NP / Harem", "Không CP"],
   },
   {
     label: "🔹 Kết thúc truyện",
@@ -72,12 +72,11 @@ export const genreGroups: GenreGroup[] = [
   },
   {
     label: "🔹 Phân loại khác",
-    genres: ["Miễn phí", "Trả phí", "Truyện có yếu tố 16+"],
+    genres: ["Miễn phí", "Trả phí"],
   },
 ];
 
 /** Flat list of all genre names */
 export const allGenres: string[] = genreGroups.flatMap((g) => g.genres);
 
-/** Genres that require age verification (16+ / 18+) */
-export const matureGenres = ["BDSM", "Truyện có yếu tố 16+"];
+
