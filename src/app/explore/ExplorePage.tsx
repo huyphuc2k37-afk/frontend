@@ -8,21 +8,7 @@ import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
 import { API_BASE_URL } from "@/lib/api";
 
-import { allGenres } from "@/data/genres";
-
-import type { Category } from "@/types";
-
-/* Derive Category[] from genre data for the filter chips */
-const categories: Category[] = allGenres.map((name) => {
-  const slug = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return { id: slug, name, slug, icon: "BookOpenIcon", color: "#6366f1", storyCount: 0 };
-});
+import { genreGroups } from "@/data/genres";
 
 interface ApiStory {
   id: string;
@@ -93,7 +79,7 @@ export default function ExplorePage() {
         {/* Unified search + filters */}
         <ExploreFilters
           stories={allStories}
-          categories={categories}
+          genreGroups={genreGroups}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           activeStatus={activeStatus}

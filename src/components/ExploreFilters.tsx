@@ -8,11 +8,12 @@ import {
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Story, Category } from "@/types";
+import type { Story } from "@/types";
+import type { GenreGroup } from "@/data/genres";
 
 interface ExploreFiltersProps {
   stories: Story[];
-  categories: Category[];
+  genreGroups: GenreGroup[];
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
   activeStatus: string;
@@ -27,7 +28,7 @@ const statusOptions = [
 
 export default function ExploreFilters({
   stories,
-  categories,
+  genreGroups,
   activeCategory,
   onCategoryChange,
   activeStatus,
@@ -199,24 +200,33 @@ export default function ExploreFilters({
                         </button>
                       )}
                     </div>
-                    <div className="hide-scrollbar -mx-1 flex flex-wrap gap-2">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() =>
-                            onCategoryChange(
-                              activeCategory === cat.name ? null : cat.name,
-                            )
-                          }
-                          className={`rounded-full px-3.5 py-1.5 text-body-sm font-medium transition-all ${
-                            activeCategory === cat.name
-                              ? "bg-primary-600 text-white shadow-md"
-                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                          }`}
-                          aria-pressed={activeCategory === cat.name}
-                        >
-                          {cat.name}
-                        </button>
+                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
+                      {genreGroups.map((group) => (
+                        <div key={group.label}>
+                          <p className="mb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            {group.label}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.genres.map((g) => (
+                              <button
+                                key={g}
+                                onClick={() =>
+                                  onCategoryChange(
+                                    activeCategory === g ? null : g,
+                                  )
+                                }
+                                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                                  activeCategory === g
+                                    ? "bg-primary-600 text-white shadow-md"
+                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                }`}
+                                aria-pressed={activeCategory === g}
+                              >
+                                {g}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
