@@ -3,19 +3,16 @@ import Link from "next/link";
 const footerLinks = {
   product: [
     { label: "Khám phá", href: "/explore" },
+    { label: "Bảng xếp hạng", href: "/ranking" },
     { label: "Trở thành tác giả", href: "/author" },
-    { label: "Bảng giá", href: "/pricing" },
-  ],
-  company: [
     { label: "Giới thiệu", href: "/about" },
     { label: "Điều khoản", href: "/terms" },
     { label: "Chính sách bảo mật", href: "/privacy" },
-    { label: "Liên hệ", href: "/contact" },
   ],
   social: [
-    { label: "Telegram", href: "https://t.me/vstory" },
-    { label: "Facebook", href: "https://facebook.com/vstory" },
-    { label: "TikTok", href: "https://tiktok.com/@vstory" },
+    { label: "Telegram", href: "https://t.me/seringuyen05061" },
+    { label: "Facebook", href: "https://www.facebook.com/vstory1202" },
+    { label: "TikTok", href: "https://www.tiktok.com/@vstory1202" },
   ],
 };
 
@@ -26,7 +23,7 @@ export default function Footer() {
       aria-label="Footer"
     >
       <div className="section-container">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center">
@@ -45,25 +42,6 @@ export default function Footer() {
             </h4>
             <ul className="mt-3 space-y-2">
               {footerLinks.product.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-body-sm text-gray-600 transition-colors hover:text-primary-600"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
-              Công ty
-            </h4>
-            <ul className="mt-3 space-y-2">
-              {footerLinks.company.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
