@@ -24,7 +24,7 @@ import { genreGroups } from "@/data/genres";
 /* ────── Constants ────── */
 
 const tagCategories: Record<string, string[]> = {
-  "Phân loại": ["Truyện dịch", "Truyện sáng tác", "Fanfic", "Oneshot"],
+  "Phân loại": ["Truyện sáng tác", "Fanfic", "Oneshot"],
   "Hình thức": ["Truyện chữ", "Light Novel", "Web Novel"],
   "Đề tài": ["Tu tiên", "Dị giới", "Hệ thống", "Trọng sinh", "Xây dựng thế lực", "Phế vật nghịch thiên"],
   "Phong cách": ["Nhẹ nhàng", "Nặng", "Hài hước", "Nghiêm túc", "Sảng văn"],

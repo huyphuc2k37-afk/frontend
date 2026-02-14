@@ -29,6 +29,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     story.description?.slice(0, 160).replace(/\n/g, " ") ||
     "Đọc truyện " + story.title + " trên VStory";
 
+  const visibleTags = story.tags
+    ? story.tags
+        .split(",")
+        .map((t: string) => t.trim())
+        .filter(Boolean)
+        .filter((t: string) => {
+          const normalized = t.toLowerCase();
+          return normalized !== "truyện dịch" && normalized !== "truyen dich";
+        })
+    : [];
+
   return {
     title: story.title + " – VStory",
     description,
@@ -37,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       story.genre,
       "đọc truyện",
       "truyện chữ",
-      ...(story.tags ? story.tags.split(",").map((t: string) => t.trim()) : []),
+      ...visibleTags,
     ],
     alternates: {
       canonical: SITE_URL + "/story/" + story.slug,
