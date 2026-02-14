@@ -8,9 +8,21 @@ import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
 import { API_BASE_URL } from "@/lib/api";
 
-import categoriesData from "@/data/mock/categories.json";
+import { allGenres } from "@/data/genres";
 
 import type { Category } from "@/types";
+
+/* Derive Category[] from genre data for the filter chips */
+const categories: Category[] = allGenres.map((name) => {
+  const slug = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return { id: slug, name, slug, icon: "BookOpenIcon", color: "#6366f1", storyCount: 0 };
+});
 
 interface ApiStory {
   id: string;
@@ -25,8 +37,6 @@ interface ApiStory {
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number; bookmarks: number };
 }
-
-const categories = categoriesData as Category[];
 
 export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);

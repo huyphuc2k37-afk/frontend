@@ -19,6 +19,7 @@ import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIco
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
+import AgeVerificationModal, { needsAgeVerification, isAgeVerified } from "@/components/AgeVerificationModal";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface Chapter {
@@ -43,6 +44,7 @@ interface StoryDetail {
   likes: number;
   averageRating: number;
   ratingCount: number;
+  isAdult: boolean;
   author: { id: string; name: string; image: string | null; bio: string | null };
   chapters: Chapter[];
   _count: { bookmarks: number; comments: number; storyLikes: number };
@@ -72,6 +74,7 @@ export default function StoryDetailPage() {
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
   const [showCover, setShowCover] = useState(true);
+  const [ageBlocked, setAgeBlocked] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
   // Redirect to login if not authenticated
@@ -251,6 +254,18 @@ export default function StoryDetailPage() {
 
   return (
     <>
+      {/* Age verification modal */}
+      {story && needsAgeVerification(story.isAdult, story.genre, story.tags) && !isAgeVerified() && !ageBlocked && (
+        <AgeVerificationModal
+          isAdult={story.isAdult}
+          genre={story.genre}
+          tags={story.tags}
+          onConfirm={() => {}}
+          onDecline={() => { setAgeBlocked(true); router.push("/explore"); }}
+        />
+      )}
+      {ageBlocked ? null : (
+      <>
       <Header />
       <main className="min-h-screen bg-gray-50">
         {/* Hero section */}
@@ -615,6 +630,8 @@ export default function StoryDetailPage() {
         </div>
       </main>
       <Footer />
+    </>
+      )}
     </>
   );
 }

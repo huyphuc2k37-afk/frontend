@@ -19,15 +19,9 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { API_BASE_URL } from "@/lib/api";
+import { genreGroups } from "@/data/genres";
 
 /* ────── Constants ────── */
-
-const genres = [
-  "Ngôn Tình", "Đam Mỹ", "Bách Hợp", "Linh Dị",
-  "Trinh Thám", "Đô Thị", "Cổ Đại", "Hài Hước",
-  "Xuyên Không", "Trọng Sinh", "Tương Lai", "Giả Tưởng",
-  "Dị Giới", "Dị Năng", "Võng Du", "HE", "Ngược", "1v1", "NP",
-];
 
 const tagCategories: Record<string, string[]> = {
   "Phân loại": ["Truyện dịch", "Truyện sáng tác", "Fanfic", "Oneshot"],
@@ -383,19 +377,26 @@ export default function CreateStoryPage() {
                         Thể loại chính <span className="text-red-500">*</span>
                       </label>
                       {errors.genre && <p className="mb-2 text-caption text-red-500">{errors.genre}</p>}
-                      <div className="flex flex-wrap gap-2">
-                        {genres.map((g) => (
-                          <button
-                            key={g}
-                            onClick={() => setGenre(g)}
-                            className={`rounded-full px-4 py-2 text-body-sm font-medium transition-all ${
-                              genre === g
-                                ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {g}
-                          </button>
+                      <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                        {genreGroups.map((group) => (
+                          <div key={group.label}>
+                            <p className="mb-2 text-caption font-semibold text-gray-500">{group.label}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {group.genres.map((g) => (
+                                <button
+                                  key={g}
+                                  onClick={() => setGenre(g)}
+                                  className={`rounded-full px-4 py-2 text-body-sm font-medium transition-all ${
+                                    genre === g
+                                      ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
+                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {g}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
