@@ -242,13 +242,30 @@ export default function Header() {
                                 {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Không có thông báo mới"}
                               </p>
                             </div>
-                            <button
-                              onClick={() => setNotificationsOpen(false)}
-                              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:hidden"
-                              aria-label="Đóng"
-                            >
-                              <XMarkIcon className="h-5 w-5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              {unreadCount > 0 && (
+                                <button
+                                  onClick={async () => {
+                                    if (!token) return;
+                                    try {
+                                      await authFetch("/api/notifications/read-all", token, { method: "PUT" });
+                                      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+                                      setUnreadCount(0);
+                                    } catch {}
+                                  }}
+                                  className="rounded-lg px-2 py-1 text-caption font-medium text-primary-600 hover:bg-primary-50 transition-colors"
+                                >
+                                  Đọc tất cả
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setNotificationsOpen(false)}
+                                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:hidden"
+                                aria-label="Đóng"
+                              >
+                                <XMarkIcon className="h-5 w-5" />
+                              </button>
+                            </div>
                           </div>
                           <div
                             className="overflow-y-auto overscroll-contain py-1 scrollbar-thin"
