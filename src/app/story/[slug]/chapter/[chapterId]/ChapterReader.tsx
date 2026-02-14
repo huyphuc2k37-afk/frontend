@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -74,7 +74,7 @@ export default function ReadChapterPage() {
   };
 
   // Re-fetch chapter data helper (used by useEffect and after purchase)
-  const fetchChapterData = async (authToken?: string, signal?: AbortSignal) => {
+  const fetchChapterData = useCallback(async (authToken?: string, signal?: AbortSignal) => {
     const fetchChapter = authToken
       ? authFetch(`/api/chapters/${chapterId}`, authToken, { signal }).then((r) => {
           if (!r.ok) throw new Error("Not found");
@@ -87,7 +87,7 @@ export default function ReadChapterPage() {
 
     const data: ChapterData & { requiresLogin?: boolean; requiresPurchase?: boolean } = await fetchChapter;
     return data;
-  };
+  }, [chapterId]);
 
   useEffect(() => {
     if (!chapterId) return;
@@ -125,7 +125,7 @@ export default function ReadChapterPage() {
       cancelled = true;
       abortController.abort();
     };
-  }, [chapterId, session, token]);
+  }, [chapterId, fetchChapterData, session, token]);
 
   const handlePurchase = async () => {
     if (!session || !chapter || purchasing || !token) return;

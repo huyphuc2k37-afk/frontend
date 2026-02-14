@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import {
   MegaphoneIcon,
@@ -27,7 +27,7 @@ export default function AdminAnnouncementsPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     if (!token) return;
     try {
       const res = await fetch(`${API_BASE_URL}/api/announcements/all`, {
@@ -40,11 +40,11 @@ export default function AdminAnnouncementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchAll();
-  }, [token]);
+  }, [fetchAll]);
 
   const handleCreate = async () => {
     if (!token || !newMessage.trim()) return;
