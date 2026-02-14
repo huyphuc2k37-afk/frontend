@@ -54,7 +54,11 @@ export const genreGroups: GenreGroup[] = [
   },
   {
     label: "🔹 Hình thức quan hệ",
-    genres: ["1x1", "NP / Harem", "Không CP"],
+    genres: [
+      "1x1", "NP / Harem", "Không CP",
+      "Trưởng thành", "Tình cảm sâu sắc", "Lãng mạn",
+      "Tình cảm người lớn", "Drama tình cảm", "Quan hệ phức tạp",
+    ],
   },
   {
     label: "🔹 Kết thúc truyện",
