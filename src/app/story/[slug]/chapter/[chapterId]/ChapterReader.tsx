@@ -59,7 +59,6 @@ export default function ReadChapterPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [ageBlocked, setAgeBlocked] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
-  const chapterBottomAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CHAPTER_BOTTOM;
 
   // Load dark mode preference from localStorage
   useEffect(() => {
@@ -384,11 +383,9 @@ export default function ReadChapterPage() {
             )}
 
             {/* Bottom-of-chapter ad */}
-            {chapterBottomAdSlot && (
-              <div className="mt-8">
-                <AdSenseSlot slot={chapterBottomAdSlot} />
-              </div>
-            )}
+            <div className="mt-8">
+              <AdSenseSlot slot="1336707630" />
+            </div>
 
             {/* Chapter comments */}
             {!needsPurchase && (
@@ -442,7 +439,7 @@ export default function ReadChapterPage() {
 
             {/* Ad: after navigation */}
             <div className="mt-8">
-              <AdSenseSlot slot="chapter-bottom-nav" />
+              <AdSenseSlot slot="1336707630" />
             </div>
           </motion.div>
         </div>

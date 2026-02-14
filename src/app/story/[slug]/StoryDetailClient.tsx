@@ -503,7 +503,7 @@ export default function StoryDetailPage() {
 
               {/* Ad: between chapters and rating */}
               <div className="py-2">
-                <AdSenseSlot slot="story-mid" />
+                <AdSenseSlot slot="1336707630" />
               </div>
 
               {/* Rating section */}
@@ -634,7 +634,7 @@ export default function StoryDetailPage() {
 
               {/* Sidebar ad */}
               <div className="py-2">
-                <AdSenseSlot slot="story-sidebar" />
+                <AdSenseSlot slot="1336707630" />
               </div>
             </div>
           </div>

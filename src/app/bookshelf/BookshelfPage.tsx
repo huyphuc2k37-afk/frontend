@@ -198,7 +198,7 @@ export default function BookshelfPage() {
           {/* Ad: bottom of bookshelf */}
           {bookmarks.length > 0 && (
             <div className="mt-8">
-              <AdSenseSlot slot="bookshelf-bottom" />
+              <AdSenseSlot slot="1336707630" />
             </div>
           )}
         </div>

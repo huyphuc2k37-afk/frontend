@@ -111,7 +111,7 @@ export default function RankingPage() {
                   {/* Ad: after 5th item */}
                   {index === 5 && (
                     <div key="ad-mid" className="py-2">
-                      <AdSenseSlot slot="ranking-mid" />
+                      <AdSenseSlot slot="1336707630" />
                     </div>
                   )}
                   <div key={story.id}>

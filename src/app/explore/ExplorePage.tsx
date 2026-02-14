@@ -112,7 +112,7 @@ export default function ExplorePage() {
 
         {/* Ad: between sections */}
         <div className="section-container py-4">
-          <AdSenseSlot slot="explore-mid" />
+          <AdSenseSlot slot="1336707630" />
         </div>
 
         {weeklyHot.length > 0 && (
