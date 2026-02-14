@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
@@ -26,19 +25,18 @@ interface ApiStory {
 }
 
 export default function ExplorePage() {
-  const searchParams = useSearchParams();
-  const urlQuery = searchParams.get("q") || "";
-
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Sync when URL ?q= changes (e.g. from Header search)
+  // Read ?q= from URL on mount
   useEffect(() => {
-    if (urlQuery) setSearchQuery(urlQuery);
-  }, [urlQuery]);
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get("q") || "";
+    if (q) setSearchQuery(q);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -95,56 +93,32 @@ export default function ExplorePage() {
           onCategoryChange={setActiveCategory}
           activeStatus={activeStatus}
           onStatusChange={setActiveStatus}
-          initialQuery={searchQuery}
+          searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
 
-        {/* Results */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+        {/* Featured carousel */}
+        <Carousel title="Truyện nổi bật" stories={featured} />
+
+        {/* Story grids */}
+        {newUpdated.length > 0 && (
+          <SectionsGrid title="Mới cập nhật" stories={newUpdated} />
+        )}
+
+        {recommended.length > 0 && (
+          <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
+        )}
+
+        {weeklyHot.length > 0 && (
+          <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
+        )}
+
+        {!loading && allStories.length === 0 && (
+          <div className="section-container py-20 text-center">
+            <p className="text-body-lg text-gray-400">
+              Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
+            </p>
           </div>
-        ) : searchQuery.trim() ? (
-          /* Search results mode */
-          allStories.length > 0 ? (
-            <SectionsGrid
-              title={`Kết quả tìm kiếm "${searchQuery}" (${allStories.length})`}
-              stories={allStories}
-            />
-          ) : (
-            <div className="section-container py-20 text-center">
-              <p className="text-body-lg text-gray-400">
-                Không tìm thấy truyện hoặc tác giả phù hợp với &ldquo;{searchQuery}&rdquo;
-              </p>
-            </div>
-          )
-        ) : (
-          /* Browse mode */
-          <>
-            {/* Featured carousel */}
-            <Carousel title="Truyện nổi bật" stories={featured} />
-
-            {/* Story grids */}
-            {newUpdated.length > 0 && (
-              <SectionsGrid title="Mới cập nhật" stories={newUpdated} />
-            )}
-
-            {recommended.length > 0 && (
-              <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
-            )}
-
-            {weeklyHot.length > 0 && (
-              <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
-            )}
-
-            {allStories.length === 0 && (
-              <div className="section-container py-20 text-center">
-                <p className="text-body-lg text-gray-400">
-                  Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
-                </p>
-              </div>
-            )}
-          </>
         )}
       </main>
 

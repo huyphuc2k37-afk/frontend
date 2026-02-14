@@ -132,8 +132,13 @@ export default function WalletPage() {
         setSelectedPack(null);
         setSelectedMethod(null);
         fetchWallet();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Nạp xu thất bại, vui lòng thử lại.");
       }
-    } catch {}
+    } catch {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    }
     setProcessing(false);
   };
 

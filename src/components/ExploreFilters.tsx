@@ -18,7 +18,7 @@ interface ExploreFiltersProps {
   onCategoryChange: (category: string | null) => void;
   activeStatus: string;
   onStatusChange: (status: string) => void;
-  initialQuery?: string;
+  searchQuery?: string;
   onSearchChange?: (query: string) => void;
 }
 
@@ -35,15 +35,28 @@ export default function ExploreFilters({
   onCategoryChange,
   activeStatus,
   onStatusChange,
-  initialQuery = "",
+  searchQuery,
   onSearchChange,
 }: ExploreFiltersProps) {
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(searchQuery || "");
 
-  // Sync when parent initialQuery changes (e.g. from URL)
+  // Sync controlled searchQuery prop
   useEffect(() => {
-    if (initialQuery) setQuery(initialQuery);
-  }, [initialQuery]);
+    if (searchQuery !== undefined && searchQuery !== query) {
+      setQuery(searchQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  // Debounce search: notify parent after user stops typing
+  useEffect(() => {
+    if (!onSearchChange) return;
+    const timer = setTimeout(() => {
+      onSearchChange(query);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
   const [isFocused, setIsFocused] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,18 +112,11 @@ export default function ExploreFilters({
                 role="combobox"
                 aria-controls="search-listbox"
                 aria-expanded={isFocused && suggestions.length > 0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && query.trim()) {
-                    setIsFocused(false);
-                    onSearchChange?.(query.trim());
-                  }
-                }}
               />
               {query && (
                 <button
                   onClick={() => {
                     setQuery("");
-                    onSearchChange?.("");
                     inputRef.current?.focus();
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -139,7 +145,6 @@ export default function ExploreFilters({
                         role="option"
                         aria-selected={false}
                         onClick={() => {
-                          setQuery(s.title);
                           setIsFocused(false);
                           window.location.href = `/story/${s.slug}`;
                         }}

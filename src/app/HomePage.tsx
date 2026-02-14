@@ -143,6 +143,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/stories?limit=12`)
@@ -151,7 +152,7 @@ export default function HomePage() {
         if (data?.stories) setAllStories(data.stories);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoading(false); setFetchError(true); });
   }, []);
 
   const tabs: { id: Tab; label: string }[] = [
@@ -194,7 +195,9 @@ export default function HomePage() {
         {!loading && allStories.length === 0 && (
           <div className="section-container py-20 text-center">
             <BookOpenIcon className="mx-auto h-12 w-12 text-gray-300" />
-            <p className="mt-4 text-body-lg text-gray-500">Chưa có truyện nào. Hãy quay lại sau!</p>
+            <p className="mt-4 text-body-lg text-gray-500">
+              {fetchError ? "Không thể tải dữ liệu. Vui lòng thử lại sau." : "Chưa có truyện nào. Hãy quay lại sau!"}
+            </p>
           </div>
         )}
 
