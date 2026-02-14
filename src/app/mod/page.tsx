@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   DocumentCheckIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -16,6 +17,7 @@ interface ModStats {
   approved: number;
   rejected: number;
   todayReviewed: number;
+  chapterPending: number;
 }
 
 export default function ModDashboard() {
@@ -29,7 +31,7 @@ export default function ModDashboard() {
     })
       .then((r) => r.json())
       .then(setStats)
-      .catch(() => setStats({ pending: 0, approved: 0, rejected: 0, todayReviewed: 0, _error: true } as any));
+      .catch(() => setStats({ pending: 0, approved: 0, rejected: 0, todayReviewed: 0, chapterPending: 0, _error: true } as any));
   }, [token]);
 
   if (!stats) {
@@ -73,6 +75,14 @@ export default function ModDashboard() {
       iconColor: "text-indigo-500",
       href: null,
     },
+    {
+      label: "Chương chờ duyệt",
+      value: stats.chapterPending,
+      icon: DocumentTextIcon,
+      color: "text-violet-600 bg-violet-50 border-violet-200",
+      iconColor: "text-violet-500",
+      href: "/mod/chapters?status=pending",
+    },
   ];
 
   return (
@@ -85,7 +95,7 @@ export default function ModDashboard() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((card) => {
           const content = (
             <div
@@ -129,6 +139,31 @@ export default function ModDashboard() {
             <Link
               href="/mod/stories?status=pending"
               className="rounded-xl bg-amber-600 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-amber-700"
+            >
+              Duyệt ngay
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Chapter pending alert */}
+      {stats.chapterPending > 0 && (
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <DocumentTextIcon className="h-6 w-6 text-violet-600" />
+              <div>
+                <p className="font-semibold text-violet-800">
+                  Có {stats.chapterPending} chương đang chờ kiểm duyệt
+                </p>
+                <p className="text-body-sm text-violet-600">
+                  Vui lòng kiểm tra và duyệt các chương mới đăng.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/mod/chapters?status=pending"
+              className="rounded-xl bg-violet-600 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-violet-700"
             >
               Duyệt ngay
             </Link>

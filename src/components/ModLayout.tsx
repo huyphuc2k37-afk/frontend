@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   HomeIcon,
   BookOpenIcon,
+  DocumentTextIcon,
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
@@ -26,6 +27,7 @@ export const useMod = () => useContext(ModContext);
 const sidebarItems = [
   { id: "dashboard", label: "Tổng quan", href: "/mod", icon: HomeIcon },
   { id: "stories", label: "Duyệt truyện", href: "/mod/stories", icon: BookOpenIcon },
+  { id: "chapters", label: "Duyệt chương", href: "/mod/chapters", icon: DocumentTextIcon },
 ];
 
 export default function ModLayout({ children }: { children: React.ReactNode }) {

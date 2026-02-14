@@ -30,6 +30,8 @@ interface Chapter {
   wordCount: number;
   isLocked: boolean;
   price: number;
+  approvalStatus?: string;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -440,7 +442,27 @@ export default function StoryDetailPage() {
                         {chapter.price} xu
                       </span>
                     )}
+                    {chapter.approvalStatus === "pending" && (
+                      <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                        ⏳ Chờ duyệt
+                      </span>
+                    )}
+                    {chapter.approvalStatus === "approved" && (
+                      <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        ✓ Đã duyệt
+                      </span>
+                    )}
+                    {chapter.approvalStatus === "rejected" && (
+                      <span className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700" title={chapter.rejectionReason || ""}>
+                        ✗ Từ chối
+                      </span>
+                    )}
                   </div>
+                  {chapter.approvalStatus === "rejected" && chapter.rejectionReason && (
+                    <p className="mt-1 text-[11px] text-red-500">
+                      Lý do: {chapter.rejectionReason}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <Link
