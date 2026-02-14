@@ -22,6 +22,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { authFetch } from "@/lib/api";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 const navLinks = [
   { label: "Trang chủ", href: "/" },
@@ -689,6 +690,9 @@ export default function Header() {
 
       {/* Spacer so content doesn't go behind fixed header */}
       <div className="h-14 sm:h-16" />
+
+      {/* Scrolling announcement banner */}
+      <AnnouncementBanner />
     </>
   );
 }

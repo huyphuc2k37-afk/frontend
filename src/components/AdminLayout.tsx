@@ -17,6 +17,7 @@ import {
   ChevronLeftIcon,
   ShieldCheckIcon,
   UserCircleIcon,
+  MegaphoneIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
@@ -34,6 +35,7 @@ const sidebarItems = [
   { id: "stories", label: "Truyện", href: "/admin/stories", icon: BookOpenIcon },
   { id: "deposits", label: "Nạp xu", href: "/admin/deposits", icon: CurrencyDollarIcon },
   { id: "withdrawals", label: "Rút tiền", href: "/admin/withdrawals", icon: BanknotesIcon },
+  { id: "announcements", label: "Thông báo", href: "/admin/announcements", icon: MegaphoneIcon },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
