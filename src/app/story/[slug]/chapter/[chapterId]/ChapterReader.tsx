@@ -73,25 +73,34 @@ export default function ReadChapterPage() {
     });
   };
 
-  useEffect(() => {
-    if (!chapterId) return;
-    setLoading(true);
-    setNeedsPurchase(false);
-    setPurchaseError("");
-
-    // Send auth token so backend can check purchase status for locked chapters
-    const fetchChapter = token
-      ? authFetch(`/api/chapters/${chapterId}`, token).then((r) => {
+  // Re-fetch chapter data helper (used by useEffect and after purchase)
+  const fetchChapterData = async (authToken?: string, signal?: AbortSignal) => {
+    const fetchChapter = authToken
+      ? authFetch(`/api/chapters/${chapterId}`, authToken, { signal }).then((r) => {
           if (!r.ok) throw new Error("Not found");
           return r.json();
         })
-      : fetch(`${API_BASE_URL}/api/chapters/${chapterId}`).then((r) => {
+      : fetch(`${API_BASE_URL}/api/chapters/${chapterId}`, { signal }).then((r) => {
           if (!r.ok) throw new Error("Not found");
           return r.json();
         });
 
-    fetchChapter
-      .then(async (data: ChapterData & { requiresLogin?: boolean; requiresPurchase?: boolean }) => {
+    const data: ChapterData & { requiresLogin?: boolean; requiresPurchase?: boolean } = await fetchChapter;
+    return data;
+  };
+
+  useEffect(() => {
+    if (!chapterId) return;
+    let cancelled = false;
+    const abortController = new AbortController();
+
+    setLoading(true);
+    setNeedsPurchase(false);
+    setPurchaseError("");
+
+    fetchChapterData(token, abortController.signal)
+      .then(async (data) => {
+        if (cancelled) return;
         setChapter(data);
 
         // Backend already strips content for unauthorized access
@@ -102,15 +111,20 @@ export default function ReadChapterPage() {
             try {
               const walletRes = await authFetch(`/api/wallet`, token);
               const wallet = await walletRes.json();
-              setUserBalance(wallet.coinBalance || wallet.balance || 0);
+              if (!cancelled) setUserBalance(wallet.coinBalance || wallet.balance || 0);
             } catch { /* ignore */ }
           }
         }
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       })
       .catch(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+      abortController.abort();
+    };
   }, [chapterId, session, token]);
 
   const handlePurchase = async () => {
@@ -131,16 +145,25 @@ export default function ReadChapterPage() {
           ? "Bạn đã mua chương này rồi."
           : data.error || "Không thể mua chương"
         );
-        // If already purchased, reload to show content
+        // If already purchased, re-fetch chapter content directly
         if (data.error === "Already purchased") {
-          window.location.reload();
+          try {
+            const chapterData = await fetchChapterData(token);
+            setChapter(chapterData);
+            setNeedsPurchase(false);
+          } catch { /* ignore */ }
         }
         setPurchasing(false);
         return;
       }
-      // Purchase success — reload chapter content
+      // Purchase success — re-fetch chapter content directly (no page reload)
       setUserBalance(data.newBalance);
-      window.location.reload();
+      try {
+        const chapterData = await fetchChapterData(token);
+        setChapter(chapterData);
+        setNeedsPurchase(false);
+      } catch { /* ignore */ }
+      setPurchasing(false);
     } catch {
       setPurchaseError("Lỗi kết nối server");
       setPurchasing(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -149,8 +149,8 @@ export default function AdminStoriesPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {stories.map((s) => (
-                  <>
-                    <tr key={s.id} className="hover:bg-gray-50">
+                  <Fragment key={s.id}>
+                    <tr className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-body-sm font-medium text-gray-900 max-w-[200px] truncate">{s.title}</td>
                       <td className="px-4 py-3 text-body-sm text-gray-500">{s.author?.name}</td>
                       <td className="px-4 py-3 text-body-sm text-center text-gray-600">{s.genre}</td>
@@ -241,7 +241,7 @@ export default function AdminStoriesPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
