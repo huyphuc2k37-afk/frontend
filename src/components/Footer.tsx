@@ -1,10 +1,12 @@
 import Link from "next/link";
 
 const footerLinks = {
-  product: [
+  explore: [
     { label: "Khám phá", href: "/explore" },
     { label: "Bảng xếp hạng", href: "/ranking" },
     { label: "Trở thành tác giả", href: "/author" },
+  ],
+  support: [
     { label: "Giới thiệu", href: "/about" },
     { label: "Điều khoản", href: "/terms" },
     { label: "Chính sách bảo mật", href: "/privacy" },
@@ -23,7 +25,7 @@ export default function Footer() {
       aria-label="Footer"
     >
       <div className="section-container">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center">
@@ -35,13 +37,13 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Product */}
+          {/* Trang chính */}
           <div>
             <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
-              Sản phẩm
+              Trang chính
             </h4>
             <ul className="mt-3 space-y-2">
-              {footerLinks.product.map((link) => (
+              {footerLinks.explore.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -54,10 +56,29 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social */}
+          {/* Hỗ trợ */}
           <div>
             <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
-              Mạng xã hội
+              Hỗ trợ
+            </h4>
+            <ul className="mt-3 space-y-2">
+              {footerLinks.support.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-body-sm text-gray-600 transition-colors hover:text-primary-600"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Mạng xã hội */}
+          <div>
+            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
+              Kết nối
             </h4>
             <ul className="mt-3 space-y-2">
               {footerLinks.social.map((link) => (
