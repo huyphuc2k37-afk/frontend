@@ -172,6 +172,7 @@ export default function AdminUsersPage() {
           <option value="">Tất cả vai trò</option>
           <option value="reader">Reader</option>
           <option value="author">Author</option>
+          <option value="moderator">Moderator</option>
           <option value="admin">Admin</option>
         </select>
         {selectedIds.size > 0 && (
@@ -296,6 +297,7 @@ export default function AdminUsersPage() {
                         >
                           <option value="reader">Reader</option>
                           <option value="author">Author</option>
+                          <option value="moderator">Moderator</option>
                           <option value="admin">Admin</option>
                         </select>
                         {u.role !== "admin" && (

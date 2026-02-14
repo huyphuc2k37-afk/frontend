@@ -30,6 +30,8 @@ interface UserStory {
   views: number;
   likes: number;
   status: string;
+  approvalStatus?: string;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: { chapters: number; bookmarks: number; comments: number };
@@ -318,6 +320,16 @@ export default function WritePage() {
                       >
                         {story.status === "completed" ? "Hoàn thành" : story.status === "paused" ? "Tạm ngưng" : "Đang viết"}
                       </span>
+                      {story.approvalStatus === "pending" && (
+                        <span className="flex-shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-bold text-yellow-700 border border-yellow-200">
+                          ⏳ Chờ duyệt
+                        </span>
+                      )}
+                      {story.approvalStatus === "rejected" && (
+                        <span className="flex-shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 border border-red-200">
+                          ❌ Từ chối
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-3 text-caption text-gray-500">
                       <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium">

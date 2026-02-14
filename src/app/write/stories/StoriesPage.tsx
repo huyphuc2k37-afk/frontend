@@ -30,6 +30,8 @@ interface UserStory {
   views: number;
   likes: number;
   status: string;
+  approvalStatus?: string;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   _count: { chapters: number; bookmarks: number; comments: number };
@@ -206,7 +208,27 @@ export default function StoriesPage() {
                     >
                       {story.status === "completed" ? "Hoàn thành" : story.status === "paused" ? "Tạm ngưng" : "Đang viết"}
                     </span>
+                    {story.approvalStatus === "pending" && (
+                      <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-[10px] font-bold text-yellow-700 border border-yellow-200">
+                        ⏳ Chờ duyệt
+                      </span>
+                    )}
+                    {story.approvalStatus === "approved" && (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                        ✅ Đã duyệt
+                      </span>
+                    )}
+                    {story.approvalStatus === "rejected" && (
+                      <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700 border border-red-200" title={story.rejectionReason || ""}>
+                        ❌ Bị từ chối
+                      </span>
+                    )}
                   </div>
+                  {story.approvalStatus === "rejected" && story.rejectionReason && (
+                    <p className="mt-1 text-[11px] text-red-600 bg-red-50 rounded-lg px-2 py-1">
+                      <strong>Lý do từ chối:</strong> {story.rejectionReason}
+                    </p>
+                  )}
 
                   <div className="mt-2 flex flex-wrap items-center gap-4 text-caption text-gray-500">
                     <span className="flex items-center gap-1">
