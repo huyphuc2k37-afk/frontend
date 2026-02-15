@@ -31,6 +31,7 @@ export default function RevenuePage() {
     tipRevenue: 0,
     balance: 0,
     periodRevenue: 0,
+    referralRevenue: 0,
   });
 
   const [revenueHistory, setRevenueHistory] = useState<any[]>([]);
@@ -55,6 +56,7 @@ export default function RevenuePage() {
           tipRevenue: data.tipRevenue || 0,
           balance: data.balance || 0,
           periodRevenue: data.periodRevenue || 0,
+          referralRevenue: data.referralRevenue || 0,
         });
         setRevenueHistory(data.recentSales || []);
         setTopStories(data.topStories || []);
@@ -138,7 +140,7 @@ export default function RevenuePage() {
       </div>
 
       {/* Revenue breakdown */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="rounded-xl bg-blue-50 p-3">
             <DocumentTextIcon className="h-6 w-6 text-blue-500" />
@@ -165,6 +167,21 @@ export default function RevenuePage() {
             </p>
           </div>
         </div>
+        {stats.referralRevenue > 0 && (
+          <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="rounded-xl bg-purple-50 p-3">
+              <SparklesIcon className="h-6 w-6 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-heading-sm font-bold text-gray-900">
+                {formatXu(stats.referralRevenue)}
+              </p>
+              <p className="text-caption text-gray-500">
+                Từ hoa hồng giới thiệu
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Revenue chart 30 days */}
