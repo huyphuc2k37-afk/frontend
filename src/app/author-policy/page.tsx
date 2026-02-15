@@ -9,8 +9,8 @@ type PolicySection = {
   content: React.ReactNode;
 };
 
-const effectiveFrom = "12/02/2026";
-const version = "1.0";
+const effectiveFrom = "15/02/2026";
+const version = "1.1";
 
 const sections: PolicySection[] = [
   {
@@ -58,11 +58,35 @@ const sections: PolicySection[] = [
           <li>Không vi phạm pháp luật</li>
           <li>Không chứa nội dung bị cấm theo quy định của VStory</li>
         </ul>
-        <p>VStory có quyền:</p>
+
+        <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.1 Kiểm duyệt nội dung</h3>
+        <p className="mt-2">
+          Mọi truyện được đăng tải trên VStory sẽ được đội ngũ kiểm duyệt của VStory <strong>xem xét và phê duyệt trước khi hiển thị công khai</strong> trên nền tảng. Truyện chỉ được xuất bản sau khi được duyệt thành công.
+        </p>
         <ul className="list-disc pl-5">
-          <li>Gỡ bỏ nội dung vi phạm</li>
+          <li>Truyện mới đăng sẽ ở trạng thái <em>&quot;Chờ duyệt&quot;</em> cho đến khi được xét duyệt.</li>
+          <li>VStory có quyền từ chối duyệt truyện nếu vi phạm chính sách nội dung hoặc quy định pháp luật.</li>
+          <li>Tác giả sẽ được thông báo lý do nếu truyện bị từ chối.</li>
+          <li>Thời gian xét duyệt thông thường: 1–3 ngày làm việc.</li>
+        </ul>
+
+        <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.2 Nội dung dành cho người lớn (18+)</h3>
+        <p className="mt-2">
+          Nếu truyện có chứa nội dung nhạy cảm, tình cảm người lớn hoặc các yếu tố 18+, Tác giả <strong>bắt buộc phải gắn đúng nhãn</strong> trong phần <em>&quot;Hình thức quan hệ&quot;</em> khi tạo truyện. Cụ thể:
+        </p>
+        <ul className="list-disc pl-5">
+          <li>Chọn nhãn <strong>&quot;Trưởng thành&quot;</strong> hoặc <strong>&quot;Tình cảm người lớn&quot;</strong> nếu nội dung có cảnh thân mật, tình dục hoặc mô tả nhạy cảm.</li>
+          <li>Đánh dấu truyện là <strong>nội dung 18+</strong> (checkbox &quot;Nội dung người lớn&quot;) để hệ thống hiển thị cảnh báo cho người đọc.</li>
+          <li>Truyện có nội dung 18+ nhưng <strong>không gắn nhãn đúng</strong> sẽ bị gỡ hoặc tạm ẩn mà không cần thông báo trước.</li>
+        </ul>
+
+        <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.3 Quyền xử lý của VStory</h3>
+        <p className="mt-2">VStory có quyền:</p>
+        <ul className="list-disc pl-5">
+          <li>Gỡ bỏ nội dung vi phạm mà không cần thông báo trước</li>
           <li>Tạm ẩn nội dung khi có khiếu nại</li>
           <li>Tạm giữ doanh thu liên quan đến nội dung đang tranh chấp</li>
+          <li>Yêu cầu Tác giả chỉnh sửa hoặc bổ sung nhãn nội dung phù hợp</li>
         </ul>
       </>
     ),
@@ -120,24 +144,86 @@ const sections: PolicySection[] = [
   },
   {
     number: 6,
-    title: "Khấu trừ thuế thu nhập cá nhân (TNCN)",
+    title: "Chi tiết phân chia doanh thu và thuế",
     content: (
       <>
-        <p>
-          Khi thực hiện rút tiền, VStory sẽ khấu trừ 5% thuế thu nhập cá nhân trên phần doanh thu của Tác giả theo quy định.
+        <h3 className="text-body-md font-semibold text-gray-900">6.1 Cơ cấu phân chia doanh thu</h3>
+        <p className="mt-2">
+          Khi người đọc mở khóa chương trả phí, tổng doanh thu được phân chia như sau:
         </p>
-        <p className="mt-2 font-medium text-gray-900">Cách tính:</p>
+
+        <div className="mt-3 overflow-hidden rounded-xl border border-[#f0e6d0]/80">
+          <table className="w-full text-body-sm">
+            <thead>
+              <tr className="bg-[#fdf9f0]">
+                <th className="px-4 py-2.5 text-left font-semibold text-gray-800">Khoản mục</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-gray-800">Tỷ lệ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f0e6d0]/50">
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Phí nền tảng VStory</td>
+                <td className="px-4 py-2.5 text-right font-medium text-gray-900">30%</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Phần doanh thu của Tác giả (trước thuế)</td>
+                <td className="px-4 py-2.5 text-right font-medium text-gray-900">70%</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (5% trên phần của Tác giả)</td>
+                <td className="px-4 py-2.5 text-right font-medium text-gray-900">−5% × 70% = −3.5%</td>
+              </tr>
+              <tr className="bg-[#fdf9f0]">
+                <td className="px-4 py-2.5 font-semibold text-gray-900">Tác giả thực nhận</td>
+                <td className="px-4 py-2.5 text-right font-bold text-primary-600">≈ 66.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="mt-5 text-body-md font-semibold text-gray-900">6.2 Ví dụ minh họa</h3>
+        <p className="mt-2">Giả sử tổng doanh thu từ một chương là <strong>100.000 VNĐ</strong>:</p>
+        <div className="mt-3 overflow-hidden rounded-xl border border-[#f0e6d0]/80">
+          <table className="w-full text-body-sm">
+            <tbody className="divide-y divide-[#f0e6d0]/50">
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Phí nền tảng (30%)</td>
+                <td className="px-4 py-2.5 text-right text-gray-900">30.000 VNĐ</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Doanh thu Tác giả trước thuế (70%)</td>
+                <td className="px-4 py-2.5 text-right text-gray-900">70.000 VNĐ</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (5% × 70.000)</td>
+                <td className="px-4 py-2.5 text-right text-red-600">−3.500 VNĐ</td>
+              </tr>
+              <tr className="bg-[#fdf9f0]">
+                <td className="px-4 py-2.5 font-semibold text-gray-900">Tác giả thực nhận</td>
+                <td className="px-4 py-2.5 text-right font-bold text-primary-600">66.500 VNĐ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="mt-5 text-body-md font-semibold text-gray-900">6.3 Thuế thu nhập cá nhân (TNCN)</h3>
+        <p className="mt-2">
+          VStory khấu trừ <strong>5% thuế TNCN</strong> trên phần doanh thu 70% của Tác giả trước khi thanh toán, theo quy định pháp luật Việt Nam. Cụ thể:
+        </p>
         <ul className="list-disc pl-5">
-          <li>Doanh thu Tác giả được hưởng = Tổng doanh thu × 70%</li>
-          <li>Thuế TNCN = 5% × Doanh thu Tác giả</li>
-          <li>Số tiền thực nhận = Doanh thu Tác giả − Thuế TNCN − (phí chuyển khoản nếu có)</li>
+          <li>Thuế TNCN = 5% × (Tổng doanh thu × 70%)</li>
+          <li>Tương đương 3.5% trên tổng doanh thu</li>
+          <li><strong>Tác giả thực nhận khoảng 66.5% tổng doanh thu</strong> (chưa bao gồm phí chuyển khoản nếu có)</li>
         </ul>
-        <p className="mt-3">Hệ thống sẽ hiển thị rõ:</p>
+
+        <h3 className="mt-5 text-body-md font-semibold text-gray-900">6.4 Minh bạch khi rút tiền</h3>
+        <p className="mt-2">Khi Tác giả thực hiện rút tiền, hệ thống sẽ hiển thị rõ ràng:</p>
         <ul className="list-disc pl-5">
-          <li>Tổng tiền được hưởng</li>
-          <li>Số thuế bị khấu trừ</li>
-          <li>Phí (nếu có)</li>
-          <li>Số tiền thực nhận</li>
+          <li>Tổng doanh thu từ chương trả phí</li>
+          <li>Phí nền tảng 30% đã trừ</li>
+          <li>Số thuế TNCN 5% bị khấu trừ</li>
+          <li>Phí chuyển khoản (nếu có)</li>
+          <li>Số tiền thực nhận cuối cùng</li>
           <li>Thời gian xử lý dự kiến</li>
         </ul>
         <p className="mt-3">Tác giả cần xác nhận trước khi hoàn tất yêu cầu rút tiền.</p>
