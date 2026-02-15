@@ -170,12 +170,12 @@ const sections: PolicySection[] = [
                 <td className="px-4 py-2.5 text-right font-medium text-gray-900">70%</td>
               </tr>
               <tr>
-                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (5% trên phần của Tác giả)</td>
-                <td className="px-4 py-2.5 text-right font-medium text-gray-900">−5% × 70% = −3.5%</td>
+                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (khấu trừ 5%)</td>
+                <td className="px-4 py-2.5 text-right font-medium text-gray-900">−5%</td>
               </tr>
               <tr className="bg-[#fdf9f0]">
                 <td className="px-4 py-2.5 font-semibold text-gray-900">Tác giả thực nhận</td>
-                <td className="px-4 py-2.5 text-right font-bold text-primary-600">≈ 66.5%</td>
+                <td className="px-4 py-2.5 text-right font-bold text-primary-600">65%</td>
               </tr>
             </tbody>
           </table>
@@ -195,12 +195,12 @@ const sections: PolicySection[] = [
                 <td className="px-4 py-2.5 text-right text-gray-900">70.000 VNĐ</td>
               </tr>
               <tr>
-                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (5% × 70.000)</td>
-                <td className="px-4 py-2.5 text-right text-red-600">−3.500 VNĐ</td>
+                <td className="px-4 py-2.5 text-gray-700">Thuế TNCN (5%)</td>
+                <td className="px-4 py-2.5 text-right text-red-600">−5.000 VNĐ</td>
               </tr>
               <tr className="bg-[#fdf9f0]">
                 <td className="px-4 py-2.5 font-semibold text-gray-900">Tác giả thực nhận</td>
-                <td className="px-4 py-2.5 text-right font-bold text-primary-600">66.500 VNĐ</td>
+                <td className="px-4 py-2.5 text-right font-bold text-primary-600">65.000 VNĐ</td>
               </tr>
             </tbody>
           </table>
@@ -208,12 +208,12 @@ const sections: PolicySection[] = [
 
         <h3 className="mt-5 text-body-md font-semibold text-gray-900">6.3 Thuế thu nhập cá nhân (TNCN)</h3>
         <p className="mt-2">
-          VStory khấu trừ <strong>5% thuế TNCN</strong> trên phần doanh thu 70% của Tác giả trước khi thanh toán, theo quy định pháp luật Việt Nam. Cụ thể:
+          VStory khấu trừ <strong>5% thuế TNCN</strong> trên phần doanh thu của Tác giả trước khi thanh toán, theo quy định pháp luật Việt Nam. Cụ thể:
         </p>
         <ul className="list-disc pl-5">
-          <li>Thuế TNCN = 5% × (Tổng doanh thu × 70%)</li>
-          <li>Tương đương 3.5% trên tổng doanh thu</li>
-          <li><strong>Tác giả thực nhận khoảng 66.5% tổng doanh thu</strong> (chưa bao gồm phí chuyển khoản nếu có)</li>
+          <li>Tổng doanh thu trừ 30% phí nền tảng = 70% về Tác giả</li>
+          <li>Thuế TNCN = 5% (khấu trừ trên phần của Tác giả)</li>
+          <li><strong>Tác giả thực nhận: 65% tổng doanh thu</strong> (chưa bao gồm phí chuyển khoản nếu có)</li>
         </ul>
 
         <h3 className="mt-5 text-body-md font-semibold text-gray-900">6.4 Minh bạch khi rút tiền</h3>
