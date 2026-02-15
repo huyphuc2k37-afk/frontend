@@ -71,27 +71,48 @@ export default function Page() {
 
       <HomePage />
 
-      {/* ── SSR SEO content — visible to Google, below the fold ── */}
+      {/* ── SSR SEO content ── */}
       <section className="border-t border-gray-100 bg-gray-50/50 py-10">
         <div className="section-container max-w-4xl">
           <h2 className="text-heading-md font-bold text-gray-800">
-            Đọc truyện chữ online miễn phí tại VStory
+            VStory – Nền tảng đọc truyện chữ online dành cho người Việt
           </h2>
           <p className="mt-3 text-body-sm leading-relaxed text-gray-600">
             VStory là nền tảng đọc và viết truyện chữ hàng đầu dành cho người
-            Việt. Tại đây, bạn có thể đọc hàng nghìn truyện hay thuộc đa dạng
-            thể loại hoàn toàn miễn phí. Từ truyện ngôn tình, đam mỹ, xuyên
-            không, tiên hiệp, kinh dị đến truyện học đường, huyền huyễn, trọng
-            sinh – tất cả đều được cập nhật liên tục bởi cộng đồng tác giả Việt
-            Nam.
-          </p>
-          <p className="mt-2 text-body-sm leading-relaxed text-gray-600">
-            Ngoài việc đọc truyện online miễn phí, bạn còn có thể theo dõi
-            truyện yêu thích, nhận thông báo khi có chương mới, đánh giá và
-            bình luận truyện. VStory hỗ trợ đọc truyện trên điện thoại, máy
-            tính bảng và máy tính – mọi lúc, mọi nơi.
+            Việt. Hàng nghìn truyện thuộc đa dạng thể loại – ngôn tình, đam mỹ,
+            xuyên không, tiên hiệp, kinh dị, học đường, huyền huyễn, trọng sinh
+            – được cập nhật liên tục bởi cộng đồng tác giả Việt Nam.
           </p>
 
+          {/* Highlights */}
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-body-sm font-semibold text-gray-800">📖 Đọc miễn phí</p>
+              <p className="mt-1 text-caption text-gray-500">
+                Hàng nghìn chương truyện miễn phí, không cần đăng ký tài khoản.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-body-sm font-semibold text-gray-800">🔐 Chương VIP</p>
+              <p className="mt-1 text-caption text-gray-500">
+                Một số chương được tác giả khóa trả phí bằng Xu. Đăng nhập và nạp Xu để mở khóa.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-body-sm font-semibold text-gray-800">🔔 Theo dõi & thông báo</p>
+              <p className="mt-1 text-caption text-gray-500">
+                Đăng nhập để theo dõi truyện yêu thích, nhận thông báo chương mới.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-body-sm font-semibold text-gray-800">📱 Mọi thiết bị</p>
+              <p className="mt-1 text-caption text-gray-500">
+                Đọc trên điện thoại, máy tính bảng, máy tính – mọi lúc, mọi nơi.
+              </p>
+            </div>
+          </div>
+
+          {/* Genre links */}
           <h3 className="mt-6 text-heading-sm font-bold text-gray-800">
             Thể loại truyện phổ biến
           </h3>
@@ -106,32 +127,6 @@ export default function Page() {
               </Link>
             ))}
           </div>
-
-          <h3 className="mt-6 text-heading-sm font-bold text-gray-800">
-            Tại sao chọn VStory?
-          </h3>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-body-sm text-gray-600">
-            <li>
-              <strong>Miễn phí hoàn toàn</strong> – Đọc truyện không giới hạn,
-              không cần đăng ký
-            </li>
-            <li>
-              <strong>Cập nhật nhanh</strong> – Chương mới được đăng mỗi ngày
-              bởi tác giả Việt
-            </li>
-            <li>
-              <strong>Đa thể loại</strong> – Ngôn tình, đam mỹ, xuyên không,
-              kinh dị, học đường...
-            </li>
-            <li>
-              <strong>Giao diện thân thiện</strong> – Tối ưu trải nghiệm đọc
-              trên mọi thiết bị
-            </li>
-            <li>
-              <strong>Cộng đồng sôi nổi</strong> – Bình luận, đánh giá, theo
-              dõi tác giả yêu thích
-            </li>
-          </ul>
         </div>
       </section>
 
