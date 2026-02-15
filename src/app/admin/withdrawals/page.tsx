@@ -47,11 +47,19 @@ export default function AdminWithdrawalsPage() {
     if (!confirm(confirmMsg)) return;
 
     const note = actionNote[id] || "";
-    await fetch(`${API_BASE_URL}/api/admin/withdrawals/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status, adminNote: note }),
-    });
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/withdrawals/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status, adminNote: note }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: "Lỗi không xác định" }));
+        alert(data.error || "Thao tác thất bại");
+      }
+    } catch {
+      alert("Lỗi kết nối server");
+    }
     fetchWithdrawals();
   };
 
