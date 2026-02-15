@@ -159,7 +159,9 @@ export default function AuthorProfilePage() {
               <div className="rounded-2xl bg-white p-6 shadow-card lg:col-span-1">
                 <div className="text-center">
                   {author.image ? (
-                    <Image src={author.image} alt="" width={96} height={96} className="mx-auto rounded-full" unoptimized />
+                    <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border-2 border-gray-100">
+                      <Image src={author.image} alt="" width={96} height={96} className="h-full w-full object-cover" unoptimized />
+                    </div>
                   ) : (
                     <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">
                       <span className="text-display-sm font-bold text-white">{String(author.name || "T")[0]}</span>
