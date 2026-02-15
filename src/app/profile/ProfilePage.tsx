@@ -326,9 +326,10 @@ export default function ProfilePage() {
                     Mã mời của bạn
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <code className="flex-1 rounded-lg bg-primary-50 px-3 py-2 text-center text-body-md font-bold tracking-wider text-primary-700">
-                      {profile.referralCode}
-                    </code>
+                    <div className="flex-1 rounded-lg bg-primary-50 px-3 py-2 text-center">
+                      <span className="text-body-sm font-medium text-primary-600">CODE: </span>
+                      <span className="text-body-md font-bold tracking-wider text-primary-700">{profile.referralCode}</span>
+                    </div>
                     <button
                       onClick={copyReferralCode}
                       className="rounded-lg border border-gray-200 p-2 text-gray-500 transition-colors hover:bg-gray-50"
