@@ -200,7 +200,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
               <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-4">
                 <div className="flex items-center gap-3">
                   {profile.image ? (
-                    <Image src={profile.image} alt="" width={40} height={40} className="rounded-full ring-2 ring-white" />
+                    <Image src={profile.image} alt="" width={40} height={40} className="h-10 w-10 rounded-full object-cover ring-2 ring-white" />
                   ) : (
                     <UserCircleIcon className="h-10 w-10 text-primary-400" />
                   )}
@@ -372,7 +372,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
               {profile && (
                 <div className="ml-1 hidden items-center gap-2 sm:flex">
                   {profile.image ? (
-                    <Image src={profile.image} alt="" width={32} height={32} className="rounded-full" />
+                    <Image src={profile.image} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
                   ) : (
                     <UserCircleIcon className="h-8 w-8 text-gray-400" />
                   )}

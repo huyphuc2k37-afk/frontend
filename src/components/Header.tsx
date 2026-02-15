@@ -379,7 +379,7 @@ export default function Header() {
                           alt=""
                           width={34}
                           height={34}
-                          className="rounded-full ring-2 ring-gray-100"
+                          className="h-[34px] w-[34px] rounded-full object-cover ring-2 ring-gray-100"
                           unoptimized
                         />
                       ) : (
@@ -600,7 +600,7 @@ export default function Header() {
                     <div className="my-2 border-t border-gray-100" />
                     <div className="flex items-center gap-3 px-3 py-2">
                       {session.user.image ? (
-                        <Image src={session.user.image} alt="" width={32} height={32} className="rounded-full" />
+                        <Image src={session.user.image} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
                       ) : (
                         <UserCircleIcon className="h-8 w-8 text-gray-400" />
                       )}

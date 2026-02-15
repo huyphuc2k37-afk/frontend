@@ -180,7 +180,7 @@ export default function ProfilePage() {
                     alt=""
                     width={96}
                     height={96}
-                    className="mx-auto rounded-full"
+                    className="mx-auto h-24 w-24 rounded-full object-cover"
                     unoptimized
                   />
                 ) : (
@@ -200,7 +200,7 @@ export default function ProfilePage() {
                           alt=""
                           width={96}
                           height={96}
-                          className="rounded-full"
+                          className="h-24 w-24 rounded-full object-cover"
                           unoptimized
                         />
                       ) : (

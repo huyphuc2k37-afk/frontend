@@ -298,7 +298,7 @@ export default function StoryDetailPage() {
                       alt={story.author.name}
                       width={24}
                       height={24}
-                      className="rounded-full"
+                      className="h-6 w-6 rounded-full object-cover"
                       unoptimized
                     />
                   )}
@@ -566,7 +566,7 @@ export default function StoryDetailPage() {
                       alt={story.author.name}
                       width={48}
                       height={48}
-                      className="rounded-full"
+                      className="h-12 w-12 rounded-full object-cover"
                       unoptimized
                     />
                   ) : (
