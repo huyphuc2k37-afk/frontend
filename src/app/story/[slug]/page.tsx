@@ -82,42 +82,69 @@ export default async function StoryPage({ params }: Props) {
   const story = await getStory(params.slug);
 
   const jsonLd = story
-    ? {
-        "@context": "https://schema.org",
-        "@type": "Book",
-        name: story.title,
-        description: story.description?.slice(0, 300),
-        url: SITE_URL + "/story/" + story.slug,
-        image: API_BASE_URL + "/api/stories/" + story.id + "/cover",
-        author: {
-          "@type": "Person",
-          name: story.author?.name,
+    ? [
+        {
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name: story.title,
+          description: story.description?.slice(0, 300),
+          url: SITE_URL + "/story/" + story.slug,
+          image: API_BASE_URL + "/api/stories/" + story.id + "/cover",
+          author: {
+            "@type": "Person",
+            name: story.author?.name,
+          },
+          genre: story.genre,
+          inLanguage: "vi",
+          ...(story.ratingCount > 0
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: story.averageRating,
+                  ratingCount: story.ratingCount,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
+          numberOfPages: story.chapters?.length || 0,
         },
-        genre: story.genre,
-        inLanguage: "vi",
-        ...(story.ratingCount > 0
-          ? {
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: story.averageRating,
-                ratingCount: story.ratingCount,
-                bestRating: 5,
-                worstRating: 1,
-              },
-            }
-          : {}),
-        numberOfPages: story.chapters?.length || 0,
-      }
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Trang chủ",
+              item: SITE_URL,
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: story.genre || "Thể loại",
+              item: SITE_URL + "/explore?genre=" + encodeURIComponent(story.genre || ""),
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: story.title,
+              item: SITE_URL + "/story/" + story.slug,
+            },
+          ],
+        },
+      ]
     : null;
 
   return (
     <>
-      {jsonLd && (
+      {jsonLd && jsonLd.map((ld: any, i: number) => (
         <script
+          key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
         />
-      )}
+      ))}
       <StoryDetailClient />
     </>
   );

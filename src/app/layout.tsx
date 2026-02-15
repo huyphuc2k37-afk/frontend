@@ -9,22 +9,28 @@ const SITE_URL = "https://vstory.vn";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "VStory – Đọc truyện online miễn phí",
+    default: "VStory – Đọc Truyện Chữ Online Miễn Phí",
     template: "%s | VStory",
   },
   description:
-    "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
+    "VStory – Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam. Truyện ngôn tình, đam mỹ, xuyên không, tu tiên, kinh dị, học đường. Cập nhật chương mới mỗi ngày.",
   keywords: [
     "đọc truyện",
     "truyện chữ",
     "truyện online",
+    "đọc truyện online miễn phí",
+    "truyện hay",
     "tiểu thuyết",
     "VStory",
-    "truyện tiên hiệp",
     "truyện ngôn tình",
-    "truyện kiếm hiệp",
-    "truyện đô thị",
+    "truyện đam mỹ",
+    "truyện xuyên không",
+    "truyện tiên hiệp",
+    "truyện kinh dị",
+    "truyện học đường",
+    "truyện huyền huyễn",
     "light novel",
+    "web truyện",
   ],
   icons: {
     icon: "/favicon.ico?v=20260212",
@@ -33,16 +39,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "vi_VN",
     siteName: "VStory",
-    title: "VStory – Đọc truyện online miễn phí",
+    title: "VStory – Đọc Truyện Chữ Online Miễn Phí",
     description:
-      "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
+      "VStory – Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam. Hàng nghìn truyện hay cập nhật mỗi ngày.",
     url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "VStory – Đọc truyện online miễn phí",
+    title: "VStory – Đọc Truyện Chữ Online Miễn Phí",
     description:
-      "Khám phá hàng nghìn truyện hay của tác giả Việt trên VStory. Đọc miễn phí, theo dõi truyện yêu thích và cập nhật chương mới mỗi ngày.",
+      "VStory – Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam. Hàng nghìn truyện hay cập nhật mỗi ngày.",
   },
   robots: {
     index: true,

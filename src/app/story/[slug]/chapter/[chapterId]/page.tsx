@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://vstory.vn";
+const SITE_URL = "https://vstory.vn";
 
 type Props = { params: { slug: string; chapterId: string } };
 
