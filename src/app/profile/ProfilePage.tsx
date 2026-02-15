@@ -13,6 +13,10 @@ import {
   PencilSquareIcon,
   EyeIcon,
   HeartIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
+  UserGroupIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -36,6 +40,10 @@ interface UserProfile {
     createdAt: string;
   }[];
   _count: { stories: number; bookmarks: number; comments: number };
+  referralCode: string | null;
+  referredById: string | null;
+  referredByName: string | null;
+  referralCount: number;
 }
 
 export default function ProfilePage() {
@@ -48,6 +56,12 @@ export default function ProfilePage() {
   const [editBio, setEditBio] = useState("");
   const [editImage, setEditImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+
+  // Referral states
+  const [referralInput, setReferralInput] = useState("");
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralMessage, setReferralMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -96,6 +110,43 @@ export default function ProfilePage() {
       setEditing(false);
     } catch {
       alert("Lưu thất bại, vui lòng thử lại.");
+    }
+  };
+
+  const handleReferralSubmit = async () => {
+    if (!referralInput.trim()) return;
+    setReferralLoading(true);
+    setReferralMessage(null);
+    try {
+      const token = (session as any).accessToken;
+      const res = await fetch(`${API_BASE_URL}/api/profile/referral`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ referralCode: referralInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReferralMessage({ type: "error", text: data.error || "Có lỗi xảy ra" });
+      } else {
+        setReferralMessage({ type: "success", text: `Đã nhập mã mời thành công! Người giới thiệu: ${data.referrerName}` });
+        setProfile((p) => (p ? { ...p, referredById: "set", referredByName: data.referrerName } : p));
+        setReferralInput("");
+      }
+    } catch {
+      setReferralMessage({ type: "error", text: "Có lỗi xảy ra, vui lòng thử lại" });
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
+  const copyReferralCode = () => {
+    if (profile?.referralCode) {
+      navigator.clipboard.writeText(profile.referralCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -266,6 +317,85 @@ export default function ProfilePage() {
               <p className="mt-4 text-center text-caption text-gray-400">
                 Tham gia từ {new Date(profile.createdAt).toLocaleDateString("vi-VN")}
               </p>
+
+              {/* ── Mã mời tác giả (chỉ hiện cho tác giả) ── */}
+              {(profile.role === "author" || profile.role === "admin") && profile.referralCode && (
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  <div className="flex items-center gap-2 text-body-sm font-semibold text-gray-900">
+                    <GiftIcon className="h-5 w-5 text-primary-500" />
+                    Mã mời của bạn
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <code className="flex-1 rounded-lg bg-primary-50 px-3 py-2 text-center text-body-md font-bold tracking-wider text-primary-700">
+                      {profile.referralCode}
+                    </code>
+                    <button
+                      onClick={copyReferralCode}
+                      className="rounded-lg border border-gray-200 p-2 text-gray-500 transition-colors hover:bg-gray-50"
+                      title="Sao chép mã mời"
+                    >
+                      {copied ? (
+                        <CheckIcon className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <ClipboardDocumentIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-caption text-gray-500">
+                    Chia sẻ mã này để nhận hoa hồng: 2% nạp xu từ độc giả, 1% thu nhập từ tác giả bạn giới thiệu.
+                  </p>
+                  {profile.referralCount > 0 && (
+                    <div className="mt-2 flex items-center gap-1 text-caption text-primary-600">
+                      <UserGroupIcon className="h-4 w-4" />
+                      {profile.referralCount} người đã sử dụng mã của bạn
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Nhập mã mời (tất cả user chưa nhập mã) ── */}
+              {!profile.referredById && (
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  <div className="flex items-center gap-2 text-body-sm font-semibold text-gray-900">
+                    <GiftIcon className="h-5 w-5 text-accent-500" />
+                    Nhập mã mời
+                  </div>
+                  <p className="mt-1 text-caption text-gray-500">
+                    Nếu bạn được tác giả giới thiệu, hãy nhập mã mời tại đây.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      value={referralInput}
+                      onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+                      placeholder="VD: REFABC123"
+                      maxLength={12}
+                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-body-sm uppercase tracking-wider"
+                    />
+                    <button
+                      onClick={handleReferralSubmit}
+                      disabled={referralLoading || !referralInput.trim()}
+                      className="rounded-lg bg-primary-500 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
+                    >
+                      {referralLoading ? "..." : "Gửi"}
+                    </button>
+                  </div>
+                  {referralMessage && (
+                    <p className={`mt-2 text-caption ${referralMessage.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                      {referralMessage.text}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Đã nhập mã mời */}
+              {profile.referredById && profile.referredByName && (
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  <div className="flex items-center gap-2 text-caption text-gray-500">
+                    <GiftIcon className="h-4 w-4 text-green-500" />
+                    Được giới thiệu bởi: <span className="font-semibold text-gray-700">{profile.referredByName}</span>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             {/* Right — content */}
