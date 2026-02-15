@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import HomePage from "./HomePage";
 import ZaloChatWidget from "@/components/ZaloChatWidget";
+import Footer from "@/components/Footer";
 import { genreSEOPages } from "@/data/genreSlugs";
 
 const SITE_URL = "https://vstory.vn";
@@ -133,6 +134,8 @@ export default function Page() {
           </ul>
         </div>
       </section>
+
+      <Footer />
 
       <ZaloChatWidget />
     </>
