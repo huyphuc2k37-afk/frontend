@@ -9,11 +9,19 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Story } from "@/types";
-import type { GenreGroup } from "@/data/genres";
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+  _count: { stories: number };
+}
 
 interface ExploreFiltersProps {
   stories: Story[];
-  genreGroups: GenreGroup[];
+  categories: ApiCategory[];
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
   activeStatus: string;
@@ -30,7 +38,7 @@ const statusOptions = [
 
 export default function ExploreFilters({
   stories,
-  genreGroups,
+  categories,
   activeCategory,
   onCategoryChange,
   activeStatus,
@@ -222,33 +230,24 @@ export default function ExploreFilters({
                         </button>
                       )}
                     </div>
-                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
-                      {genreGroups.map((group) => (
-                        <div key={group.label}>
-                          <p className="mb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                            {group.label}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {group.genres.map((g) => (
-                              <button
-                                key={g}
-                                onClick={() =>
-                                  onCategoryChange(
-                                    activeCategory === g ? null : g,
-                                  )
-                                }
-                                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                                  activeCategory === g
-                                    ? "bg-primary-600 text-white shadow-md"
-                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                }`}
-                                aria-pressed={activeCategory === g}
-                              >
-                                {g}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.slug}
+                          onClick={() =>
+                            onCategoryChange(
+                              activeCategory === cat.slug ? null : cat.slug,
+                            )
+                          }
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                            activeCategory === cat.slug
+                              ? "bg-primary-600 text-white shadow-md"
+                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                          }`}
+                          aria-pressed={activeCategory === cat.slug}
+                        >
+                          {cat.icon} {cat.name}
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -304,7 +303,7 @@ export default function ExploreFilters({
               <span className="text-caption text-gray-400">Đang lọc:</span>
               {activeCategory && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
-                  {activeCategory}
+                  {categories.find((c) => c.slug === activeCategory)?.name || activeCategory}
                   <button
                     onClick={() => onCategoryChange(null)}
                     className="ml-0.5 hover:text-primary-900"

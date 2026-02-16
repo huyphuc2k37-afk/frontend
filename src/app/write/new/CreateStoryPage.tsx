@@ -23,14 +23,36 @@ import { genreGroups } from "@/data/genres";
 
 /* ────── Constants ────── */
 
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+}
+
+interface ApiTag {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+}
+
+const TAG_TYPE_LABELS: Record<string, string> = {
+  genre: "Thể loại",
+  setting: "Bối cảnh",
+  tone: "Phong cách",
+  relation: "Quan hệ",
+  ending: "Kết cục",
+  perspective: "Góc nhìn",
+  content: "Nội dung",
+  form: "Hình thức",
+  mature: "Nội dung người lớn",
+};
+
 const tagCategories: Record<string, string[]> = {
   "Phân loại": ["Truyện sáng tác", "Fanfic", "Oneshot"],
   "Hình thức": ["Truyện chữ", "Light Novel", "Web Novel"],
-  "Đề tài": ["Tu tiên", "Dị giới", "Hệ thống", "Trọng sinh", "Xây dựng thế lực", "Phế vật nghịch thiên"],
-  "Phong cách": ["Nhẹ nhàng", "Nặng", "Hài hước", "Nghiêm túc", "Sảng văn"],
-  "Nhân vật": ["Nam chính mạnh", "Nữ chính mạnh", "Đa nhân vật", "Phản diện"],
-  "Bối cảnh": ["Cổ đại", "Hiện đại", "Tương lai", "Xuyên thời gian", "Dị giới"],
-  "Kết cục": ["Happy End", "Sad End", "Open End"],
 };
 
 const audienceOptions = [
@@ -84,7 +106,12 @@ export default function CreateStoryPage() {
   const [coverError, setCoverError] = useState<string | null>(null);
   const [genre, setGenre] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [activeTagCat, setActiveTagCat] = useState("Phân loại");
+  const [activeTagCat, setActiveTagCat] = useState("genre");
+  // API-driven categories & tags
+  const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
+  const [apiTags, setApiTags] = useState<ApiTag[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   // Tab 2: Outline
   const [theme, setTheme] = useState("");
@@ -102,6 +129,29 @@ export default function CreateStoryPage() {
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login?callbackUrl=/write/new");
   }, [status, router]);
+
+  // Fetch categories & tags from API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then((r) => r.json())
+      .then((data) => setApiCategories(data?.categories || []))
+      .catch(() => {});
+    fetch(`${API_BASE_URL}/api/tags`)
+      .then((r) => r.json())
+      .then((data) => setApiTags(data?.tags || []))
+      .catch(() => {});
+  }, []);
+
+  const tagsByType = apiTags.reduce<Record<string, ApiTag[]>>((acc, t) => {
+    (acc[t.type] = acc[t.type] || []).push(t);
+    return acc;
+  }, {});
+
+  const toggleApiTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : prev.length < 20 ? [...prev, tagId] : prev
+    );
+  };
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -174,6 +224,8 @@ export default function CreateStoryPage() {
 
     const body = {
       title, slug, description, genre,
+      categoryId: selectedCategoryId || undefined,
+      tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       coverImage: coverImage || undefined,
       tags: selectedTags.join(","),
       theme: theme || undefined,
@@ -371,7 +423,29 @@ export default function CreateStoryPage() {
                       </div>
                     </div>
 
-                    {/* Genre */}
+                    {/* Category */}
+                    <div className="rounded-2xl bg-white p-6 shadow-card">
+                      <label className="mb-3 block text-body-sm font-semibold text-gray-700">
+                        Danh mục <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {apiCategories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setSelectedCategoryId(selectedCategoryId === cat.id ? "" : cat.id)}
+                            className={`rounded-full px-4 py-2 text-body-sm font-medium transition-all ${
+                              selectedCategoryId === cat.id
+                                ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {cat.icon} {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Genre (legacy) */}
                     <div className="rounded-2xl bg-white p-6 shadow-card">
                       <label className="mb-3 block text-body-sm font-semibold text-gray-700">
                         Thể loại chính <span className="text-red-500">*</span>
@@ -402,10 +476,73 @@ export default function CreateStoryPage() {
                       </div>
                     </div>
 
-                    {/* Tags */}
+                    {/* Tags (API-driven) */}
                     <div className="rounded-2xl bg-white p-6 shadow-card">
                       <div className="mb-1 flex items-center justify-between">
                         <label className="text-body-sm font-semibold text-gray-700">Thẻ tag</label>
+                        <span className="text-caption text-gray-400">Đã chọn {selectedTagIds.length}/20 thẻ</span>
+                      </div>
+
+                      {/* Selected tags */}
+                      {selectedTagIds.length > 0 && (
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {selectedTagIds.map((tagId) => {
+                            const tag = apiTags.find((t) => t.id === tagId);
+                            if (!tag) return null;
+                            return (
+                              <span
+                                key={tagId}
+                                className="flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700"
+                              >
+                                {tag.name}
+                                <button onClick={() => toggleApiTag(tagId)} className="ml-0.5 hover:text-red-500">
+                                  <XMarkIcon className="h-3.5 w-3.5" />
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Category sidebar + tags */}
+                      <div className="grid grid-cols-[160px_1fr] gap-4 rounded-xl border border-gray-100">
+                        <div className="space-y-0.5 border-r border-gray-100 py-2">
+                          {Object.keys(tagsByType).map((type) => (
+                            <button
+                              key={type}
+                              onClick={() => setActiveTagCat(type)}
+                              className={`w-full px-4 py-2 text-left text-body-sm transition-colors ${
+                                activeTagCat === type
+                                  ? "bg-primary-50 font-semibold text-primary-700"
+                                  : "text-gray-600 hover:bg-gray-50"
+                              }`}
+                            >
+                              {TAG_TYPE_LABELS[type] || type}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap content-start gap-2 p-4">
+                          {(tagsByType[activeTagCat] || []).map((tag) => (
+                            <button
+                              key={tag.id}
+                              onClick={() => toggleApiTag(tag.id)}
+                              className={`rounded-lg border px-3 py-1.5 text-caption font-medium transition-all ${
+                                selectedTagIds.includes(tag.id)
+                                  ? "border-primary-400 bg-primary-50 text-primary-700"
+                                  : "border-gray-200 text-gray-500 hover:border-gray-300"
+                              }`}
+                            >
+                              {tag.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Legacy tags (backward compat) */}
+                    <div className="rounded-2xl bg-white p-6 shadow-card">
+                      <div className="mb-1 flex items-center justify-between">
+                        <label className="text-body-sm font-semibold text-gray-700">Thẻ tag cũ (tùy chọn)</label>
                         <span className="text-caption text-gray-400">Đã chọn {selectedTags.length} thẻ</span>
                       </div>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { genreSEOPages } from "@/data/genreSlugs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
 
@@ -32,7 +32,35 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GenreIndexPage() {
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  icon: string;
+  color: string;
+  displayOrder: number;
+  _count: { stories: number };
+}
+
+async function getCategories(): Promise<ApiCategory[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/categories`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data?.categories || [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function GenreIndexPage() {
+  const categories = await getCategories();
+
   return (
     <>
       <Header />
@@ -52,17 +80,23 @@ export default function GenreIndexPage() {
         <section className="py-8">
           <div className="section-container">
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {genreSEOPages.map((genre) => (
+              {categories.map((cat) => (
                 <Link
-                  key={genre.slug}
-                  href={`/the-loai/${genre.slug}`}
+                  key={cat.slug}
+                  href={`/the-loai/${cat.slug}`}
                   className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary-300 hover:shadow-md"
                 >
-                  <h2 className="text-heading-sm font-bold text-gray-900 transition-colors group-hover:text-primary-600">
-                    {genre.heading}
-                  </h2>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{cat.icon}</span>
+                    <h2 className="text-heading-sm font-bold text-gray-900 transition-colors group-hover:text-primary-600">
+                      {cat.name}
+                    </h2>
+                  </div>
                   <p className="mt-2 line-clamp-2 text-body-sm text-gray-500">
-                    {genre.description}
+                    {cat.description || cat.seoDescription}
+                  </p>
+                  <p className="mt-2 text-caption text-gray-400">
+                    {cat._count.stories} truyện
                   </p>
                 </Link>
               ))}

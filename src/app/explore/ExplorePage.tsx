@@ -9,7 +9,14 @@ import Footer from "@/components/Footer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL } from "@/lib/api";
 
-import { genreGroups } from "@/data/genres";
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+  _count: { stories: number };
+}
 
 interface ApiStory {
   id: string;
@@ -23,14 +30,24 @@ interface ApiStory {
   updatedAt: string;
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number; bookmarks: number };
+  category?: { name: string; slug: string } | null;
 }
 
 export default function ExplorePage() {
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch categories once
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then((r) => r.json())
+      .then((data) => setCategories(data?.categories || []))
+      .catch(() => {});
+  }, []);
 
   // Read ?q= from URL on mount
   useEffect(() => {
@@ -42,7 +59,7 @@ export default function ExplorePage() {
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("limit", "40");
-    if (activeCategory) params.set("genre", activeCategory);
+    if (activeCategory) params.set("category", activeCategory);
     if (activeStatus !== "all") params.set("status", activeStatus);
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
@@ -89,7 +106,7 @@ export default function ExplorePage() {
         {/* Unified search + filters */}
         <ExploreFilters
           stories={allStories}
-          genreGroups={genreGroups}
+          categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           activeStatus={activeStatus}

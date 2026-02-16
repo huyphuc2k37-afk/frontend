@@ -1,51 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
-import { genreSEOPages, getGenreSEOBySlug } from "@/data/genreSlugs";
 import GenreLandingClient from "./GenreLandingClient";
 
 const SITE_URL = "https://vstory.vn";
 
 type Props = { params: { slug: string } };
 
-/** Pre-generate all genre pages at build time */
-export function generateStaticParams() {
-  return genreSEOPages.map((g) => ({ slug: g.slug }));
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const genre = getGenreSEOBySlug(params.slug);
-  if (!genre) return { title: "Thể loại không tồn tại – VStory" };
-
-  return {
-    title: genre.title,
-    description: genre.description,
-    keywords: [
-      genre.name,
-      `truyện ${genre.name.toLowerCase()}`,
-      `đọc truyện ${genre.name.toLowerCase()}`,
-      "đọc truyện online",
-      "truyện chữ",
-      "truyện hay",
-      "VStory",
-    ],
-    alternates: {
-      canonical: `${SITE_URL}/the-loai/${genre.slug}`,
-    },
-    openGraph: {
-      title: genre.title,
-      description: genre.description,
-      url: `${SITE_URL}/the-loai/${genre.slug}`,
-      siteName: "VStory",
-      type: "website",
-      locale: "vi_VN",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: genre.title,
-      description: genre.description,
-    },
-  };
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  icon: string;
+  color: string;
 }
 
 interface ApiStory {
@@ -60,39 +30,92 @@ interface ApiStory {
   updatedAt: string;
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number; bookmarks: number };
+  category?: { name: string; slug: string } | null;
 }
 
-async function getStoriesByGenre(genreName: string): Promise<ApiStory[]> {
+async function getCategoryBySlug(slug: string): Promise<{ category: ApiCategory; stories: ApiStory[]; total: number } | null> {
   try {
-    const params = new URLSearchParams({
-      genre: genreName,
-      limit: "30",
-      sort: "updatedAt",
-    });
-    const res = await fetch(`${API_BASE_URL}/api/stories?${params}`, {
+    const res = await fetch(`${API_BASE_URL}/api/categories/${slug}?pageSize=30&sort=updated`, {
       next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function getAllCategorySlugs(): Promise<{ slug: string }[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/categories`, {
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return data?.stories || [];
+    return (data?.categories || []).map((c: any) => ({ slug: c.slug }));
   } catch {
     return [];
   }
 }
 
-export default async function GenrePage({ params }: Props) {
-  const genre = getGenreSEOBySlug(params.slug);
-  if (!genre) notFound();
+/** Pre-generate all category pages at build time */
+export async function generateStaticParams() {
+  return await getAllCategorySlugs();
+}
 
-  const stories = await getStoriesByGenre(genre.name);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const data = await getCategoryBySlug(params.slug);
+  if (!data) return { title: "Thể loại không tồn tại – VStory" };
+
+  const cat = data.category;
+  const title = cat.seoTitle || `Truyện ${cat.name} Hay Nhất - Đọc Online Miễn Phí`;
+  const description = cat.seoDescription || `Đọc truyện ${cat.name.toLowerCase()} hay nhất online miễn phí tại VStory.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      cat.name,
+      `truyện ${cat.name.toLowerCase()}`,
+      `đọc truyện ${cat.name.toLowerCase()}`,
+      "đọc truyện online",
+      "truyện chữ",
+      "truyện hay",
+      "VStory",
+    ],
+    alternates: {
+      canonical: `${SITE_URL}/the-loai/${cat.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/the-loai/${cat.slug}`,
+      siteName: "VStory",
+      type: "website",
+      locale: "vi_VN",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function GenrePage({ params }: Props) {
+  const data = await getCategoryBySlug(params.slug);
+  if (!data) notFound();
+
+  const { category, stories } = data;
+  const heading = `Truyện ${category.name}`;
 
   /* JSON-LD CollectionPage */
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: genre.heading,
-    description: genre.description,
-    url: `${SITE_URL}/the-loai/${genre.slug}`,
+    name: heading,
+    description: category.seoDescription || category.description,
+    url: `${SITE_URL}/the-loai/${category.slug}`,
     inLanguage: "vi",
     isPartOf: {
       "@type": "WebSite",
@@ -117,8 +140,8 @@ export default async function GenrePage({ params }: Props) {
         {
           "@type": "ListItem",
           position: 3,
-          name: genre.heading,
-          item: `${SITE_URL}/the-loai/${genre.slug}`,
+          name: heading,
+          item: `${SITE_URL}/the-loai/${category.slug}`,
         },
       ],
     },
@@ -133,7 +156,7 @@ export default async function GenrePage({ params }: Props) {
           name: s.title,
           url: `${SITE_URL}/story/${s.slug}`,
           author: { "@type": "Person", name: s.author?.name },
-          genre: s.genre,
+          genre: category.name,
         },
       })),
     },
@@ -145,7 +168,7 @@ export default async function GenrePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <GenreLandingClient genre={genre} initialStories={stories} />
+      <GenreLandingClient category={category} initialStories={stories} />
     </>
   );
 }
