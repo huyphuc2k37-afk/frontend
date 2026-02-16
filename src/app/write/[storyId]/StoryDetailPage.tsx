@@ -22,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
+import { genreGroups } from "@/data/genres";
 
 interface Chapter {
   id: string;
@@ -36,6 +37,33 @@ interface Chapter {
   updatedAt: string;
 }
 
+interface ApiCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+}
+
+interface ApiTag {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+}
+
+const TAG_TYPE_LABELS: Record<string, string> = {
+  genre: "Thể loại",
+  setting: "Bối cảnh",
+  tone: "Phong cách",
+  relation: "Quan hệ",
+  ending: "Kết cục",
+  perspective: "Góc nhìn",
+  content: "Nội dung",
+  form: "Hình thức",
+  mature: "Nội dung người lớn",
+};
+
 interface StoryDetail {
   id: string;
   title: string;
@@ -43,11 +71,16 @@ interface StoryDetail {
   description: string;
   genre: string;
   tags: string | null;
+  categoryId: string | null;
+  category: { id: string; name: string; slug: string } | null;
+  storyTagList: ApiTag[];
   status: string;
   views: number;
   likes: number;
   coverImage: string | null;
   isAdult: boolean;
+  approvalStatus: string;
+  rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
   chapters: Chapter[];
@@ -68,6 +101,12 @@ export default function StoryDetailPage() {
   const [editStatus, setEditStatus] = useState("");
   const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [editGenre, setEditGenre] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState<string>("");
+  const [editTagIds, setEditTagIds] = useState<string[]>([]);
+  const [activeTagType, setActiveTagType] = useState("genre");
+  const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
+  const [apiTags, setApiTags] = useState<ApiTag[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -88,6 +127,9 @@ export default function StoryDetailPage() {
         setEditDesc(data.description);
         setEditStatus(data.status);
         setEditCoverImage(data.coverImage || null);
+        setEditGenre(data.genre || "");
+        setEditCategoryId(data.categoryId || "");
+        setEditTagIds((data.storyTagList || []).map((t: ApiTag) => t.id));
         setLoading(false);
       })
       .catch(() => {
@@ -100,6 +142,29 @@ export default function StoryDetailPage() {
     if (!token || !storyId) return;
     fetchStory();
   }, [token, storyId, fetchStory]);
+
+  // Fetch categories & tags for editing
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then((r) => r.json())
+      .then((data) => setApiCategories(data?.categories || []))
+      .catch(() => {});
+    fetch(`${API_BASE_URL}/api/tags`)
+      .then((r) => r.json())
+      .then((data) => setApiTags(data?.tags || []))
+      .catch(() => {});
+  }, []);
+
+  const tagsByType = apiTags.reduce<Record<string, ApiTag[]>>((acc, t) => {
+    (acc[t.type] = acc[t.type] || []).push(t);
+    return acc;
+  }, {});
+
+  const toggleApiTag = (tagId: string) => {
+    setEditTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : prev.length < 20 ? [...prev, tagId] : prev
+    );
+  };
 
   const handleSaveInfo = async () => {
     if (!token || !story) return;
@@ -116,6 +181,9 @@ export default function StoryDetailPage() {
           description: editDesc,
           status: editStatus,
           coverImage: editCoverImage,
+          genre: editGenre,
+          categoryId: editCategoryId || null,
+          tagIds: editTagIds,
         }),
       });
       if (res.ok) {
@@ -240,6 +308,9 @@ export default function StoryDetailPage() {
                     setEditDesc(story.description);
                     setEditStatus(story.status);
                     setEditCoverImage(story.coverImage || null);
+                    setEditGenre(story.genre || "");
+                    setEditCategoryId(story.categoryId || "");
+                    setEditTagIds((story.storyTagList || []).map((t) => t.id));
                     setCoverError(null);
                   }}
                   className="rounded-lg px-3 py-1.5 text-caption font-medium text-gray-500 hover:bg-gray-50"
@@ -337,10 +408,120 @@ export default function StoryDetailPage() {
                 <option value="paused">Tạm ngưng</option>
               </select>
             </div>
+
+            {/* Category */}
+            <div>
+              <label className="mb-2 block text-caption font-medium text-gray-700">Danh mục</label>
+              <div className="flex flex-wrap gap-2">
+                {apiCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setEditCategoryId(editCategoryId === cat.id ? "" : cat.id)}
+                    className={`rounded-full px-3 py-1.5 text-caption font-medium transition-all ${
+                      editCategoryId === cat.id
+                        ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Genre */}
+            <div>
+              <label className="mb-2 block text-caption font-medium text-gray-700">Thể loại chính</label>
+              <div className="max-h-[300px] space-y-3 overflow-y-auto pr-1">
+                {genreGroups.map((group) => (
+                  <div key={group.label}>
+                    <p className="mb-1.5 text-[11px] font-semibold text-gray-400">{group.label}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.genres.map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setEditGenre(g)}
+                          className={`rounded-full px-3 py-1 text-[12px] font-medium transition-all ${
+                            editGenre === g
+                              ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-caption font-medium text-gray-700">Thẻ tag</label>
+                <span className="text-[11px] text-gray-400">{editTagIds.length}/20</span>
+              </div>
+              {editTagIds.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {editTagIds.map((tagId) => {
+                    const tag = apiTags.find((t) => t.id === tagId);
+                    if (!tag) return null;
+                    return (
+                      <span key={tagId} className="flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-medium text-primary-700">
+                        {tag.name}
+                        <button type="button" onClick={() => toggleApiTag(tagId)} className="ml-0.5 hover:text-red-500">&times;</button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="grid grid-cols-[140px_1fr] gap-3 rounded-xl border border-gray-100">
+                <div className="space-y-0.5 border-r border-gray-100 py-2">
+                  {Object.keys(tagsByType).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setActiveTagType(type)}
+                      className={`w-full px-3 py-1.5 text-left text-[12px] transition-colors ${
+                        activeTagType === type
+                          ? "bg-primary-50 font-semibold text-primary-700"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {TAG_TYPE_LABELS[type] || type}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap content-start gap-1.5 p-3">
+                  {(tagsByType[activeTagType] || []).map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleApiTag(tag.id)}
+                      className={`rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-all ${
+                        editTagIds.includes(tag.id)
+                          ? "border-primary-400 bg-primary-50 text-primary-700"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
             ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
+              {story.category && (
+                <span className="rounded-md bg-primary-50 px-2.5 py-1 text-caption font-medium text-primary-700">
+                  {story.category.name}
+                </span>
+              )}
               <span className="rounded-md bg-gray-100 px-2.5 py-1 text-caption font-medium text-gray-600">
                 {story.genre}
               </span>
@@ -361,6 +542,15 @@ export default function StoryDetailPage() {
                 </span>
               )}
             </div>
+            {story.storyTagList && story.storyTagList.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {story.storyTagList.map((tag) => (
+                  <span key={tag.id} className="rounded-full bg-gray-50 px-2 py-0.5 text-[11px] text-gray-500">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
             <p className="text-body-sm text-gray-600 leading-relaxed">{story.description}</p>
             <div className="flex flex-wrap gap-4 text-caption text-gray-500">
               <span className="flex items-center gap-1">
