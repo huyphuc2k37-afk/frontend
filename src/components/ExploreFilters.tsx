@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Story } from "@/types";
+import { genreGroups } from "@/data/genres";
 
 interface ApiCategory {
   id: string;
@@ -24,6 +25,8 @@ interface ExploreFiltersProps {
   categories: ApiCategory[];
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
+  activeGenre: string | null;
+  onGenreChange: (genre: string | null) => void;
   activeStatus: string;
   onStatusChange: (status: string) => void;
   searchQuery?: string;
@@ -41,6 +44,8 @@ export default function ExploreFilters({
   categories,
   activeCategory,
   onCategoryChange,
+  activeGenre,
+  onGenreChange,
   activeStatus,
   onStatusChange,
   searchQuery,
@@ -97,7 +102,7 @@ export default function ExploreFilters({
   }, []);
 
   const activeFiltersCount =
-    (activeCategory ? 1 : 0) + (activeStatus !== "all" ? 1 : 0);
+    (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + (activeStatus !== "all" ? 1 : 0);
 
   return (
     <section className="py-6 sm:py-8" aria-label="Bộ lọc">
@@ -255,7 +260,54 @@ export default function ExploreFilters({
                   {/* Divider */}
                   <div className="my-4 border-t border-gray-100" />
 
-                  {/* Trạng thái */}
+                  {/* Thể loại chi tiết */}
+                  <div>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-body-sm font-semibold text-gray-700">
+                        Thể loại chi tiết
+                      </span>
+                      {activeGenre && (
+                        <button
+                          onClick={() => onGenreChange(null)}
+                          className="text-caption font-medium text-primary-600 hover:text-primary-700"
+                        >
+                          Xóa bộ lọc
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
+                      {genreGroups.map((group) => (
+                        <div key={group.label}>
+                          <p className="mb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                            {group.label}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.genres.map((g) => (
+                              <button
+                                key={g}
+                                onClick={() =>
+                                  onGenreChange(
+                                    activeGenre === g ? null : g,
+                                  )
+                                }
+                                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                                  activeGenre === g
+                                    ? "bg-primary-600 text-white shadow-md"
+                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                }`}
+                                aria-pressed={activeGenre === g}
+                              >
+                                {g}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="my-4 border-t border-gray-100" />
                   <div>
                     <span className="mb-3 block text-body-sm font-semibold text-gray-700">
                       Trạng thái
@@ -284,6 +336,7 @@ export default function ExploreFilters({
                       <button
                         onClick={() => {
                           onCategoryChange(null);
+                          onGenreChange(null);
                           onStatusChange("all");
                         }}
                         className="text-body-sm font-medium text-red-500 hover:text-red-600"
@@ -308,6 +361,18 @@ export default function ExploreFilters({
                     onClick={() => onCategoryChange(null)}
                     className="ml-0.5 hover:text-primary-900"
                     aria-label={`Xóa lọc ${activeCategory}`}
+                  >
+                    <XMarkIcon className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              )}
+              {activeGenre && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
+                  {activeGenre}
+                  <button
+                    onClick={() => onGenreChange(null)}
+                    className="ml-0.5 hover:text-primary-900"
+                    aria-label={`Xóa lọc ${activeGenre}`}
                   >
                     <XMarkIcon className="h-3.5 w-3.5" />
                   </button>

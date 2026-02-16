@@ -36,6 +36,7 @@ interface ApiStory {
 export default function ExplorePage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeGenre, setActiveGenre] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
@@ -60,6 +61,7 @@ export default function ExplorePage() {
     const params = new URLSearchParams();
     params.set("limit", "40");
     if (activeCategory) params.set("category", activeCategory);
+    if (activeGenre) params.set("genre", activeGenre);
     if (activeStatus !== "all") params.set("status", activeStatus);
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
@@ -71,7 +73,7 @@ export default function ExplorePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeCategory, activeStatus, searchQuery]);
+  }, [activeCategory, activeGenre, activeStatus, searchQuery]);
 
   // Since backend already filters by genre/status, allStories IS the filtered result
   const featured = allStories.slice(0, 8);
@@ -109,6 +111,8 @@ export default function ExplorePage() {
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          activeGenre={activeGenre}
+          onGenreChange={setActiveGenre}
           activeStatus={activeStatus}
           onStatusChange={setActiveStatus}
           searchQuery={searchQuery}
