@@ -151,7 +151,14 @@ export default function StoryDetailPage() {
       .catch(() => {});
     fetch(`${API_BASE_URL}/api/tags`)
       .then((r) => r.json())
-      .then((data) => setApiTags(data?.tags || []))
+      .then((data) => {
+        const grouped = data?.tags;
+        if (grouped && typeof grouped === "object" && !Array.isArray(grouped)) {
+          setApiTags(Object.values(grouped).flat() as ApiTag[]);
+        } else {
+          setApiTags(Array.isArray(grouped) ? grouped : []);
+        }
+      })
       .catch(() => {});
   }, []);
 
