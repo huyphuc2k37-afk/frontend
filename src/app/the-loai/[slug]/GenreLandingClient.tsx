@@ -74,7 +74,7 @@ function StoryCard({ story }: { story: ApiStory }) {
             : story.views}
         </span>
         <span>
-          {story._count.chapters} chương
+          {story._count?.chapters ?? 0} chương
         </span>
       </div>
     </Link>

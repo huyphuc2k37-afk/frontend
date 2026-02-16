@@ -5,6 +5,8 @@ import GenreLandingClient from "./GenreLandingClient";
 
 const SITE_URL = "https://vstory.vn";
 
+export const dynamicParams = true;
+
 type Props = { params: { slug: string } };
 
 interface ApiCategory {

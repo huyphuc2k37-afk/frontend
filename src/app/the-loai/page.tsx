@@ -6,6 +6,8 @@ import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Thể Loại Truyện - Đọc Truyện Online Miễn Phí Tại VStory",
   description:
@@ -96,7 +98,7 @@ export default async function GenreIndexPage() {
                     {cat.description || cat.seoDescription}
                   </p>
                   <p className="mt-2 text-caption text-gray-400">
-                    {cat._count.stories} truyện
+                    {cat._count?.stories ?? 0} truyện
                   </p>
                 </Link>
               ))}
