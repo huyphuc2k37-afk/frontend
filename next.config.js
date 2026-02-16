@@ -1,3 +1,57 @@
+const withPWA = require("next-pwa")({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+  runtimeCaching: [
+    // Cache API responses for story listing / ranking
+    {
+      urlPattern: /\/api\/(stories|ranking|authors)/,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "api-cache",
+        expiration: { maxEntries: 100, maxAgeSeconds: 300 },
+      },
+    },
+    // Cache chapter content for offline reading
+    {
+      urlPattern: /\/api\/chapters\/.+/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "chapter-cache",
+        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 7 }, // 7 days
+      },
+    },
+    // Cache images
+    {
+      urlPattern: /\/api\/stories\/.+\/cover/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "cover-cache",
+        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 30 }, // 30 days
+      },
+    },
+    // Cache static assets
+    {
+      urlPattern: /\/_next\/static\/.*/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-cache",
+        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 365 },
+      },
+    },
+    // Cache Google fonts
+    {
+      urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "google-fonts",
+        expiration: { maxEntries: 20, maxAgeSeconds: 86400 * 365 },
+      },
+    },
+  ],
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async redirects() {
@@ -37,4 +91,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);

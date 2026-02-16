@@ -34,7 +34,9 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: "/favicon.ico?v=20260212",
+    apple: "/icons/icon-192x192.png",
   },
+  manifest: "/manifest.json",
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -67,6 +69,9 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
+        <meta name="theme-color" content="#667eea" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"

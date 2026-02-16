@@ -1,0 +1,26 @@
+{
+  "name": "VStory – Đọc Truyện Chữ Online",
+  "short_name": "VStory",
+  "description": "Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "lang": "vi",
+  "categories": ["books", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
