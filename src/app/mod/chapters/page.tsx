@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useMod } from "@/components/ModLayout";
 import { API_BASE_URL } from "@/lib/api";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -468,7 +469,7 @@ export default function ModChaptersPage() {
                       <p className="text-[11px] font-medium text-gray-400">Nội dung chương</p>
                       <div
                         className="prose prose-sm mt-2 max-h-80 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-4"
-                        dangerouslySetInnerHTML={{ __html: selectedChapter.content }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedChapter.content) }}
                       />
                     </div>
 

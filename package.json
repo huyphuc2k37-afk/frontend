@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
+    "dompurify": "^3.3.1",
     "framer-motion": "^11.15.0",
     "jsonwebtoken": "^9.0.3",
     "next": "^14.2.21",
@@ -20,6 +21,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",

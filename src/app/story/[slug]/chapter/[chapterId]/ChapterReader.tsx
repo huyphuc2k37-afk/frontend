@@ -18,6 +18,7 @@ import {
   MoonIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
@@ -337,9 +338,10 @@ export default function ReadChapterPage() {
               /* Chapter content */
               <div className={`rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746]' : 'border-gray-100 bg-white'}`}>
                 <div className="prose prose-lg max-w-none">
-                  <div className={`whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {chapter.content}
-                  </div>
+                  <div
+                    className={`whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }}
+                  />
                 </div>
 
                 {/* Author note */}
