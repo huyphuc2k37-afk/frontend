@@ -267,6 +267,11 @@ const sections: PolicySection[] = [
           <li>Tạm khóa hoặc khóa vĩnh viễn tài khoản Tác giả</li>
           <li>Gỡ bỏ nội dung vi phạm</li>
           <li>Ngừng hợp tác nếu Tác giả vi phạm nghiêm trọng</li>
+          <li>
+            <strong>Gỡ toàn bộ nội dung và xóa vĩnh viễn tài khoản</strong> nếu phát hiện Tác giả sử dụng AI (trí tuệ
+            nhân tạo) để tạo hàng loạt truyện nhằm mục đích spam, trục lợi hệ thống hoặc làm giảm chất lượng nền tảng.
+            Mọi doanh thu chưa rút liên quan đến nội dung vi phạm sẽ bị hủy bỏ và không được thanh toán.
+          </li>
         </ul>
         <p className="mt-3">Trong trường hợp chấm dứt, doanh thu hợp lệ còn lại sẽ được xử lý theo quy định.</p>
       </>
