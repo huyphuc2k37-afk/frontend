@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://vstory.vn/about",
   },
+  openGraph: {
+    title: "Giới thiệu – VStory",
+    description:
+      "VStory là nền tảng đọc và viết truyện chữ dành cho người Việt.",
+    url: "https://vstory.vn/about",
+    siteName: "VStory",
+    type: "website",
+  },
 };
 
 export default function Page() {

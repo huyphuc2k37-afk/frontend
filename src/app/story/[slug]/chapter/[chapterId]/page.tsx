@@ -45,6 +45,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: SITE_URL + "/story/" + params.slug + "/chapter/" + params.chapterId,
       siteName: "VStory",
       type: "article",
+      ...(chapter.story?.id
+        ? {
+            images: [
+              {
+                url: API_BASE_URL + "/api/stories/" + chapter.story.id + "/cover",
+                width: 400,
+                height: 600,
+                alt: storyTitle,
+              },
+            ],
+          }
+        : {}),
     },
     twitter: {
       card: "summary",
