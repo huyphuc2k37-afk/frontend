@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useMod } from "@/components/ModLayout";
-import Image from "next/image";
 import { API_BASE_URL } from "@/lib/api";
 import {
   CheckCircleIcon,
@@ -148,13 +147,11 @@ export default function CoversPage() {
                 onClick={() => story.coverImage && setPreviewImage(story.coverImage)}
               >
                 {story.coverImage ? (
-                  <Image
+                  <img
                     src={story.coverImage}
                     alt={story.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    unoptimized
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -262,14 +259,10 @@ export default function CoversPage() {
       {previewImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setPreviewImage(null)}>
           <div className="relative max-h-[90vh] max-w-[90vw]">
-            <Image
+            <img
               src={previewImage}
               alt="Preview"
-              width={600}
-              height={800}
-              className="rounded-lg object-contain"
-              style={{ maxHeight: "90vh" }}
-              unoptimized
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
             />
           </div>
         </div>
