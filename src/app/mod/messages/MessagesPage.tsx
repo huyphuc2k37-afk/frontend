@@ -48,6 +48,7 @@ export default function MessagesPage() {
   const [showNew, setShowNew] = useState(false);
   const [searchAuthor, setSearchAuthor] = useState("");
   const [authorResults, setAuthorResults] = useState<{ id: string; name: string; email: string; image: string | null }[]>([]);
+  const [allAuthors, setAllAuthors] = useState<{ id: string; name: string; email: string; image: string | null }[]>([]);
   const [newSubject, setNewSubject] = useState("");
   const [newContent, setNewContent] = useState("");
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
@@ -80,6 +81,15 @@ export default function MessagesPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Load all authors when modal opens
+  useEffect(() => {
+    if (!token || !showNew || allAuthors.length > 0) return;
+    fetch(`${API_BASE_URL}/api/messages/authors?search=`, { headers })
+      .then((r) => r.ok ? r.json() : { authors: [] })
+      .then((data) => setAllAuthors(data?.authors || []))
+      .catch(() => {});
+  }, [token, showNew]);
 
   // Search authors
   useEffect(() => {
@@ -307,18 +317,52 @@ export default function MessagesPage() {
                   className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-body-sm focus:border-indigo-400 focus:outline-none"
                 />
               </div>
-              {authorResults.length > 0 && (
+              {/* Selected author badge */}
+              {selectedAuthorId && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500 text-[11px] font-bold text-white">
+                    {searchAuthor.charAt(0)}
+                  </div>
+                  <span className="text-body-sm font-medium text-indigo-700">{searchAuthor}</span>
+                  <button onClick={() => { setSelectedAuthorId(""); setSearchAuthor(""); }} className="ml-auto text-indigo-400 hover:text-indigo-600">&times;</button>
+                </div>
+              )}
+              {/* Search results */}
+              {authorResults.length > 0 && !selectedAuthorId && (
                 <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-white">
                   {authorResults.map((a) => (
                     <button
                       key={a.id}
                       onClick={() => { setSelectedAuthorId(a.id); setSearchAuthor(a.name); setAuthorResults([]); }}
-                      className={`w-full px-3 py-2 text-left hover:bg-gray-50 ${selectedAuthorId === a.id ? "bg-indigo-50" : ""}`}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-50"
                     >
                       <p className="text-body-sm font-medium text-gray-900">{a.name}</p>
                       <p className="text-caption text-gray-500">{a.email}</p>
                     </button>
                   ))}
+                </div>
+              )}
+              {/* Pre-loaded author list */}
+              {!selectedAuthorId && searchAuthor.length < 2 && allAuthors.length > 0 && (
+                <div className="mt-2">
+                  <p className="mb-1.5 text-caption font-medium text-gray-400">Chọn nhanh</p>
+                  <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50">
+                    {allAuthors.map((a) => (
+                      <button
+                        key={a.id}
+                        onClick={() => { setSelectedAuthorId(a.id); setSearchAuthor(a.name); }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-indigo-50"
+                      >
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-[11px] font-bold text-white">
+                          {a.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-body-sm font-medium text-gray-900">{a.name}</p>
+                          <p className="truncate text-[11px] text-gray-400">{a.email}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
