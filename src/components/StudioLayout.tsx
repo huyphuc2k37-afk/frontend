@@ -21,6 +21,7 @@ import {
   ChevronLeftIcon,
   CurrencyDollarIcon,
   BanknotesIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL, authFetch } from "@/lib/api";
@@ -52,6 +53,7 @@ const sidebarItems = [
   { id: "revenue", label: "Doanh thu", href: "/write/revenue", icon: CurrencyDollarIcon },
   { id: "withdraw", label: "Rút tiền", href: "/write/withdraw", icon: BanknotesIcon },
   { id: "notifications", label: "Thông báo", href: "/write/notifications", icon: BellAlertIcon },
+  { id: "messages", label: "Tin nhắn", href: "/write/messages", icon: ChatBubbleLeftRightIcon },
 ];
 
 const sidebarBottom = [

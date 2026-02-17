@@ -13,6 +13,8 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronLeftIcon,
   ShieldCheckIcon,
+  ChatBubbleLeftRightIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
@@ -28,6 +30,8 @@ const sidebarItems = [
   { id: "dashboard", label: "Tổng quan", href: "/mod", icon: HomeIcon },
   { id: "stories", label: "Duyệt truyện", href: "/mod/stories", icon: BookOpenIcon },
   { id: "chapters", label: "Duyệt chương", href: "/mod/chapters", icon: DocumentTextIcon },
+  { id: "covers", label: "Duyệt ảnh bìa", href: "/mod/covers", icon: PhotoIcon },
+  { id: "messages", label: "Nhắn tin", href: "/mod/messages", icon: ChatBubbleLeftRightIcon },
 ];
 
 export default function ModLayout({ children }: { children: React.ReactNode }) {

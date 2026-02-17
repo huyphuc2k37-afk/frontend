@@ -9,6 +9,7 @@ import {
   XCircleIcon,
   DocumentCheckIcon,
   DocumentTextIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -23,6 +24,7 @@ interface ModStats {
 export default function ModDashboard() {
   const { token } = useMod();
   const [stats, setStats] = useState<ModStats | null>(null);
+  const [coverPending, setCoverPending] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -32,6 +34,12 @@ export default function ModDashboard() {
       .then((r) => r.json())
       .then(setStats)
       .catch(() => setStats({ pending: 0, approved: 0, rejected: 0, todayReviewed: 0, chapterPending: 0, _error: true } as any));
+    fetch(`${API_BASE_URL}/api/mod/covers/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setCoverPending(data?.pending || 0))
+      .catch(() => {});
   }, [token]);
 
   if (!stats) {
@@ -82,6 +90,14 @@ export default function ModDashboard() {
       color: "text-violet-600 bg-violet-50 border-violet-200",
       iconColor: "text-violet-500",
       href: "/mod/chapters?status=pending",
+    },
+    {
+      label: "Ảnh bìa chờ duyệt",
+      value: coverPending,
+      icon: PhotoIcon,
+      color: "text-pink-600 bg-pink-50 border-pink-200",
+      iconColor: "text-pink-500",
+      href: "/mod/covers",
     },
   ];
 
@@ -164,6 +180,31 @@ export default function ModDashboard() {
             <Link
               href="/mod/chapters?status=pending"
               className="rounded-xl bg-violet-600 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-violet-700"
+            >
+              Duyệt ngay
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Cover pending alert */}
+      {coverPending > 0 && (
+        <div className="rounded-2xl border border-pink-200 bg-pink-50 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <PhotoIcon className="h-6 w-6 text-pink-600" />
+              <div>
+                <p className="font-semibold text-pink-800">
+                  Có {coverPending} ảnh bìa đang chờ kiểm duyệt
+                </p>
+                <p className="text-body-sm text-pink-600">
+                  Vui lòng kiểm tra hình ảnh bìa truyện mới đăng.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/mod/covers"
+              className="rounded-xl bg-pink-600 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-pink-700"
             >
               Duyệt ngay
             </Link>
