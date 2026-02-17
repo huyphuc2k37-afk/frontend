@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -52,10 +52,11 @@ export default function AdminMessagesPage() {
   const [newContent, setNewContent] = useState("");
   const [selectedAuthorId, setSelectedAuthorId] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMsgCount = useRef(0);
 
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
 
-  useEffect(() => {
+  const fetchConversations = useCallback(() => {
     if (!token) return;
     fetch(`${API_BASE_URL}/api/messages/conversations`, { headers })
       .then((r) => r.ok ? r.json() : { conversations: [] })
@@ -63,7 +64,7 @@ export default function AdminMessagesPage() {
       .catch(() => setLoading(false));
   }, [token]);
 
-  useEffect(() => {
+  const fetchMessages = useCallback(() => {
     if (!token || !selectedConv) return;
     fetch(`${API_BASE_URL}/api/messages/conversations/${selectedConv}`, { headers })
       .then((r) => r.ok ? r.json() : { messages: [], conversation: null })
@@ -75,7 +76,25 @@ export default function AdminMessagesPage() {
       .catch(() => {});
   }, [token, selectedConv]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => {
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    fetchMessages();
+    if (!selectedConv) return;
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, [fetchMessages, selectedConv]);
+
+  useEffect(() => {
+    if (messages.length !== prevMsgCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      prevMsgCount.current = messages.length;
+    }
+  }, [messages]);
 
   // Load all authors when modal opens
   useEffect(() => {
