@@ -33,7 +33,7 @@ interface Message {
 }
 
 export default function AuthorMessagesPage() {
-  const { token, profile } = useStudio();
+  const { token } = useStudio();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,7 +49,7 @@ export default function AuthorMessagesPage() {
   useEffect(() => {
     if (!token) return;
     fetch(`${API_BASE_URL}/api/messages/conversations`, { headers })
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : { conversations: [] })
       .then((data) => { setConversations(data?.conversations || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [token]);
@@ -57,7 +57,7 @@ export default function AuthorMessagesPage() {
   useEffect(() => {
     if (!token || !selectedConv) return;
     fetch(`${API_BASE_URL}/api/messages/conversations/${selectedConv}`, { headers })
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : { messages: [], conversation: null })
       .then((data) => {
         setMessages(data?.messages || []);
         setConvParticipants(data?.conversation?.participants || []);

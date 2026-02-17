@@ -8,7 +8,6 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   PhotoIcon,
-  EyeIcon,
   FunnelIcon,
 } from "@heroicons/react/24/outline";
 
@@ -43,8 +42,8 @@ export default function CoversPage() {
   const fetchCovers = () => {
     if (!token) return;
     Promise.all([
-      fetch(`${API_BASE_URL}/api/mod/covers?status=${filter}&page=${page}`, { headers }).then((r) => r.json()),
-      fetch(`${API_BASE_URL}/api/mod/covers/stats`, { headers }).then((r) => r.json()),
+      fetch(`${API_BASE_URL}/api/mod/covers?status=${filter}&page=${page}`, { headers }).then((r) => r.ok ? r.json() : { stories: [], totalPages: 1 }),
+      fetch(`${API_BASE_URL}/api/mod/covers/stats`, { headers }).then((r) => r.ok ? r.json() : { pending: 0, approved: 0, rejected: 0 }),
     ]).then(([data, statsData]) => {
       setStories(data?.stories || []);
       setTotalPages(data?.totalPages || 1);
@@ -60,8 +59,12 @@ export default function CoversPage() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/mod/covers/${id}/approve`, { method: "PUT", headers });
       if (res.ok) {
-        setStories((prev) => prev.filter((s) => s.id !== id));
-        setStats((prev) => ({ ...prev, pending: prev.pending - 1, approved: prev.approved + 1 }));
+        if (filter === "all") {
+          setStories((prev) => prev.map((s) => s.id === id ? { ...s, coverApprovalStatus: "approved", coverRejectionReason: null } : s));
+        } else {
+          setStories((prev) => prev.filter((s) => s.id !== id));
+        }
+        setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1), approved: prev.approved + 1 }));
       }
     } catch {}
     setProcessing(null);
@@ -75,8 +78,12 @@ export default function CoversPage() {
         method: "PUT", headers, body: JSON.stringify({ reason: rejectReason.trim() }),
       });
       if (res.ok) {
-        setStories((prev) => prev.filter((s) => s.id !== rejectId));
-        setStats((prev) => ({ ...prev, pending: prev.pending - 1, rejected: prev.rejected + 1 }));
+        if (filter === "all") {
+          setStories((prev) => prev.map((s) => s.id === rejectId ? { ...s, coverApprovalStatus: "rejected", coverRejectionReason: rejectReason.trim() } : s));
+        } else {
+          setStories((prev) => prev.filter((s) => s.id !== rejectId));
+        }
+        setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1), rejected: prev.rejected + 1 }));
         setRejectId(null);
         setRejectReason("");
       }
@@ -147,6 +154,7 @@ export default function CoversPage() {
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -261,6 +269,7 @@ export default function CoversPage() {
               height={800}
               className="rounded-lg object-contain"
               style={{ maxHeight: "90vh" }}
+              unoptimized
             />
           </div>
         </div>

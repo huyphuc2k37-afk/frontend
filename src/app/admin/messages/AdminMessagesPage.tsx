@@ -57,7 +57,7 @@ export default function AdminMessagesPage() {
   useEffect(() => {
     if (!token) return;
     fetch(`${API_BASE_URL}/api/messages/conversations`, { headers })
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : { conversations: [] })
       .then((data) => { setConversations(data?.conversations || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [token]);
@@ -65,7 +65,7 @@ export default function AdminMessagesPage() {
   useEffect(() => {
     if (!token || !selectedConv) return;
     fetch(`${API_BASE_URL}/api/messages/conversations/${selectedConv}`, { headers })
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : { messages: [], conversation: null })
       .then((data) => {
         setMessages(data?.messages || []);
         setConvParticipants(data?.conversation?.participants || []);
@@ -80,7 +80,7 @@ export default function AdminMessagesPage() {
     if (!token || searchAuthor.length < 2) { setAuthorResults([]); return; }
     const timer = setTimeout(() => {
       fetch(`${API_BASE_URL}/api/messages/authors?search=${encodeURIComponent(searchAuthor)}`, { headers })
-        .then((r) => r.json())
+        .then((r) => r.ok ? r.json() : { authors: [] })
         .then((data) => setAuthorResults(data?.authors || []))
         .catch(() => {});
     }, 300);
