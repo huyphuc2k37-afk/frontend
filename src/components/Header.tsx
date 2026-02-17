@@ -13,6 +13,7 @@ import {
   ArrowRightOnRectangleIcon,
   MagnifyingGlassIcon,
   BellIcon,
+  ChatBubbleLeftRightIcon,
   PencilSquareIcon,
   ClockIcon,
   CurrencyDollarIcon,
@@ -42,6 +43,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [unreadMsgCount, setUnreadMsgCount] = useState<number>(0);
   const { data: session } = useSession();
   const { profile } = useUserProfile();
   const token = (session as any)?.accessToken as string | undefined;
@@ -112,6 +114,25 @@ export default function Header() {
     const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [token]);
+
+  // Poll unread message count (author/mod/admin only)
+  const canMessage = isAuthor || isMod || isAdmin;
+  useEffect(() => {
+    if (!token || !canMessage) { setUnreadMsgCount(0); return; }
+    const fetchMsgUnread = async () => {
+      try {
+        const res = await authFetch("/api/messages/unread-count", token);
+        const data = await res.json();
+        if (res.ok) setUnreadMsgCount(typeof data.unread === "number" ? data.unread : 0);
+      } catch { /* ignore */ }
+    };
+    fetchMsgUnread();
+    const interval = setInterval(fetchMsgUnread, 15000);
+    return () => clearInterval(interval);
+  }, [token, canMessage]);
+
+  // Determine messages page based on role
+  const messagesHref = isAdmin ? "/admin/messages" : isMod ? "/mod/messages" : "/write/messages";
 
   const fetchNotifications = async () => {
     if (!token) return;
@@ -211,6 +232,22 @@ export default function Header() {
 
               {session?.user ? (
                 <>
+                  {/* Messenger icon */}
+                  {canMessage && (
+                    <Link
+                      href={messagesHref}
+                      className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                      aria-label="Tin nhắn"
+                    >
+                      <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                      {unreadMsgCount > 0 && (
+                        <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                          {unreadMsgCount > 9 ? "9+" : unreadMsgCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
+
                   {/* Notification bell */}
                   <div className="relative" ref={notificationsRef}>
                     <button
