@@ -32,12 +32,13 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  /* WebSite + Organization JSON-LD */
+  /* WebSite JSON-LD — helps Google identify the homepage as the main site page */
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
     name: "VStory",
-    alternateName: "VStory.vn",
+    alternateName: ["VStory.vn", "vstory", "V Story"],
     url: SITE_URL,
     description:
       "Nền tảng đọc và viết truyện chữ online miễn phí dành cho người Việt",
@@ -52,21 +53,47 @@ export default function Page() {
     },
     publisher: {
       "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
       name: "VStory",
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/favicon.ico`,
+        url: `${SITE_URL}/icons/icon-512x512.png`,
+        width: 512,
+        height: 512,
       },
+      sameAs: [],
     },
+  };
+
+  /* Organization JSON-LD — reinforces brand identity */
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
+    name: "VStory",
+    alternateName: "VStory.vn",
+    url: SITE_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/icons/icon-512x512.png`,
+      width: 512,
+      height: 512,
+    },
+    description:
+      "VStory – Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam. Truyện ngôn tình, đam mỹ, xuyên không, tu tiên, kinh dị, học đường.",
   };
 
   return (
     <>
-      {/* Structured data for sitelinks search box */}
+      {/* Structured data for sitelinks search box + organization */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
       <HomePage />
