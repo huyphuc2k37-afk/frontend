@@ -295,19 +295,21 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-body-sm text-center text-gray-600">{u._count?.stories || 0}</td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex flex-col items-center gap-1">
                         <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold ${roleColors[u.role] || "bg-gray-100 text-gray-600"}`}>
                           {u.role}
                         </span>
                         {u.role === "moderator" && u.isSuperMod && (
-                          <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700" title="Super Moderator">
-                            SUPER
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">
+                            <ShieldCheckIcon className="h-3 w-3" />
+                            Super Mod
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                         <select
                           value={u.role}
                           onChange={(e) => updateRole(u.id, e.target.value)}
@@ -318,19 +320,6 @@ export default function AdminUsersPage() {
                           <option value="moderator">Moderator</option>
                           <option value="admin">Admin</option>
                         </select>
-                        {u.role === "moderator" && (
-                          <button
-                            onClick={() => toggleSuperMod(u.id, !!u.isSuperMod)}
-                            className={`rounded p-1 transition-colors ${
-                              u.isSuperMod
-                                ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
-                                : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                            }`}
-                            title={u.isSuperMod ? "Hủy quyền Super Mod" : "Cấp quyền Super Mod"}
-                          >
-                            <ShieldCheckIcon className="h-4 w-4" />
-                          </button>
-                        )}
                         {u.role !== "admin" && (
                           <button
                             onClick={() => deleteSingle(u.id, u.name)}
@@ -339,6 +328,20 @@ export default function AdminUsersPage() {
                             title="Xóa người dùng"
                           >
                             <TrashIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                        </div>
+                        {u.role === "moderator" && (
+                          <button
+                            onClick={() => toggleSuperMod(u.id, !!u.isSuperMod)}
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                              u.isSuperMod
+                                ? "bg-amber-500 text-white hover:bg-amber-600"
+                                : "bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-700"
+                            }`}
+                          >
+                            <ShieldCheckIcon className="h-3 w-3" />
+                            {u.isSuperMod ? "Hủy Super Mod" : "Cấp Super Mod"}
                           </button>
                         )}
                       </div>
