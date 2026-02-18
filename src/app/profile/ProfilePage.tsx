@@ -85,11 +85,31 @@ export default function ProfilePage() {
     }
   }, [status, router, session]);
 
-  const readFileAsDataURL = (file: File) =>
-    new Promise<string>((resolve, reject) => {
+  /** Read file, resize to max 400×400 to keep payload small */
+  const readAndResizeImage = (file: File, maxSize = 400): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
       reader.onerror = reject;
+      reader.onload = () => {
+        const img = new window.Image();
+        img.onerror = () => reject(new Error("Cannot load image"));
+        img.onload = () => {
+          let w = img.width;
+          let h = img.height;
+          if (w > maxSize || h > maxSize) {
+            const ratio = Math.min(maxSize / w, maxSize / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/webp", 0.8));
+        };
+        img.src = String(reader.result);
+      };
       reader.readAsDataURL(file);
     });
 
@@ -222,13 +242,13 @@ export default function ProfilePage() {
                             if (!file) return;
                             setImageError(null);
 
-                            if (file.size > 2 * 1024 * 1024) {
-                              setImageError("Ảnh tối đa 2MB");
+                            if (file.size > 5 * 1024 * 1024) {
+                              setImageError("Ảnh tối đa 5MB");
                               return;
                             }
 
                             try {
-                              const dataUrl = await readFileAsDataURL(file);
+                              const dataUrl = await readAndResizeImage(file);
                               setEditImage(dataUrl);
                             } catch {
                               setImageError("Không thể đọc file ảnh");
