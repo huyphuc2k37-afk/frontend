@@ -21,9 +21,10 @@ import { API_BASE_URL } from "@/lib/api";
 
 interface ModContextType {
   token: string | null;
+  isSuperMod: boolean;
 }
 
-const ModContext = createContext<ModContextType>({ token: null });
+const ModContext = createContext<ModContextType>({ token: null, isSuperMod: false });
 export const useMod = () => useContext(ModContext);
 
 const sidebarItems = [
@@ -41,6 +42,7 @@ export default function ModLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modName, setModName] = useState("");
+  const [isSuperMod, setIsSuperMod] = useState(false);
 
   const token = (session as any)?.accessToken || null;
 
@@ -60,6 +62,7 @@ export default function ModLayout({ children }: { children: React.ReactNode }) {
             return;
           }
           setModName(data.name);
+          setIsSuperMod(data.role === "admin" || !!data.isSuperMod);
           setLoading(false);
         })
         .catch(() => router.push("/"));
@@ -87,7 +90,7 @@ export default function ModLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ModContext.Provider value={{ token }}>
+    <ModContext.Provider value={{ token, isSuperMod }}>
       <div className="flex min-h-screen bg-gray-100">
         {/* Mobile overlay */}
         {sidebarOpen && (

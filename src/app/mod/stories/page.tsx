@@ -9,9 +9,11 @@ import {
   ClockIcon,
   MagnifyingGlassIcon,
   EyeIcon,
+  PencilSquareIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 
 interface Author {
@@ -55,7 +57,7 @@ const statusTabs = [
 ];
 
 export default function ModStoriesPage() {
-  const { token } = useMod();
+  const { token, isSuperMod } = useMod();
 
   // Helper to normalize tags (backend sends String? or string[])
   const parseTags = (tags: string[] | string | null | undefined): string[] => {
@@ -79,6 +81,74 @@ export default function ModStoriesPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionResult, setActionResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editGenre, setEditGenre] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+  const [editIsAdult, setEditIsAdult] = useState(false);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
+  const [editCoverBase64, setEditCoverBase64] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+
+  const openEditModal = () => {
+    if (!selectedStory) return;
+    setEditTitle(selectedStory.title);
+    setEditDescription(selectedStory.description || "");
+    setEditGenre(selectedStory.genre || "");
+    setEditStatus(selectedStory.status || "ongoing");
+    setEditIsAdult(selectedStory.isAdult);
+    setEditCoverPreview(selectedStory.coverImage || null);
+    setEditCoverBase64(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setEditCoverPreview(base64);
+      setEditCoverBase64(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveEdit = async () => {
+    if (!token || !selectedStory) return;
+    setEditSaving(true);
+    try {
+      const body: any = {
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        genre: editGenre,
+        status: editStatus,
+        isAdult: editIsAdult,
+      };
+      if (editCoverBase64) body.coverImage = editCoverBase64;
+      const res = await fetch(`${API_BASE_URL}/api/mod/stories/${selectedStory.id}/edit`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionResult({ type: "success", msg: "Đã cập nhật truyện thành công!" });
+        setShowEditModal(false);
+        // Refresh detail
+        viewDetail(selectedStory.id);
+        fetchStories();
+      } else {
+        setActionResult({ type: "error", msg: data.error || "Lỗi khi cập nhật" });
+      }
+    } catch {
+      setActionResult({ type: "error", msg: "Lỗi kết nối" });
+    }
+    setEditSaving(false);
+  };
 
   const fetchStories = useCallback(async () => {
     if (!token) return;
@@ -464,17 +534,28 @@ export default function ModStoriesPage() {
                       </div>
                     )}
 
-                    {/* View on site */}
-                    {selectedStory.approvalStatus === "approved" && (
-                      <a
-                        href={`/story/${selectedStory.slug}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
+                    {/* View on site + Edit */}
+                    <div className="flex flex-wrap gap-2">
+                      {selectedStory.approvalStatus === "approved" && (
+                        <a
+                          href={`/story/${selectedStory.slug}`}
+                          target="_blank"
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                          Xem truyện trên site
+                        </a>
+                      )}
+                      {isSuperMod && (
+                      <button
+                        onClick={openEditModal}
+                        className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-body-sm font-medium text-indigo-700 hover:bg-indigo-100"
                       >
-                        <EyeIcon className="h-4 w-4" />
-                        Xem truyện trên site
-                      </a>
-                    )}
+                        <PencilSquareIcon className="h-4 w-4" />
+                        Sửa truyện
+                      </button>
+                      )}
+                    </div>
 
                     {/* Actions */}
                     {selectedStory.approvalStatus === "pending" && (
@@ -572,6 +653,138 @@ export default function ModStoriesPage() {
                   <>
                     <XCircleIcon className="h-4 w-4" />
                     Xác nhận từ chối
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {showEditModal && selectedStory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
+                <PencilSquareIcon className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-body-lg font-bold text-gray-900">Sửa truyện</h3>
+                <p className="text-body-sm text-gray-500">Chỉnh sửa nội dung và ảnh bìa truyện.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1">Tên truyện</label>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1">Mô tả</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={5}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                />
+              </div>
+
+              {/* Genre + Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-semibold text-gray-600 mb-1">Thể loại</label>
+                  <input
+                    value={editGenre}
+                    onChange={(e) => setEditGenre(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-gray-600 mb-1">Trạng thái</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                  >
+                    <option value="ongoing">Đang viết</option>
+                    <option value="completed">Hoàn thành</option>
+                    <option value="paused">Tạm ngưng</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 18+ */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editIsAdult}
+                  onChange={(e) => setEditIsAdult(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-body-sm text-gray-700">Nội dung 18+</span>
+              </label>
+
+              {/* Cover image */}
+              <div>
+                <label className="block text-[12px] font-semibold text-gray-600 mb-1">Ảnh bìa</label>
+                <div className="flex items-start gap-3">
+                  {editCoverPreview ? (
+                    <img
+                      src={editCoverPreview}
+                      alt="Cover preview"
+                      className="h-24 w-16 rounded-lg object-cover border border-gray-200"
+                    />
+                  ) : (
+                    <div className="flex h-24 w-16 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50">
+                      <PhotoIcon className="h-6 w-6 text-gray-300" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-[12px] font-medium text-gray-600 hover:bg-gray-50">
+                      <PhotoIcon className="h-4 w-4" />
+                      Chọn ảnh mới
+                      <input type="file" accept="image/*" className="hidden" onChange={handleEditCoverChange} />
+                    </label>
+                    {editCoverBase64 && (
+                      <button
+                        onClick={() => { setEditCoverBase64(null); setEditCoverPreview(selectedStory.coverImage || null); }}
+                        className="text-[11px] text-red-500 hover:text-red-600"
+                      >
+                        Hoàn tác ảnh
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={!editTitle.trim() || editSaving}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-body-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {editSaving ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <PencilSquareIcon className="h-4 w-4" />
+                    Lưu thay đổi
                   </>
                 )}
               </button>

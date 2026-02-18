@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
-import { MagnifyingGlassIcon, PlusCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, PlusCircleIcon, TrashIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 
 export default function AdminUsersPage() {
   const { token } = useAdmin();
@@ -52,6 +52,16 @@ export default function AdminUsersPage() {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ role }),
+    });
+    fetchUsers();
+  };
+
+  const toggleSuperMod = async (userId: string, current: boolean) => {
+    if (!token) return;
+    await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ isSuperMod: !current }),
     });
     fetchUsers();
   };
@@ -148,6 +158,7 @@ export default function AdminUsersPage() {
   const roleColors: Record<string, string> = {
     reader: "bg-gray-100 text-gray-600",
     author: "bg-blue-100 text-blue-700",
+    moderator: "bg-purple-100 text-purple-700",
     admin: "bg-red-100 text-red-700",
   };
 
@@ -284,9 +295,16 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-body-sm text-center text-gray-600">{u._count?.stories || 0}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold ${roleColors[u.role] || "bg-gray-100 text-gray-600"}`}>
-                        {u.role}
-                      </span>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold ${roleColors[u.role] || "bg-gray-100 text-gray-600"}`}>
+                          {u.role}
+                        </span>
+                        {u.role === "moderator" && u.isSuperMod && (
+                          <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700" title="Super Moderator">
+                            SUPER
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -300,6 +318,19 @@ export default function AdminUsersPage() {
                           <option value="moderator">Moderator</option>
                           <option value="admin">Admin</option>
                         </select>
+                        {u.role === "moderator" && (
+                          <button
+                            onClick={() => toggleSuperMod(u.id, !!u.isSuperMod)}
+                            className={`rounded p-1 transition-colors ${
+                              u.isSuperMod
+                                ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
+                                : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                            }`}
+                            title={u.isSuperMod ? "Hủy quyền Super Mod" : "Cấp quyền Super Mod"}
+                          >
+                            <ShieldCheckIcon className="h-4 w-4" />
+                          </button>
+                        )}
                         {u.role !== "admin" && (
                           <button
                             onClick={() => deleteSingle(u.id, u.name)}
