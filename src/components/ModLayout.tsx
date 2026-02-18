@@ -15,6 +15,7 @@ import {
   ShieldCheckIcon,
   ChatBubbleLeftRightIcon,
   PhotoIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
@@ -32,6 +33,7 @@ const sidebarItems = [
   { id: "stories", label: "Duyệt truyện", href: "/mod/stories", icon: BookOpenIcon },
   { id: "chapters", label: "Duyệt chương", href: "/mod/chapters", icon: DocumentTextIcon },
   { id: "covers", label: "Duyệt ảnh bìa", href: "/mod/covers", icon: PhotoIcon },
+  { id: "manage-stories", label: "Quản lý truyện", href: "/mod/manage-stories", icon: PencilSquareIcon, superModOnly: true },
   { id: "messages", label: "Nhắn tin", href: "/mod/messages", icon: ChatBubbleLeftRightIcon },
 ];
 
@@ -138,7 +140,7 @@ export default function ModLayout({ children }: { children: React.ReactNode }) {
 
             {/* Nav */}
             <nav className="mt-4 flex-1 space-y-1 px-3">
-              {sidebarItems.map((item) => {
+              {sidebarItems.filter((item) => !(item as any).superModOnly || isSuperMod).map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link
