@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -13,6 +13,8 @@ import {
   SparklesIcon,
   BookOpenIcon,
   ClockIcon,
+  FunnelIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
@@ -137,13 +139,39 @@ function MiniCover({ src, alt }: { src: string; alt: string }) {
 }
 
 /* ── Tab options ── */
-type Tab = "recent" | "new" | "recommended";
+type Tab = "recent" | "new" | "recommended" | "all";
+
+/* ── Genre groups for the "Tất cả truyện" filter ── */
+const homeGenreGroups = [
+  { label: "Tình cảm", genres: ["Ngôn tình", "Đam mỹ", "Bách hợp", "LGBT+"] },
+  { label: "Phiêu lưu", genres: ["Xuyên không", "Tu tiên", "Huyền huyễn", "Trọng sinh"] },
+  { label: "Bối cảnh", genres: ["Học đường", "Cổ đại", "Hiện đại", "Mạt thế"] },
+  { label: "Đặc sắc", genres: ["Kinh dị", "Khoa học viễn tưởng", "Light novel", "Fanfic"] },
+];
+
+const allHomeGenres = homeGenreGroups.flatMap((g) => g.genres);
+
+const sortOptions = [
+  { value: "updatedAt", label: "Mới cập nhật" },
+  { value: "new", label: "Mới đăng" },
+  { value: "views", label: "Lượt xem" },
+  { value: "likes", label: "Yêu thích" },
+];
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+
+  // "Tất cả truyện" tab state
+  const [allTabGenre, setAllTabGenre] = useState<string | null>(null);
+  const [allTabSort, setAllTabSort] = useState("updatedAt");
+  const [allTabStories, setAllTabStories] = useState<ApiStory[]>([]);
+  const [allTabLoading, setAllTabLoading] = useState(false);
+  const [allTabPage, setAllTabPage] = useState(1);
+  const [allTabTotal, setAllTabTotal] = useState(0);
+  const ALL_TAB_LIMIT = 18;
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/stories?limit=12`)
@@ -155,10 +183,46 @@ export default function HomePage() {
       .catch(() => { setLoading(false); setFetchError(true); });
   }, []);
 
+  // Fetch stories for "Tất cả truyện" tab
+  const fetchAllTabStories = useCallback(async (genre: string | null, sort: string, page: number) => {
+    setAllTabLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: String(ALL_TAB_LIMIT), page: String(page), sort });
+      if (genre) params.set("genre", genre);
+      const res = await fetch(`${API_BASE_URL}/api/stories?${params}`);
+      const data = await res.json();
+      if (data?.stories) {
+        setAllTabStories(data.stories);
+        setAllTabTotal(data.pagination?.total || 0);
+      }
+    } catch {}
+    setAllTabLoading(false);
+  }, []);
+
+  // When switching to "all" tab or changing genre/sort/page, fetch
+  useEffect(() => {
+    if (activeTab === "all") {
+      fetchAllTabStories(allTabGenre, allTabSort, allTabPage);
+    }
+  }, [activeTab, allTabGenre, allTabSort, allTabPage, fetchAllTabStories]);
+
+  const handleGenreChange = (genre: string | null) => {
+    setAllTabGenre(genre);
+    setAllTabPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setAllTabSort(sort);
+    setAllTabPage(1);
+  };
+
+  const allTabTotalPages = Math.ceil(allTabTotal / ALL_TAB_LIMIT);
+
   const tabs: { id: Tab; label: string }[] = [
     { id: "recent", label: "Vừa cập nhật" },
     { id: "new", label: "Tác phẩm mới" },
     { id: "recommended", label: "Đề xuất" },
+    { id: "all", label: "Tất cả truyện" },
   ];
 
   const tabStories = useMemo(() => {
@@ -230,6 +294,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Tab content grid ── */}
+        {activeTab !== "all" ? (
         <section className="py-8">
           <div className="section-container">
             <div
@@ -251,6 +316,137 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        ) : (
+        /* ── "Tất cả truyện" tab content with genre filter + sort + pagination ── */
+        <section className="py-6">
+          <div className="section-container">
+            {/* Genre filter pills */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <FunnelIcon className="h-4 w-4 text-gray-400" />
+                <span className="text-body-sm font-semibold text-gray-600">Thể loại:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleGenreChange(null)}
+                  className={`rounded-full px-3.5 py-1.5 text-caption font-medium transition-all ${
+                    allTabGenre === null
+                      ? "bg-primary-500 text-white shadow-sm"
+                      : "bg-white/70 text-gray-600 border border-[#f0e6d0] hover:bg-white hover:shadow-sm"
+                  }`}
+                >
+                  Tất cả
+                </button>
+                {allHomeGenres.map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => handleGenreChange(genre)}
+                    className={`rounded-full px-3.5 py-1.5 text-caption font-medium transition-all ${
+                      allTabGenre === genre
+                        ? "bg-primary-500 text-white shadow-sm"
+                        : "bg-white/70 text-gray-600 border border-[#f0e6d0] hover:bg-white hover:shadow-sm"
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort options */}
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ListBulletIcon className="h-4 w-4 text-gray-400" />
+                <span className="text-body-sm font-semibold text-gray-600">Sắp xếp:</span>
+                <div className="flex gap-1.5 ml-1">
+                  {sortOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleSortChange(opt.value)}
+                      className={`rounded-lg px-3 py-1 text-caption font-medium transition-all ${
+                        allTabSort === opt.value
+                          ? "bg-primary-50 text-primary-600 border border-primary-200"
+                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {allTabTotal > 0 && (
+                <span className="text-caption text-gray-400">{allTabTotal.toLocaleString()} truyện</span>
+              )}
+            </div>
+
+            {/* Stories grid */}
+            {allTabLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+              </div>
+            ) : allTabStories.length === 0 ? (
+              <div className="py-16 text-center">
+                <BookOpenIcon className="mx-auto h-10 w-10 text-gray-300" />
+                <p className="mt-3 text-body-sm text-gray-400">
+                  {allTabGenre ? `Chưa có truyện thể loại "${allTabGenre}"` : "Không tìm thấy truyện"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                {allTabStories.map((story, i) => (
+                  <SimpleCard key={story.id} story={story} index={i} />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {allTabTotalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  disabled={allTabPage <= 1}
+                  onClick={() => setAllTabPage(allTabPage - 1)}
+                  className="rounded-full border border-[#f0e6d0] bg-white/60 px-4 py-2 text-caption font-medium text-gray-600 hover:bg-white/80 disabled:opacity-40"
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                </button>
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(allTabTotalPages, 7) }, (_, i) => {
+                  let pageNum: number;
+                  if (allTabTotalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (allTabPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (allTabPage >= allTabTotalPages - 3) {
+                    pageNum = allTabTotalPages - 6 + i;
+                  } else {
+                    pageNum = allTabPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setAllTabPage(pageNum)}
+                      className={`h-8 w-8 rounded-full text-caption font-medium transition-all ${
+                        allTabPage === pageNum
+                          ? "bg-primary-500 text-white shadow-sm"
+                          : "text-gray-500 hover:bg-white/80"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  disabled={allTabPage >= allTabTotalPages}
+                  onClick={() => setAllTabPage(allTabPage + 1)}
+                  className="rounded-full border border-[#f0e6d0] bg-white/60 px-4 py-2 text-caption font-medium text-gray-600 hover:bg-white/80 disabled:opacity-40"
+                >
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+        )}
 
         {/* ── Truyện hot carousel ── */}
         <div>
