@@ -144,9 +144,10 @@ type Tab = "recent" | "new" | "recommended" | "all";
 /* ── Genre groups for the "Tất cả truyện" filter ── */
 const homeGenreGroups = [
   { label: "Tình cảm", genres: ["Ngôn tình", "Đam mỹ", "Bách hợp", "LGBT+"] },
-  { label: "Phiêu lưu", genres: ["Xuyên không", "Tu tiên", "Huyền huyễn", "Trọng sinh"] },
+  { label: "Giả tưởng", genres: ["Xuyên không", "Tu tiên", "Huyền huyễn", "Trọng sinh"] },
   { label: "Bối cảnh", genres: ["Học đường", "Cổ đại", "Hiện đại", "Mạt thế"] },
   { label: "Đặc sắc", genres: ["Kinh dị", "Khoa học viễn tưởng", "Light novel", "Fanfic"] },
+  { label: "Phong cách", genres: ["Ngọt ngào", "Ngược tâm", "Chữa lành", "ABO"] },
 ];
 
 const allHomeGenres = homeGenreGroups.flatMap((g) => g.genres);

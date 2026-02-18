@@ -5,29 +5,35 @@ export interface GenreGroup {
   genres: string[];
 }
 
-/** Full grouped genre list for story creation / editing */
+/**
+ * Full grouped genre list for story creation / editing.
+ *
+ * Only TRUE genres are listed here — items that answer
+ * "What kind of story is this?"
+ *
+ * Relationship types (1x1, Harem …), endings (HE, SE …),
+ * perspectives, pricing, etc. belong in the Tag system
+ * (type: relation / ending / tone / form / content / perspective / mature).
+ */
 export const genreGroups: GenreGroup[] = [
   {
     label: "🔹 Tình cảm",
     genres: [
-      "Ngôn tình", "Đam mỹ", "LGBT+", "Bách hợp",
-      "Thanh mai trúc mã", "Cưỡng chế yêu", "Sinh tử văn", "ABO",
+      "Ngôn tình", "Đam mỹ", "Bách hợp", "LGBT+", "ABO",
     ],
   },
   {
     label: "🔹 Bối cảnh & thời đại",
     genres: [
-      "Học đường", "Văn phòng công sở", "Thương trường", "Showbiz",
-      "Quân nhân", "Hiện đại", "Cổ đại", "Tương lai",
-      "Tiền sử", "Mạt thế", "Tận thế", "Chiến tranh", "Việt Nam",
+      "Học đường", "Cổ đại", "Hiện đại", "Mạt thế",
+      "Quân nhân", "Showbiz", "Thương trường", "Văn phòng công sở",
     ],
   },
   {
     label: "🔹 Giả tưởng & siêu nhiên",
     genres: [
-      "Hiện đại kỳ ảo", "Khoa học viễn tưởng", "Huyền huyễn", "Dị giới",
-      "Dị năng", "Tu tiên", "Thú nhân", "Robot", "AI",
-      "Thần thú", "Tâm linh", "Kinh dị", "Minh hôn",
+      "Huyền huyễn", "Tu tiên", "Khoa học viễn tưởng", "Kinh dị",
+      "Dị giới", "Dị năng", "Hiện đại kỳ ảo", "Tâm linh",
     ],
   },
   {
@@ -38,45 +44,23 @@ export const genreGroups: GenreGroup[] = [
     ],
   },
   {
-    label: "🔹 Tâm lý & cảm xúc",
+    label: "🔹 Phong cách & cảm xúc",
     genres: [
-      "Ngược tâm", "Ngược nhẹ", "Ngọt ngào", "Thuần ngọt",
-      "Chữa lành", "Tâm lý", "Tâm lý tội phạm",
+      "Ngược tâm", "Ngọt ngào", "Thuần ngọt", "Chữa lành",
+      "Tâm lý tội phạm",
     ],
   },
   {
-    label: "🔹 Hướng nội dung",
+    label: "🔹 Đề tài đặc biệt",
     genres: [
-      "Góc nhìn nữ chính", "Góc nhìn nam chính", "Làm ruộng",
-      "Ẩm thực", "Livestream", "E-sport", "Thể thao",
-      "Thế giới mạng", "Thế giới ngầm",
-    ],
-  },
-  {
-    label: "🔹 Hình thức quan hệ",
-    genres: [
-      "1x1", "NP / Harem", "Không CP",
-      "Trưởng thành", "Tình cảm sâu sắc", "Lãng mạn",
-      "Tình cảm người lớn", "Drama tình cảm", "Quan hệ phức tạp",
-    ],
-  },
-  {
-    label: "🔹 Kết thúc truyện",
-    genres: [
-      "HE (Happy Ending)", "SE (Sad Ending)", "OE (Open Ending)",
-      "BE (Bad Ending)", "GE (Good Ending)",
+      "Làm ruộng", "Ẩm thực", "E-sport", "Thể thao",
     ],
   },
   {
     label: "🔹 Hình thức tác phẩm",
     genres: [
-      "Tự truyện", "Tản văn", "Light novel", "Fanfic",
-      "Oneshot", "Truyện ngắn", "Tiểu thuyết",
+      "Light novel", "Fanfic", "Oneshot", "Truyện ngắn",
     ],
-  },
-  {
-    label: "🔹 Phân loại khác",
-    genres: ["Miễn phí", "Trả phí"],
   },
 ];
 
