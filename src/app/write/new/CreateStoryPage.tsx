@@ -104,7 +104,7 @@ export default function CreateStoryPage() {
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
-  const [genre, setGenre] = useState("");
+  const [genres, setGenres] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeTagCat, setActiveTagCat] = useState("genre");
   // API-driven categories & tags
@@ -210,10 +210,10 @@ export default function CreateStoryPage() {
     const e: Record<string, string> = {};
     if (!title.trim()) e.title = "Vui lòng nhập tên truyện";
     if (!description.trim()) e.description = "Vui lòng nhập giới thiệu";
-    if (!genre) e.genre = "Vui lòng chọn thể loại";
+    if (genres.length === 0) e.genre = "Vui lòng chọn ít nhất 1 thể loại";
     setErrors(e);
     return Object.keys(e).length === 0;
-  }, [title, description, genre]);
+  }, [title, description, genres]);
 
   const generateSlug = (text: string) =>
     text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -230,7 +230,7 @@ export default function CreateStoryPage() {
     const slug = generateSlug(title);
 
     const body = {
-      title, slug, description, genre,
+      title, slug, description, genre: genres.join(", "),
       categoryId: selectedCategoryId || undefined,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       coverImage: coverImage || undefined,
@@ -268,7 +268,7 @@ export default function CreateStoryPage() {
 
   const tabProgress = () => {
     let done = 0;
-    if (title && description && genre) done++;
+    if (title && description && genres.length > 0) done++;
     if (theme || worldBuilding || characters.length > 0) done++;
     if (targetAudience || postSchedule.length > 0) done++;
     return done;
@@ -452,12 +452,28 @@ export default function CreateStoryPage() {
                       </div>
                     </div>
 
-                    {/* Genre (legacy) */}
+                    {/* Genre (multi-select) */}
                     <div className="rounded-2xl bg-white p-6 shadow-card">
-                      <label className="mb-3 block text-body-sm font-semibold text-gray-700">
-                        Thể loại chính <span className="text-red-500">*</span>
-                      </label>
+                      <div className="mb-3 flex items-center justify-between">
+                        <label className="text-body-sm font-semibold text-gray-700">
+                          Thể loại chính <span className="text-red-500">*</span>
+                        </label>
+                        <span className="text-caption text-gray-400">Đã chọn {genres.length}/5</span>
+                      </div>
                       {errors.genre && <p className="mb-2 text-caption text-red-500">{errors.genre}</p>}
+
+                      {genres.length > 0 && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          {genres.map((g) => (
+                            <span key={g} className="flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
+                              {g}
+                              <button onClick={() => setGenres((prev) => prev.filter((x) => x !== g))} className="ml-0.5 hover:text-red-500">
+                                <XMarkIcon className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                         {genreGroups.map((group) => (
@@ -467,9 +483,9 @@ export default function CreateStoryPage() {
                               {group.genres.map((g) => (
                                 <button
                                   key={g}
-                                  onClick={() => setGenre(g)}
+                                  onClick={() => setGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : prev.length < 5 ? [...prev, g] : prev)}
                                   className={`rounded-full px-4 py-2 text-body-sm font-medium transition-all ${
-                                    genre === g
+                                    genres.includes(g)
                                       ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
                                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                   }`}

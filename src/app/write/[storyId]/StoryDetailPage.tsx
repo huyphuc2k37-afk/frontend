@@ -101,7 +101,7 @@ export default function StoryDetailPage() {
   const [editStatus, setEditStatus] = useState("");
   const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
-  const [editGenre, setEditGenre] = useState("");
+  const [editGenres, setEditGenres] = useState<string[]>([]);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [editTagIds, setEditTagIds] = useState<string[]>([]);
   const [activeTagType, setActiveTagType] = useState("genre");
@@ -127,7 +127,7 @@ export default function StoryDetailPage() {
         setEditDesc(data.description);
         setEditStatus(data.status);
         setEditCoverImage(data.coverImage || null);
-        setEditGenre(data.genre || "");
+        setEditGenres(data.genre ? data.genre.split(", ").map((g: string) => g.trim()).filter(Boolean) : []);
         setEditCategoryId(data.categoryId || "");
         setEditTagIds((data.storyTagList || []).map((t: ApiTag) => t.id));
         setLoading(false);
@@ -188,7 +188,7 @@ export default function StoryDetailPage() {
           description: editDesc,
           status: editStatus,
           coverImage: editCoverImage,
-          genre: editGenre,
+          genre: editGenres.join(", "),
           categoryId: editCategoryId || null,
           tagIds: editTagIds,
         }),
@@ -315,7 +315,7 @@ export default function StoryDetailPage() {
                     setEditDesc(story.description);
                     setEditStatus(story.status);
                     setEditCoverImage(story.coverImage || null);
-                    setEditGenre(story.genre || "");
+                    setEditGenres(story.genre ? story.genre.split(", ").map((g) => g.trim()).filter(Boolean) : []);
                     setEditCategoryId(story.categoryId || "");
                     setEditTagIds((story.storyTagList || []).map((t) => t.id));
                     setCoverError(null);
@@ -439,7 +439,20 @@ export default function StoryDetailPage() {
 
             {/* Genre */}
             <div>
-              <label className="mb-2 block text-caption font-medium text-gray-700">Thể loại chính</label>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-caption font-medium text-gray-700">Thể loại chính</label>
+                <span className="text-[11px] text-gray-400">{editGenres.length}/5</span>
+              </div>
+              {editGenres.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {editGenres.map((g) => (
+                    <span key={g} className="flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-medium text-primary-700">
+                      {g}
+                      <button type="button" onClick={() => setEditGenres((prev) => prev.filter((x) => x !== g))} className="ml-0.5 hover:text-red-500">&times;</button>
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="max-h-[300px] space-y-3 overflow-y-auto pr-1">
                 {genreGroups.map((group) => (
                   <div key={group.label}>
@@ -449,9 +462,9 @@ export default function StoryDetailPage() {
                         <button
                           key={g}
                           type="button"
-                          onClick={() => setEditGenre(g)}
+                          onClick={() => setEditGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : prev.length < 5 ? [...prev, g] : prev)}
                           className={`rounded-full px-3 py-1 text-[12px] font-medium transition-all ${
-                            editGenre === g
+                            editGenres.includes(g)
                               ? "bg-primary-600 text-white shadow-md ring-2 ring-primary-300"
                               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                           }`}
@@ -529,9 +542,11 @@ export default function StoryDetailPage() {
                   {story.category.name}
                 </span>
               )}
-              <span className="rounded-md bg-gray-100 px-2.5 py-1 text-caption font-medium text-gray-600">
-                {story.genre}
-              </span>
+              {story.genre && story.genre.split(", ").filter(Boolean).map((g) => (
+                <span key={g} className="rounded-md bg-gray-100 px-2.5 py-1 text-caption font-medium text-gray-600">
+                  {g}
+                </span>
+              ))}
               <span
                 className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                   story.status === "completed"

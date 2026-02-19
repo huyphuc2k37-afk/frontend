@@ -14,6 +14,9 @@ import {
   ChatBubbleLeftRightIcon,
   LockClosedIcon,
   StarIcon,
+  ShareIcon,
+  LinkIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 import Header from "@/components/Header";
@@ -76,7 +79,17 @@ export default function StoryDetailPage() {
   const [ratingLoading, setRatingLoading] = useState(false);
   const [showCover, setShowCover] = useState(true);
   const [ageBlocked, setAgeBlocked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
+
+  // Close share menu when clicking outside
+  useEffect(() => {
+    if (!showShareMenu) return;
+    const handler = () => setShowShareMenu(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [showShareMenu]);
 
   // No login redirect — story pages are public. Auth is only needed for interactions (like, rate, bookmark).
 
@@ -333,9 +346,11 @@ export default function StoryDetailPage() {
 
                 {/* Tags */}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200">
-                    {story.genre}
-                  </span>
+                  {story.genre && story.genre.split(", ").filter(Boolean).map((g) => (
+                    <span key={g} className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200">
+                      {g}
+                    </span>
+                  ))}
                   {story.isAdult && (
                     <span className="rounded-full bg-red-600/80 px-3 py-1 text-caption font-bold text-white">
                       18+
@@ -410,6 +425,61 @@ export default function StoryDetailPage() {
                       {isLiked ? "Đã thích" : "Thích"}
                     </button>
                   )}
+
+                  {/* Share / Copy link */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu); }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-white/20"
+                    >
+                      <ShareIcon className="h-5 w-5" />
+                      Chia sẻ
+                    </button>
+                    {showShareMenu && (
+                      <div className="absolute left-0 top-full z-50 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
+                        <button
+                          onClick={() => {
+                            const url = `https://vstory.vn/story/${story.slug}`;
+                            navigator.clipboard.writeText(url).then(() => {
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            });
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          {copied ? <ClipboardDocumentCheckIcon className="h-4 w-4 text-green-500" /> : <LinkIcon className="h-4 w-4" />}
+                          {copied ? "Đã sao chép!" : "Sao chép liên kết"}
+                        </button>
+                        <a
+                          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <svg className="h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                          Facebook
+                        </a>
+                        <a
+                          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                          X (Twitter)
+                        </a>
+                        <a
+                          href={`https://telegram.me/share/url?url=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <svg className="h-4 w-4 text-sky-500" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                          Telegram
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -591,7 +661,7 @@ export default function StoryDetailPage() {
                 <div className="space-y-3 text-body-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Thể loại</span>
-                    <span className="font-medium text-gray-800">{story.genre}</span>
+                    <span className="font-medium text-gray-800 text-right">{story.genre}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Trạng thái</span>
