@@ -332,9 +332,9 @@ export default function WritePage() {
                       )}
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-3 text-caption text-gray-500">
-                      <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium">
-                        {story.genre}
-                      </span>
+                      {story.genre?.split(",").map((g: string) => g.trim()).filter(Boolean).slice(0, 2).map((g: string) => (
+                        <span key={g} className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium">{g}</span>
+                      ))}
                       <span className="flex items-center gap-1">
                         <DocumentTextIcon className="h-3 w-3" />
                         {story._count?.chapters || 0}

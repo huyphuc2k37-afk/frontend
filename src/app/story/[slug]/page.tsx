@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     keywords: [
       story.title,
-      story.genre,
+      ...(story.genre ? story.genre.split(",").map((g: string) => g.trim()).filter(Boolean) : []),
       "đọc truyện",
       "truyện chữ",
       ...visibleTags,
@@ -94,7 +94,7 @@ export default async function StoryPage({ params }: Props) {
             "@type": "Person",
             name: story.author?.name,
           },
-          genre: story.genre,
+          genre: story.genre ? story.genre.split(",").map((g: string) => g.trim()).filter(Boolean) : undefined,
           inLanguage: "vi",
           ...(story.ratingCount > 0
             ? {
@@ -122,8 +122,8 @@ export default async function StoryPage({ params }: Props) {
             {
               "@type": "ListItem",
               position: 2,
-              name: story.genre || "Thể loại",
-              item: SITE_URL + "/explore?genre=" + encodeURIComponent(story.genre || ""),
+              name: story.genre?.split(",")[0]?.trim() || "Thể loại",
+              item: SITE_URL + "/explore?genre=" + encodeURIComponent(story.genre?.split(",")[0]?.trim() || ""),
             },
             {
               "@type": "ListItem",

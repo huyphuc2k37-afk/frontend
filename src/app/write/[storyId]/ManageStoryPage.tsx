@@ -192,9 +192,9 @@ export default function StoriesPage() {
                     >
                       {story.title}
                     </Link>
-                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                      {story.genre}
-                    </span>
+                    {story.genre?.split(",").map((g) => g.trim()).filter(Boolean).map((g) => (
+                      <span key={g} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{g}</span>
+                    ))}
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                         story.status === "completed"

@@ -661,7 +661,11 @@ export default function StoryDetailPage() {
                 <div className="space-y-3 text-body-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Thể loại</span>
-                    <span className="font-medium text-gray-800 text-right">{story.genre}</span>
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {story.genre?.split(",").map((g) => g.trim()).filter(Boolean).map((g) => (
+                        <span key={g} className="rounded bg-gray-100 px-1.5 py-0.5 text-caption font-medium text-gray-800">{g}</span>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Trạng thái</span>

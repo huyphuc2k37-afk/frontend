@@ -58,9 +58,9 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
 
           {/* Meta */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-caption text-gray-400">
-            <span className="rounded-full bg-gray-100 px-2 py-0.5">
-              {story.genre}
-            </span>
+            {story.genre?.split(",").map((g: string) => g.trim()).filter(Boolean).slice(0, 2).map((g: string) => (
+              <span key={g} className="rounded-full bg-gray-100 px-2 py-0.5">{g}</span>
+            ))}
             <span>&middot;</span>
             <span>{story.views > 0 ? `${(story.views / 1000).toFixed(1)}K đọc` : "0 đọc"}</span>
             {story.status && (

@@ -547,7 +547,7 @@ export default function HomePage() {
                           {(story.views / 1000).toFixed(1)}K
                         </span>
                         <span className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium">
-                          {story.genre}
+                          {story.genre?.split(",")[0]?.trim() || story.genre}
                         </span>
                       </div>
                     </div>
