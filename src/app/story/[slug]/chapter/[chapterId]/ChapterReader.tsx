@@ -65,6 +65,18 @@ export default function ReadChapterPage() {
     if (saved === "true") setDarkMode(true);
   }, []);
 
+  // Track reading time for daily quest (1 minute intervals)
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => {
+      authFetch("/api/quests/read", token, {
+        method: "POST",
+        body: JSON.stringify({ minutes: 1 }),
+      }).catch(() => {});
+    }, 60_000); // every 1 minute
+    return () => clearInterval(interval);
+  }, [token]);
+
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       localStorage.setItem("reader-dark-mode", String(!prev));

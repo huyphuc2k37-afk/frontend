@@ -19,6 +19,7 @@ import {
   CurrencyDollarIcon,
   Cog6ToothIcon,
   ShieldCheckIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import { useSession, signOut } from "next-auth/react";
 import { useUserProfile } from "@/contexts/UserProfileContext";
@@ -511,6 +512,16 @@ export default function Header() {
                                 Nạp xu
                               </Link>
                             )}
+                            {!isAdmin && !isMod && (
+                              <Link
+                                href="/quests"
+                                onClick={() => setUserMenuOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-amber-600 hover:bg-amber-50"
+                              >
+                                <GiftIcon className="h-4 w-4" />
+                                Nhiệm vụ nhận xu
+                              </Link>
+                            )}
                             {!isAuthor && !isAdmin && (
                               <>
                                 <Link
@@ -693,6 +704,11 @@ export default function Header() {
                     {!isAdmin && (
                       <Link href="/wallet" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                         Nạp xu
+                      </Link>
+                    )}
+                    {!isAdmin && !isMod && (
+                      <Link href="/quests" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-amber-600 hover:bg-amber-50">
+                        🎁 Nhiệm vụ nhận xu
                       </Link>
                     )}
                     {!isAuthor && !isAdmin && (
