@@ -70,14 +70,19 @@ const sections: PolicySection[] = [
           <li>Thời gian xét duyệt thông thường: 1–3 ngày làm việc.</li>
         </ul>
 
-        <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.2 Nội dung dành cho người lớn (18+)</h3>
+        <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.2 Nội dung bị nghiêm cấm</h3>
         <p className="mt-2">
-          Nếu truyện có chứa nội dung nhạy cảm, tình cảm người lớn hoặc các yếu tố 18+, Tác giả <strong>bắt buộc phải gắn đúng nhãn</strong> trong phần <em>&quot;Hình thức quan hệ&quot;</em> khi tạo truyện. Cụ thể:
+          VStory <strong>nghiêm cấm tuyệt đối</strong> các loại nội dung sau đây. Truyện vi phạm sẽ bị gỡ bỏ ngay lập tức và tài khoản tác giả có thể bị khóa vĩnh viễn:
         </p>
         <ul className="list-disc pl-5">
-          <li>Chọn nhãn <strong>&quot;Trưởng thành&quot;</strong> hoặc <strong>&quot;Tình cảm người lớn&quot;</strong> nếu nội dung có cảnh thân mật, tình dục hoặc mô tả nhạy cảm.</li>
-          <li>Đánh dấu truyện là <strong>nội dung 18+</strong> (checkbox &quot;Nội dung người lớn&quot;) để hệ thống hiển thị cảnh báo cho người đọc.</li>
-          <li>Truyện có nội dung 18+ nhưng <strong>không gắn nhãn đúng</strong> sẽ bị gỡ hoặc tạm ẩn mà không cần thông báo trước.</li>
+          <li>Nội dung khiêu dâm, đồi trụy, kích dục (18+)</li>
+          <li>Nội dung mô tả chi tiết bạo lực đẫm máu, tra tấn, hành hạ</li>
+          <li>Nội dung tuyên truyền, kích động bạo lực, khủng bố</li>
+          <li>Nội dung liên quan đến ma túy, chất cấm</li>
+          <li>Nội dung phân biệt chủng tộc, giới tính, tôn giáo</li>
+          <li>Nội dung xuyên tạc lịch sử, chống phá Nhà nước</li>
+          <li>Nội dung xâm phạm quyền trẻ em</li>
+          <li>Mọi nội dung khác vi phạm pháp luật Việt Nam</li>
         </ul>
 
         <h3 className="mt-4 text-body-md font-semibold text-gray-900">3.3 Quyền xử lý của VStory</h3>

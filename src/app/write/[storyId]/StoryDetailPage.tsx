@@ -61,7 +61,7 @@ const TAG_TYPE_LABELS: Record<string, string> = {
   perspective: "Góc nhìn",
   content: "Nội dung",
   form: "Hình thức",
-  mature: "Nội dung người lớn",
+
 };
 
 interface StoryDetail {
@@ -558,11 +558,6 @@ export default function StoryDetailPage() {
               >
                 {statusLabels[story.status] || story.status}
               </span>
-              {story.isAdult && (
-                <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-600">
-                  18+
-                </span>
-              )}
             </div>
             {story.storyTagList && story.storyTagList.length > 0 && (
               <div className="flex flex-wrap gap-1.5">

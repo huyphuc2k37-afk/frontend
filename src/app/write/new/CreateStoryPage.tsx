@@ -47,7 +47,7 @@ const TAG_TYPE_LABELS: Record<string, string> = {
   perspective: "Góc nhìn",
   content: "Nội dung",
   form: "Hình thức",
-  mature: "Nội dung người lớn",
+
 };
 
 const tagCategories: Record<string, string[]> = {
@@ -123,7 +123,7 @@ export default function CreateStoryPage() {
   // Tab 3: Settings
   const [targetAudience, setTargetAudience] = useState("");
   const [postSchedule, setPostSchedule] = useState<string[]>([]);
-  const [isAdult, setIsAdult] = useState(false);
+
   const [storyStatus, setStoryStatus] = useState("ongoing");
 
   useEffect(() => {
@@ -242,7 +242,6 @@ export default function CreateStoryPage() {
       plotOutline: plotPoints.length ? JSON.stringify(plotPoints) : undefined,
       targetAudience: targetAudience || undefined,
       postSchedule: postSchedule.length ? postSchedule.join(",") : undefined,
-      isAdult: isAdult,
       status: storyStatus,
     };
 
@@ -785,39 +784,6 @@ export default function CreateStoryPage() {
                     transition={{ duration: 0.2 }}
                     className="space-y-6"
                   >
-                    {/* Adult content */}
-                    <div className="rounded-2xl bg-white p-6 shadow-card">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <label className="text-body-sm font-semibold text-gray-700">
-                            Truyện có cần phải &quot;che&quot; không?
-                          </label>
-                          <p className="mt-1 text-caption text-gray-400">
-                            Chọn &quot;Có&quot; nếu truyện có bất kỳ tình tiết 18+ liên quan đến tình dục, bạo lực,...
-                          </p>
-
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setIsAdult(true)}
-                            className={`rounded-lg px-5 py-2 text-body-sm font-medium transition-all ${
-                              isAdult ? "bg-red-100 text-red-700 ring-2 ring-red-300" : "bg-gray-100 text-gray-500"
-                            }`}
-                          >
-                            Có
-                          </button>
-                          <button
-                            onClick={() => setIsAdult(false)}
-                            className={`rounded-lg px-5 py-2 text-body-sm font-medium transition-all ${
-                              !isAdult ? "bg-green-100 text-green-700 ring-2 ring-green-300" : "bg-gray-100 text-gray-500"
-                            }`}
-                          >
-                            Không
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Target audience */}
                     <div className="rounded-2xl bg-white p-6 shadow-card">
                       <label className="mb-3 block text-body-sm font-semibold text-gray-700">

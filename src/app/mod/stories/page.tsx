@@ -31,7 +31,6 @@ interface Story {
   genre: string;
   tags: string[] | string | null;
   status: string;
-  isAdult: boolean;
   approvalStatus: string;
   rejectionReason: string | null;
   reviewedBy: string | null;
@@ -88,7 +87,6 @@ export default function ModStoriesPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editGenre, setEditGenre] = useState("");
   const [editStatus, setEditStatus] = useState("");
-  const [editIsAdult, setEditIsAdult] = useState(false);
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
   const [editCoverBase64, setEditCoverBase64] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
@@ -99,7 +97,6 @@ export default function ModStoriesPage() {
     setEditDescription(selectedStory.description || "");
     setEditGenre(selectedStory.genre || "");
     setEditStatus(selectedStory.status || "ongoing");
-    setEditIsAdult(selectedStory.isAdult);
     setEditCoverPreview(selectedStory.coverImage || null);
     setEditCoverBase64(null);
     setShowEditModal(true);
@@ -126,7 +123,6 @@ export default function ModStoriesPage() {
         description: editDescription.trim(),
         genre: editGenre,
         status: editStatus,
-        isAdult: editIsAdult,
       };
       if (editCoverBase64) body.coverImage = editCoverBase64;
       const res = await fetch(`${API_BASE_URL}/api/mod/stories/${selectedStory.id}/edit`, {
@@ -345,9 +341,6 @@ export default function ModStoriesPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="truncate text-body-sm font-semibold text-gray-900">{story.title}</h3>
-                        {story.isAdult && (
-                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600">18+</span>
-                        )}
                       </div>
                       <p className="mt-1 text-[12px] text-gray-500">
                         bởi <span className="font-medium text-gray-700">{story.author.name}</span>
@@ -418,9 +411,6 @@ export default function ModStoriesPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="text-body-lg font-bold text-gray-900">{selectedStory.title}</h3>
-                          {selectedStory.isAdult && (
-                            <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600">18+</span>
-                          )}
                         </div>
                         <p className="mt-1 text-body-sm text-gray-500">
                           bởi <span className="font-medium text-gray-700">{selectedStory.author.name}</span> ({selectedStory.author.email})
@@ -720,17 +710,6 @@ export default function ModStoriesPage() {
                   </select>
                 </div>
               </div>
-
-              {/* 18+ */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editIsAdult}
-                  onChange={(e) => setEditIsAdult(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-body-sm text-gray-700">Nội dung 18+</span>
-              </label>
 
               {/* Cover image */}
               <div>

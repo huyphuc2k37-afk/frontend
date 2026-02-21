@@ -22,7 +22,6 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
-import AgeVerificationModal, { needsAgeVerification, isAgeVerified } from "@/components/AgeVerificationModal";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -35,7 +34,7 @@ interface ChapterData {
   isLocked: boolean;
   price: number;
   createdAt: string;
-  story: { id: string; title: string; slug: string; authorId: string; isAdult: boolean; genre: string; tags?: string | null };
+  story: { id: string; title: string; slug: string; authorId: string; genre: string; tags?: string | null };
   prev: { id: string; title: string; number: number } | null;
   next: { id: string; title: string; number: number } | null;
 }
@@ -58,7 +57,6 @@ export default function ReadChapterPage() {
   const [tipSuccess, setTipSuccess] = useState(false);
   const [tipError, setTipError] = useState("");
   const [darkMode, setDarkMode] = useState(false);
-  const [ageBlocked, setAgeBlocked] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
 
   // Load dark mode preference from localStorage
@@ -229,18 +227,6 @@ export default function ReadChapterPage() {
 
   return (
     <>
-      {/* Age verification modal */}
-      {chapter && needsAgeVerification(chapter.story.isAdult, chapter.story.genre, chapter.story.tags) && !isAgeVerified() && !ageBlocked && (
-        <AgeVerificationModal
-          isAdult={chapter.story.isAdult}
-          genre={chapter.story.genre}
-          tags={chapter.story.tags}
-          onConfirm={() => {}}
-          onDecline={() => { setAgeBlocked(true); router.push("/explore"); }}
-        />
-      )}
-      {ageBlocked ? null : (
-      <>
       <Header />
       <main className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1a1a2e]' : 'bg-gray-50'}`}>
         {/* Chapter header */}
@@ -466,8 +452,6 @@ export default function ReadChapterPage() {
         </div>
       </main>
       <Footer />
-    </>
-      )}
     </>
   );
 }

@@ -17,7 +17,6 @@ interface CoverStory {
   coverImage: string | null;
   coverApprovalStatus: string;
   coverRejectionReason: string | null;
-  isAdult: boolean;
   createdAt: string;
   updatedAt: string;
   author: { id: string; name: string; email: string; image: string | null };
@@ -157,11 +156,6 @@ export default function CoversPage() {
                   <div className="flex h-full items-center justify-center">
                     <PhotoIcon className="h-12 w-12 text-gray-300" />
                   </div>
-                )}
-                {story.isAdult && (
-                  <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                    18+
-                  </span>
                 )}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 p-3">
                   <p className="line-clamp-2 text-body-sm font-semibold text-white">{story.title}</p>

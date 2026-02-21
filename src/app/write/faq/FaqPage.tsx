@@ -91,7 +91,7 @@ const faqItems: FaqItem[] = [
     category: "Quy định",
     question: "Truyện có nội dung 18+ có được phép không?",
     answer:
-      "Truyện dành cho đọc giả trưởng thành cần được đánh dấu 'Nội dung người lớn' trong phần Cài đặt truyện. Truyện sẽ được ẩn khỏi đọc giả chưa đủ tuổi và có nhãn cảnh báo.",
+      "Không. VStory nghiêm cấm mọi nội dung 18+ bao gồm: nội dung khiêu dâm, tình dục, bạo lực đẫm máu, ma túy, và các nội dung vi phạm pháp luật Việt Nam. Truyện vi phạm sẽ bị gỡ bỏ ngay lập tức và tài khoản tác giả có thể bị khóa vĩnh viễn.",
   },
 ];
 

@@ -25,7 +25,6 @@ export default function ModManageStoriesPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editGenre, setEditGenre] = useState("");
   const [editStatus, setEditStatus] = useState("");
-  const [editIsAdult, setEditIsAdult] = useState(false);
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
   const [editCoverBase64, setEditCoverBase64] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
@@ -64,7 +63,6 @@ export default function ModManageStoriesPage() {
       setEditDescription(data.description || "");
       setEditGenre(data.genre || "");
       setEditStatus(data.status || "ongoing");
-      setEditIsAdult(data.isAdult || false);
       setEditCoverPreview(data.coverImage || null);
       setEditCoverBase64(null);
       setEditResult(null);
@@ -93,7 +91,6 @@ export default function ModManageStoriesPage() {
         description: editDescription.trim(),
         genre: editGenre,
         status: editStatus,
-        isAdult: editIsAdult,
       };
       if (editCoverBase64) body.coverImage = editCoverBase64;
       const res = await fetch(`${API_BASE_URL}/api/mod/stories/${editStory.id}/edit`, {
@@ -330,17 +327,6 @@ export default function ModManageStoriesPage() {
                   </select>
                 </div>
               </div>
-
-              {/* 18+ */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editIsAdult}
-                  onChange={(e) => setEditIsAdult(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-body-sm text-gray-700">Nội dung 18+</span>
-              </label>
 
               {/* Cover image */}
               <div>
