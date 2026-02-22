@@ -62,7 +62,11 @@ export default function Page() {
         width: 512,
         height: 512,
       },
-      sameAs: [],
+      sameAs: [
+        "https://www.facebook.com/vstory1202",
+        "https://www.tiktok.com/@vstory1202",
+        "https://t.me/seringuyen05061",
+      ],
     },
   };
 
@@ -82,6 +86,18 @@ export default function Page() {
     },
     description:
       "VStory – Nền tảng đọc truyện chữ online miễn phí hàng đầu Việt Nam. Truyện ngôn tình, đam mỹ, xuyên không, tu tiên, kinh dị, học đường.",
+    sameAs: [
+      "https://www.facebook.com/vstory1202",
+      "https://www.tiktok.com/@vstory1202",
+      "https://t.me/seringuyen05061",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "support@vstory.vn",
+      availableLanguage: ["vi", "en"],
+      url: `${SITE_URL}/contact`,
+    },
   };
 
   return (
