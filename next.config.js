@@ -54,6 +54,27 @@ const withPWA = require("next-pwa")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    const noIndexHeaders = [
+      {
+        key: "X-Robots-Tag",
+        value: "noindex, nofollow, nosnippet, noarchive",
+      },
+    ];
+
+    return [
+      { source: "/login", headers: noIndexHeaders },
+      { source: "/register", headers: noIndexHeaders },
+      { source: "/author/register", headers: noIndexHeaders },
+      { source: "/profile", headers: noIndexHeaders },
+      { source: "/wallet", headers: noIndexHeaders },
+      { source: "/bookshelf", headers: noIndexHeaders },
+      { source: "/quests", headers: noIndexHeaders },
+      { source: "/admin/:path*", headers: noIndexHeaders },
+      { source: "/mod/:path*", headers: noIndexHeaders },
+      { source: "/write/:path*", headers: noIndexHeaders },
+    ];
+  },
   async redirects() {
     return [
       {
