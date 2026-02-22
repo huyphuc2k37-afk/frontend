@@ -22,13 +22,14 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 7 }, // 7 days
       },
     },
-    // Cache images
+    // Cache cover images (network-first behavior to avoid stale 403/404 after moderation changes)
     {
       urlPattern: /\/api\/stories\/.+\/cover/,
-      handler: "CacheFirst",
+      handler: "StaleWhileRevalidate",
       options: {
         cacheName: "cover-cache",
-        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 30 }, // 30 days
+        cacheableResponse: { statuses: [200] },
+        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 7 }, // 7 days
       },
     },
     // Cache static assets

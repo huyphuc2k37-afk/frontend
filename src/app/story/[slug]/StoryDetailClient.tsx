@@ -39,6 +39,7 @@ interface StoryDetail {
   id: string;
   title: string;
   slug: string;
+  updatedAt: string;
   description: string;
   genre: string;
   tags: string | null;
@@ -271,7 +272,7 @@ export default function StoryDetailPage() {
                 <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56 bg-gray-700">
                   {showCover && (
                     <Image
-                      src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                      src={`${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                       alt={story.title}
                       fill
                       sizes="224px"

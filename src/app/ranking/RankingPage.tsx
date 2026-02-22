@@ -18,6 +18,7 @@ interface RankedStory {
   id: string;
   title: string;
   slug: string;
+  updatedAt?: string;
   genre: string;
   status: string;
   views: number;
@@ -130,7 +131,7 @@ export default function RankingPage() {
                     {/* Cover */}
                     <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                       <Image
-                        src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                        src={`${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                         alt={story.title}
                         fill
                         sizes="56px"

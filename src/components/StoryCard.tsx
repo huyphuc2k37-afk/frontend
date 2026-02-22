@@ -16,7 +16,7 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 export default function StoryCard({ story, variant = "default" }: StoryCardProps) {
   const isFeatured = variant === "featured";
-  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
   const [coverSrc, setCoverSrc] = useState(coverUrl);
 
   return (

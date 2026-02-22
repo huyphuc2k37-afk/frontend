@@ -38,7 +38,7 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 /* ── Story Card (simple — cover + title + author) ── */
 function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
-  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
   const [coverSrc, setCoverSrc] = useState(coverUrl);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
@@ -531,7 +531,7 @@ export default function HomePage() {
 
                     {/* Cover mini */}
                     <MiniCover
-                      src={`${API_BASE_URL}/api/stories/${story.id}/cover`}
+                      src={`${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                       alt={story.title}
                     />
 

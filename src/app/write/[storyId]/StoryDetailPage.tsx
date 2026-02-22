@@ -100,6 +100,7 @@ export default function StoryDetailPage() {
   const [editDesc, setEditDesc] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
+  const [coverChanged, setCoverChanged] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [editGenres, setEditGenres] = useState<string[]>([]);
   const [editCategoryId, setEditCategoryId] = useState<string>("");
@@ -127,6 +128,7 @@ export default function StoryDetailPage() {
         setEditDesc(data.description);
         setEditStatus(data.status);
         setEditCoverImage(data.coverImage || null);
+        setCoverChanged(false);
         setEditGenres(data.genre ? data.genre.split(", ").map((g: string) => g.trim()).filter(Boolean) : []);
         setEditCategoryId(data.categoryId || "");
         setEditTagIds((data.storyTagList || []).map((t: ApiTag) => t.id));
@@ -187,7 +189,7 @@ export default function StoryDetailPage() {
           title: editTitle,
           description: editDesc,
           status: editStatus,
-          coverImage: editCoverImage,
+          ...(coverChanged ? { coverImage: editCoverImage } : {}),
           genre: editGenres.join(", "),
           categoryId: editCategoryId || null,
           tagIds: editTagIds,
@@ -196,6 +198,8 @@ export default function StoryDetailPage() {
       if (res.ok) {
         const updated = await res.json();
         setStory((prev) => (prev ? { ...prev, ...updated } : prev));
+        setEditCoverImage(updated.coverImage || null);
+        setCoverChanged(false);
         setEditingInfo(false);
       }
     } catch {}
@@ -315,6 +319,7 @@ export default function StoryDetailPage() {
                     setEditDesc(story.description);
                     setEditStatus(story.status);
                     setEditCoverImage(story.coverImage || null);
+                    setCoverChanged(false);
                     setEditGenres(story.genre ? story.genre.split(", ").map((g) => g.trim()).filter(Boolean) : []);
                     setEditCategoryId(story.categoryId || "");
                     setEditTagIds((story.storyTagList || []).map((t) => t.id));
@@ -368,7 +373,7 @@ export default function StoryDetailPage() {
                       }
                       try {
                         const reader = new FileReader();
-                        reader.onload = () => setEditCoverImage(String(reader.result));
+                        reader.onload = () => { setEditCoverImage(String(reader.result)); setCoverChanged(true); };
                         reader.onerror = () => setCoverError("Không thể đọc file ảnh");
                         reader.readAsDataURL(file);
                       } catch {
