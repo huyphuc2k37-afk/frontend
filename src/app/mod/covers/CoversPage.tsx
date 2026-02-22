@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Image from "next/image";
 import { useMod } from "@/components/ModLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -35,9 +36,12 @@ export default function CoversPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
+  const headers = useMemo<HeadersInit | undefined>(
+    () => (token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : undefined),
+    [token]
+  );
 
-  const fetchCovers = () => {
+  const fetchCovers = useCallback(() => {
     if (!token) return;
     Promise.all([
       fetch(`${API_BASE_URL}/api/mod/covers?status=${filter}&page=${page}`, { headers }).then((r) => r.ok ? r.json() : { stories: [], totalPages: 1 }),
@@ -48,9 +52,9 @@ export default function CoversPage() {
       setStats(statsData);
       setLoading(false);
     }).catch(() => setLoading(false));
-  };
+  }, [token, filter, page, headers]);
 
-  useEffect(() => { fetchCovers(); }, [token, filter, page]);
+  useEffect(() => { fetchCovers(); }, [fetchCovers]);
 
   const approveCover = async (id: string) => {
     setProcessing(id);
@@ -146,11 +150,12 @@ export default function CoversPage() {
                 onClick={() => story.coverImage && setPreviewImage(story.coverImage)}
               >
                 {story.coverImage ? (
-                  <img
+                  <Image
                     src={story.coverImage}
                     alt={story.title}
+                    fill
+                    unoptimized
                     className="absolute inset-0 h-full w-full object-cover"
-                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -253,9 +258,12 @@ export default function CoversPage() {
       {previewImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setPreviewImage(null)}>
           <div className="relative max-h-[90vh] max-w-[90vw]">
-            <img
+            <Image
               src={previewImage}
               alt="Preview"
+              width={1200}
+              height={1600}
+              unoptimized
               className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
             />
           </div>

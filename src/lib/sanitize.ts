@@ -26,8 +26,6 @@ export function sanitizeHtml(dirty: string): string {
       "a",
     ],
     ALLOWED_ATTR: [
-      // Global
-      "class", "id", "style",
       // Links
       "href", "target", "rel",
       // Images
@@ -35,11 +33,10 @@ export function sanitizeHtml(dirty: string): string {
       // Tables
       "colspan", "rowspan",
     ],
-    // Force links to open in new tab and add noopener
     ALLOW_DATA_ATTR: false,
-    ADD_ATTR: ["target"],
-    // Hook: ensure all <a> tags have safe attributes
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.-]|$))/i,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
     FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input", "textarea", "select", "button"],
-    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
+    FORBID_ATTR: ["style", "id", "class", "onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
   });
 }

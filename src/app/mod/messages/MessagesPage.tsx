@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMod } from "@/components/ModLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -55,7 +55,10 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMsgCount = useRef(0);
 
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
+  const headers = useMemo<HeadersInit | undefined>(
+    () => (token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : undefined),
+    [token]
+  );
 
   // Fetch conversations (reusable)
   const fetchConversations = useCallback(() => {
@@ -64,7 +67,7 @@ export default function MessagesPage() {
       .then((r) => r.ok ? r.json() : { conversations: [] })
       .then((data) => { setConversations(data?.conversations || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [token]);
+  }, [token, headers]);
 
   // Fetch messages (reusable)
   const fetchMessages = useCallback(() => {
@@ -77,7 +80,7 @@ export default function MessagesPage() {
         setConvSubject(data?.conversation?.subject || "");
       })
       .catch(() => {});
-  }, [token, selectedConv]);
+  }, [token, selectedConv, headers]);
 
   // Initial load + polling conversations every 5s
   useEffect(() => {
@@ -108,7 +111,7 @@ export default function MessagesPage() {
       .then((r) => r.ok ? r.json() : { authors: [] })
       .then((data) => setAllAuthors(data?.authors || []))
       .catch(() => {});
-  }, [token, showNew]);
+  }, [token, showNew, allAuthors.length, headers]);
 
   // Search authors
   useEffect(() => {
@@ -120,7 +123,7 @@ export default function MessagesPage() {
         .catch(() => {});
     }, 300);
     return () => clearTimeout(timer);
-  }, [token, searchAuthor]);
+  }, [token, searchAuthor, headers]);
 
   const sendReply = async () => {
     if (!token || !selectedConv || !newMessage.trim() || sending) return;

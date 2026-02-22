@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAdmin } from "@/components/AdminLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -54,7 +54,10 @@ export default function AdminMessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMsgCount = useRef(0);
 
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
+  const headers = useMemo<HeadersInit | undefined>(
+    () => (token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : undefined),
+    [token]
+  );
 
   const fetchConversations = useCallback(() => {
     if (!token) return;
@@ -62,7 +65,7 @@ export default function AdminMessagesPage() {
       .then((r) => r.ok ? r.json() : { conversations: [] })
       .then((data) => { setConversations(data?.conversations || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [token]);
+  }, [token, headers]);
 
   const fetchMessages = useCallback(() => {
     if (!token || !selectedConv) return;
@@ -74,7 +77,7 @@ export default function AdminMessagesPage() {
         setConvSubject(data?.conversation?.subject || "");
       })
       .catch(() => {});
-  }, [token, selectedConv]);
+  }, [token, selectedConv, headers]);
 
   useEffect(() => {
     fetchConversations();
@@ -103,7 +106,7 @@ export default function AdminMessagesPage() {
       .then((r) => r.ok ? r.json() : { authors: [] })
       .then((data) => setAllAuthors(data?.authors || []))
       .catch(() => {});
-  }, [token, showNew]);
+  }, [token, showNew, allAuthors.length, headers]);
 
   useEffect(() => {
     if (!token || searchAuthor.length < 2) { setAuthorResults([]); return; }
@@ -114,7 +117,7 @@ export default function AdminMessagesPage() {
         .catch(() => {});
     }, 300);
     return () => clearTimeout(timer);
-  }, [token, searchAuthor]);
+  }, [token, searchAuthor, headers]);
 
   const sendReply = async () => {
     if (!token || !selectedConv || !newMessage.trim() || sending) return;

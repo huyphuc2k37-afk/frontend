@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -45,7 +45,10 @@ export default function AuthorMessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMsgCount = useRef(0);
 
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
+  const headers = useMemo<HeadersInit | undefined>(
+    () => (token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : undefined),
+    [token]
+  );
 
   const fetchConversations = useCallback(() => {
     if (!token) return;
@@ -53,7 +56,7 @@ export default function AuthorMessagesPage() {
       .then((r) => r.ok ? r.json() : { conversations: [] })
       .then((data) => { setConversations(data?.conversations || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [token]);
+  }, [token, headers]);
 
   const fetchMessages = useCallback(() => {
     if (!token || !selectedConv) return;
@@ -65,7 +68,7 @@ export default function AuthorMessagesPage() {
         setConvSubject(data?.conversation?.subject || "");
       })
       .catch(() => {});
-  }, [token, selectedConv]);
+  }, [token, selectedConv, headers]);
 
   useEffect(() => {
     fetchConversations();

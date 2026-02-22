@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useMod } from "@/components/ModLayout";
 import { API_BASE_URL } from "@/lib/api";
 import {
@@ -716,9 +717,12 @@ export default function ModStoriesPage() {
                 <label className="block text-[12px] font-semibold text-gray-600 mb-1">Ảnh bìa</label>
                 <div className="flex items-start gap-3">
                   {editCoverPreview ? (
-                    <img
+                    <Image
                       src={editCoverPreview}
                       alt="Cover preview"
+                      width={64}
+                      height={96}
+                      unoptimized
                       className="h-24 w-16 rounded-lg object-cover border border-gray-200"
                     />
                   ) : (
