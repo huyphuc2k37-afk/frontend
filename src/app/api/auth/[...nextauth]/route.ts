@@ -4,6 +4,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import jwt from "jsonwebtoken";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const JWT_API_SECRET = process.env.JWT_API_SECRET || process.env.NEXTAUTH_SECRET;
+const AUTH_SYNC_SECRET = process.env.AUTH_SYNC_SECRET || process.env.NEXTAUTH_SECRET;
+
+if (!JWT_API_SECRET || !AUTH_SYNC_SECRET) {
+  throw new Error("Missing auth secrets: set JWT_API_SECRET and AUTH_SYNC_SECRET (or NEXTAUTH_SECRET fallback)");
+}
 
 const handler = NextAuth({
   providers: [
@@ -74,7 +80,7 @@ const handler = NextAuth({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-sync-secret": process.env.NEXTAUTH_SECRET || "",
+              "x-sync-secret": AUTH_SYNC_SECRET,
             },
             body: JSON.stringify({ email: token.email, name: token.name, image: token.picture }),
           });
@@ -97,7 +103,7 @@ const handler = NextAuth({
           name: token.name,
           picture: token.picture,
         },
-        process.env.NEXTAUTH_SECRET!,
+        JWT_API_SECRET,
         { expiresIn: "7d" }
       );
       return session;
