@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { API_BASE_URL } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 const SITE_URL = "https://vstory.vn";
 
 type BackendSitemapResponse = {
