@@ -19,6 +19,7 @@ import {
   LockClosedIcon,
   LockOpenIcon,
   CurrencyDollarIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
@@ -603,13 +604,22 @@ export default function StoryDetailPage() {
           <h3 className="text-body-lg font-semibold text-gray-900">
             Danh sách chương ({story.chapters.length})
           </h3>
-          <Link
-            href={`/write/${story.id}/chapter/new`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1.5 text-caption font-medium text-primary-600 hover:bg-primary-100"
-          >
-            <PlusIcon className="h-3.5 w-3.5" />
-            Thêm chương
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/write/${story.id}/chapter/bulk`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-caption font-medium text-amber-600 hover:bg-amber-100"
+            >
+              <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+              Đăng nhiều chương
+            </Link>
+            <Link
+              href={`/write/${story.id}/chapter/new`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1.5 text-caption font-medium text-primary-600 hover:bg-primary-100"
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              Thêm chương
+            </Link>
+          </div>
         </div>
 
         {story.chapters.length === 0 ? (
