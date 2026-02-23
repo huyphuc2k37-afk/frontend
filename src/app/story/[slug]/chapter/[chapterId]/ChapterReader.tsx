@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -16,11 +16,13 @@ import {
   GiftIcon,
   SunIcon,
   MoonIcon,
+  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
+import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
@@ -59,6 +61,48 @@ export default function ReadChapterPage() {
   const [darkMode, setDarkMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const token = (session as any)?.accessToken as string | undefined;
+
+  // ─── Inline paragraph comment state ───
+  const [paragraphDrawerOpen, setParagraphDrawerOpen] = useState(false);
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(0);
+  const [activeParagraphText, setActiveParagraphText] = useState("");
+  const [paragraphCounts, setParagraphCounts] = useState<Record<number, number>>({});
+
+  // Split chapter content into paragraphs for inline commenting
+  const paragraphs = useMemo(() => {
+    if (!chapter?.content) return [];
+    const html = sanitizeHtml(chapter.content);
+    // Try to split by <p> tags first
+    const pMatch = html.match(/<p[^>]*>[\s\S]*?<\/p>/gi);
+    if (pMatch && pMatch.length > 1) return pMatch;
+    // Fallback: split by double newline (plain text content)
+    const parts = html.split(/\n\s*\n/).filter((p) => p.trim().length > 0);
+    return parts;
+  }, [chapter?.content]);
+
+  // Fetch paragraph comment counts
+  useEffect(() => {
+    if (!chapterId || !chapter || paragraphs.length === 0) return;
+    fetch(`${API_BASE_URL}/api/comments/paragraph-counts?chapterId=${chapterId}`)
+      .then((r) => r.json())
+      .then((data) => setParagraphCounts(data.counts || {}))
+      .catch(() => {});
+  }, [chapterId, chapter, paragraphs.length]);
+
+  const openParagraphDrawer = (index: number, text: string) => {
+    setActiveParagraphIndex(index);
+    setActiveParagraphText(text);
+    setParagraphDrawerOpen(true);
+  };
+
+  const closeParagraphDrawer = () => {
+    setParagraphDrawerOpen(false);
+    // Refresh counts after closing
+    fetch(`${API_BASE_URL}/api/comments/paragraph-counts?chapterId=${chapterId}`)
+      .then((r) => r.json())
+      .then((data) => setParagraphCounts(data.counts || {}))
+      .catch(() => {});
+  };
 
   // ─── Copy protection for chapter content ───
   useEffect(() => {
@@ -379,10 +423,45 @@ export default function ReadChapterPage() {
                 style={{ WebkitUserSelect: "none", MozUserSelect: "none", msUserSelect: "none", userSelect: "none" } as React.CSSProperties}
               >
                 <div className="prose prose-lg max-w-none">
-                  <div
-                    className={`whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }}
-                  />
+                  {/* Paragraph-by-paragraph rendering with inline comment badges */}
+                  {paragraphs.map((para, idx) => {
+                    // Extract plain text for the drawer
+                    const plainText = para.replace(/<[^>]+>/g, "").trim();
+                    if (!plainText) return null;
+                    const count = paragraphCounts[idx] || 0;
+
+                    return (
+                      <div key={idx} className="group/para relative">
+                        <div className="flex items-start gap-0">
+                          {/* Paragraph content */}
+                          <div
+                            className={`flex-1 whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                            dangerouslySetInnerHTML={{ __html: para }}
+                          />
+
+                          {/* Comment badge — always visible if has comments, otherwise show on hover */}
+                          <button
+                            onClick={() => openParagraphDrawer(idx, plainText)}
+                            className={`flex-shrink-0 ml-2 mt-1 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 ${
+                              count > 0
+                                ? darkMode
+                                  ? 'bg-primary-900/50 text-primary-300 hover:bg-primary-800/60'
+                                  : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+                                : `opacity-0 group-hover/para:opacity-100 ${
+                                    darkMode
+                                      ? 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-300'
+                                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                                  }`
+                            }`}
+                            title="Bình luận đoạn này"
+                          >
+                            <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+                            {count > 0 && <span>{count}</span>}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Author note */}
@@ -507,6 +586,17 @@ export default function ReadChapterPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Paragraph comment drawer */}
+      <ParagraphCommentDrawer
+        isOpen={paragraphDrawerOpen}
+        onClose={closeParagraphDrawer}
+        chapterId={chapterId}
+        paragraphIndex={activeParagraphIndex}
+        paragraphText={activeParagraphText}
+        session={session}
+        token={token}
+      />
     </>
   );
 }
