@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -57,7 +57,46 @@ export default function ReadChapterPage() {
   const [tipSuccess, setTipSuccess] = useState(false);
   const [tipError, setTipError] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const token = (session as any)?.accessToken as string | undefined;
+
+  // ─── Copy protection for chapter content ───
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const prevent = (e: Event) => e.preventDefault();
+
+    // Block right-click, copy, cut, select on content area
+    el.addEventListener("contextmenu", prevent);
+    el.addEventListener("copy", prevent);
+    el.addEventListener("cut", prevent);
+    el.addEventListener("selectstart", prevent);
+
+    // Block Ctrl+C, Ctrl+A, Ctrl+U, Ctrl+S, PrintScreen
+    const handleKey = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ["c", "a", "u", "s", "p"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+      }
+      // Block PrintScreen
+      if (e.key === "PrintScreen") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      el.removeEventListener("contextmenu", prevent);
+      el.removeEventListener("copy", prevent);
+      el.removeEventListener("cut", prevent);
+      el.removeEventListener("selectstart", prevent);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [chapter]);
 
   // Load dark mode preference from localStorage
   useEffect(() => {
@@ -334,7 +373,11 @@ export default function ReadChapterPage() {
               </div>
             ) : (
               /* Chapter content */
-              <div className={`rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746]' : 'border-gray-100 bg-white'}`}>
+              <div
+                ref={contentRef}
+                className={`rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300 select-none ${darkMode ? 'border-gray-700 bg-[#1e2746]' : 'border-gray-100 bg-white'}`}
+                style={{ WebkitUserSelect: "none", MozUserSelect: "none", msUserSelect: "none", userSelect: "none" } as React.CSSProperties}
+              >
                 <div className="prose prose-lg max-w-none">
                   <div
                     className={`whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
