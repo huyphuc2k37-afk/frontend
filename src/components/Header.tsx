@@ -525,7 +525,7 @@ export default function Header() {
                             {!isAuthor && !isAdmin && (
                               <>
                                 <Link
-                                  href="/history"
+                                  href="/bookshelf"
                                   onClick={() => setUserMenuOpen(false)}
                                   className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
                                 >
@@ -713,7 +713,7 @@ export default function Header() {
                     )}
                     {!isAuthor && !isAdmin && (
                       <>
-                        <Link href="/history" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <Link href="/bookshelf" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-gray-700 hover:bg-gray-50">
                           Lịch sử đọc
                         </Link>
                         <Link href="/author/register" className="block rounded-lg px-3 py-2.5 text-body-sm font-medium text-primary-600 hover:bg-primary-50">

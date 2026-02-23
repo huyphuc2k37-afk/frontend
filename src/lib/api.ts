@@ -10,8 +10,8 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
   };
-  // Only set Content-Type for requests with a body
-  if (options.body) {
+  // Only set Content-Type for non-FormData bodies (FormData needs browser-set boundary)
+  if (options.body && !(options.body instanceof FormData)) {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";
   }
 
@@ -33,8 +33,8 @@ export async function authFetch(path: string, token: string, options: RequestIni
     Authorization: `Bearer ${token}`,
     ...(options.headers as Record<string, string> || {}),
   };
-  // Only set Content-Type for requests with a body
-  if (options.body) {
+  // Only set Content-Type for non-FormData bodies (FormData needs browser-set boundary)
+  if (options.body && !(options.body instanceof FormData)) {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";
   }
 
