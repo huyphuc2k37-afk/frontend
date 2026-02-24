@@ -346,10 +346,7 @@ export default function StoryDetailPage() {
                   >
                     {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
                   </span>
-                  {story.tags && story.tags.split(",").map((tag) => tag.trim()).filter(Boolean).filter((tag) => {
-                    const normalized = tag.toLowerCase();
-                    return normalized !== "truyện dịch" && normalized !== "truyen dich";
-                  }).map((tag) => (
+                  {story.tags && story.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
                     <span
                       key={tag}
                       className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300"

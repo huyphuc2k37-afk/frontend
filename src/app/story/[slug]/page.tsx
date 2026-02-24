@@ -34,10 +34,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         .split(",")
         .map((t: string) => t.trim())
         .filter(Boolean)
-        .filter((t: string) => {
-          const normalized = t.toLowerCase();
-          return normalized !== "truyện dịch" && normalized !== "truyen dich";
-        })
     : [];
 
   return {
