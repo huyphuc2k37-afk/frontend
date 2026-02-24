@@ -8,14 +8,14 @@ const footerLinks = {
     { label: "Trở thành tác giả", href: "/author" },
   ],
   genres: [
-    { label: "Truyện Ngôn Tình", href: "/the-loai/tinh-cam" },
-    { label: "Truyện Đam Mỹ", href: "/the-loai/tinh-cam" },
+    { label: "Truyện Ngôn Tình", href: "/the-loai/ngon-tinh" },
+    { label: "Truyện Đam Mỹ", href: "/the-loai/dam-my" },
     { label: "Truyện Xuyên Không", href: "/the-loai/xuyen-khong" },
-    { label: "Truyện Tiên Hiệp", href: "/the-loai/gia-tuong-huyen-huyen" },
-    { label: "Truyện Kinh Dị", href: "/the-loai/kinh-di-tam-linh" },
-    { label: "Truyện Học Đường", href: "/the-loai/hoc-duong-do-thi" },
-    { label: "Truyện Huyền Huyễn", href: "/the-loai/gia-tuong-huyen-huyen" },
-    { label: "Light Novel", href: "/the-loai/fanfic-light-novel" },
+    { label: "Truyện Huyền Huyễn", href: "/the-loai/huyen-huyen" },
+    { label: "Truyện Kinh Dị", href: "/the-loai/kinh-di" },
+    { label: "Truyện Học Đường", href: "/the-loai/hoc-duong" },
+    { label: "Light Novel", href: "/the-loai/light-novel" },
+    { label: "Truyện Bách Hợp", href: "/the-loai/bach-hop" },
   ],
   support: [
     { label: "Giới thiệu", href: "/about" },
@@ -74,7 +74,7 @@ export default function Footer() {
             </h4>
             <ul className="mt-3 space-y-2">
               {footerLinks.genres.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-body-sm text-gray-600 transition-colors hover:text-primary-600"

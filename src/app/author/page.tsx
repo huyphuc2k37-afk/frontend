@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://vstory.vn/author",
   },
+  openGraph: {
+    title: "Trở thành tác giả – VStory",
+    description:
+      "Chia sẻ câu chuyện của bạn với hàng triệu độc giả. Nhận doanh thu, công cụ viết chuyên nghiệp.",
+    url: "https://vstory.vn/author",
+    siteName: "VStory",
+    locale: "vi_VN",
+    type: "website",
+  },
 };
 
 export default function Page() {

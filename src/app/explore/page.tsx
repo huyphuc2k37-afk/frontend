@@ -22,6 +22,7 @@ export const metadata: Metadata = {
       "Kho truyện chữ đa thể loại, đọc online miễn phí. Cập nhật mỗi ngày tại VStory.",
     url: "https://vstory.vn/explore",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

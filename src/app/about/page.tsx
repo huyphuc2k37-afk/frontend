@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "VStory là nền tảng đọc và viết truyện chữ dành cho người Việt.",
     url: "https://vstory.vn/about",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

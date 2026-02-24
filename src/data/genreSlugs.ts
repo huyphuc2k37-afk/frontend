@@ -18,6 +18,10 @@ export interface GenreSEO {
 /**
  * Primary genre pages – each generates a dedicated /the-loai/[slug] page
  * that targets a specific search keyword cluster.
+ *
+ * IMPORTANT: All slugs must be canonical category slugs from the database.
+ * Do NOT use old/alternative slugs here — they would cause 301 redirects
+ * which wastes crawl budget and signals poor link hygiene.
  */
 export const genreSEOPages: GenreSEO[] = [
   {
@@ -51,87 +55,57 @@ export const genreSEOPages: GenreSEO[] = [
       "Tuyển tập truyện xuyên không hay nhất – xuyên về cổ đại, xuyên vào sách, xuyên game. Đọc miễn phí tại VStory với hàng nghìn chương mới mỗi ngày.",
   },
   {
-    slug: "tien-hiep",
-    name: "Tu tiên",
-    title: "Truyện Tiên Hiệp, Tu Tiên Hay Nhất - Đọc Miễn Phí",
+    slug: "huyen-huyen",
+    name: "Huyền huyễn",
+    title: "Truyện Huyền Huyễn, Tiên Hiệp Hay Nhất - Đọc Miễn Phí",
     description:
-      "Đọc truyện tiên hiệp, truyện tu tiên, truyện tu chân hay nhất online miễn phí. Cập nhật chương mới nhanh nhất tại VStory.",
-    heading: "Truyện Tiên Hiệp – Tu Tiên",
+      "Đọc truyện huyền huyễn, tiên hiệp, tu tiên hay nhất online miễn phí. Cập nhật chương mới nhanh nhất tại VStory.",
+    heading: "Truyện Huyền Huyễn – Giả Tưởng",
     intro:
-      "Khám phá thế giới tu tiên, tiên hiệp hấp dẫn với hàng nghìn tác phẩm hay. Đọc miễn phí, cập nhật mỗi ngày tại VStory.",
+      "Khám phá thế giới huyền huyễn, tiên hiệp, tu tiên kỳ ảo với hàng nghìn tác phẩm hay. Đọc miễn phí và cập nhật chương mới mỗi ngày tại VStory.",
   },
   {
     slug: "hoc-duong",
     name: "Học đường",
     title: "Truyện Học Đường Hay - Đọc Online Miễn Phí",
     description:
-      "Đọc truyện học đường hay, truyện tình cảm tuổi học trò online miễn phí. Hàng nghìn truyện học đường mới tại VStory.",
-    heading: "Truyện Học Đường",
+      "Đọc truyện học đường hay, truyện tình cảm tuổi học trò, đời thường online miễn phí. Hàng nghìn truyện học đường mới tại VStory.",
+    heading: "Truyện Học Đường – Đời Thường",
     intro:
-      "Tổng hợp truyện học đường hay nhất – tình cảm tuổi học trò, thanh xuân vườn trường. Đọc miễn phí trên VStory.",
+      "Tổng hợp truyện học đường hay nhất – tình cảm tuổi học trò, thanh xuân vườn trường, đời thường. Đọc miễn phí trên VStory.",
   },
   {
     slug: "kinh-di",
     name: "Kinh dị",
     title: "Truyện Kinh Dị Hay - Đọc Truyện Ma Online Miễn Phí",
     description:
-      "Đọc truyện kinh dị, truyện ma, truyện rùng rợn online miễn phí. Cập nhật truyện kinh dị mới nhất tại VStory.",
-    heading: "Truyện Kinh Dị",
+      "Đọc truyện kinh dị, truyện ma, truyện linh dị online miễn phí. Cập nhật truyện kinh dị mới nhất tại VStory.",
+    heading: "Truyện Kinh Dị – Linh Dị",
     intro:
-      "Bộ sưu tập truyện kinh dị, truyện ma rùng rợn. Đọc miễn phí những câu chuyện ly kỳ, bí ẩn trên VStory.",
+      "Bộ sưu tập truyện kinh dị, truyện ma, linh dị rùng rợn. Đọc miễn phí những câu chuyện ly kỳ, bí ẩn trên VStory.",
   },
   {
-    slug: "huyen-huyen",
-    name: "Huyền huyễn",
-    title: "Truyện Huyền Huyễn Hay Nhất - Đọc Online Miễn Phí",
+    slug: "tinh-cam",
+    name: "Tình cảm",
+    title: "Truyện Tình Cảm Hay Nhất - Đọc Online Miễn Phí",
     description:
-      "Đọc truyện huyền huyễn, truyện fantasy hay nhất online miễn phí tại VStory. Hàng nghìn tác phẩm cập nhật liên tục.",
-    heading: "Truyện Huyền Huyễn",
+      "Đọc truyện tình cảm hay, ngọt sủng, lãng mạn online miễn phí tại VStory. Cập nhật liên tục.",
+    heading: "Truyện Tình Cảm",
     intro:
-      "Khám phá thế giới huyền huyễn kỳ ảo với hàng nghìn tác phẩm hay. Đọc miễn phí và cập nhật chương mới mỗi ngày tại VStory.",
-  },
-  {
-    slug: "trong-sinh",
-    name: "Trọng sinh",
-    title: "Truyện Trọng Sinh Hay - Đọc Online Miễn Phí",
-    description:
-      "Đọc truyện trọng sinh hay nhất, truyện tái sinh, truyện sống lại online miễn phí tại VStory.",
-    heading: "Truyện Trọng Sinh",
-    intro:
-      "Tuyển tập truyện trọng sinh hay – nhân vật chính sống lại, thay đổi số phận. Đọc miễn phí tại VStory.",
+      "Tuyển tập truyện tình cảm, lãng mạn, ngọt sủng dành cho fans tình cảm. Đọc miễn phí, cập nhật liên tục tại VStory.",
   },
   {
     slug: "co-dai",
     name: "Cổ đại",
-    title: "Truyện Cổ Đại Hay Nhất - Đọc Online Miễn Phí",
+    title: "Truyện Cổ Đại, Kiếm Hiệp Hay - Đọc Online Miễn Phí",
     description:
       "Đọc truyện cổ đại hay, truyện cung đấu, truyện kiếm hiệp online miễn phí. Cập nhật hàng ngày tại VStory.",
-    heading: "Truyện Cổ Đại",
+    heading: "Truyện Cổ Đại – Kiếm Hiệp",
     intro:
       "Bước vào thế giới cổ đại với cung đấu, giang hồ hiệp khách. Hàng nghìn truyện cổ đại hay đọc miễn phí trên VStory.",
   },
   {
-    slug: "do-thi",
-    name: "Hiện đại",
-    title: "Truyện Đô Thị, Hiện Đại Hay - Đọc Online Miễn Phí",
-    description:
-      "Đọc truyện đô thị, truyện hiện đại hay nhất online miễn phí. Truyện tình cảm, phiêu lưu trong bối cảnh đô thị tại VStory.",
-    heading: "Truyện Đô Thị – Hiện Đại",
-    intro:
-      "Tổng hợp truyện đô thị, hiện đại hay nhất. Từ tình cảm lãng mạn đến phiêu lưu hành động – đọc miễn phí trên VStory.",
-  },
-  {
-    slug: "ngot-sung",
-    name: "Thuần ngọt",
-    title: "Truyện Ngọt Sủng, Thuần Ngọt Hay - Đọc Online Miễn Phí",
-    description:
-      "Đọc truyện ngọt sủng, thuần ngọt, sủng văn hay miễn phí. Truyện tình cảm ngọt ngào, lãng mạn tại VStory.",
-    heading: "Truyện Ngọt Sủng – Thuần Ngọt",
-    intro:
-      "Tuyển tập truyện ngọt sủng, thuần ngọt dành cho fans tình cảm lãng mạn. Đọc miễn phí, cập nhật liên tục tại VStory.",
-  },
-  {
-    slug: "khoa-hoc-vien-tuong",
+    slug: "khoa-hoc",
     name: "Khoa học viễn tưởng",
     title: "Truyện Khoa Học Viễn Tưởng Hay - Đọc Online Miễn Phí",
     description:
@@ -143,12 +117,12 @@ export const genreSEOPages: GenreSEO[] = [
   {
     slug: "light-novel",
     name: "Light novel",
-    title: "Light Novel Tiếng Việt Hay - Đọc Online Miễn Phí",
+    title: "Light Novel & Fanfic Tiếng Việt Hay - Đọc Online Miễn Phí",
     description:
-      "Đọc light novel tiếng Việt, LN hay nhất trên VStory. Truyện nhẹ, phong cách Nhật Bản – miễn phí, cập nhật nhanh.",
-    heading: "Light Novel Tiếng Việt",
+      "Đọc light novel tiếng Việt, fanfic hay nhất trên VStory. Phong cách Nhật Bản – miễn phí, cập nhật nhanh.",
+    heading: "Light Novel & Fanfic",
     intro:
-      "Tổng hợp light novel tiếng Việt hay nhất. Phong cách kể chuyện nhẹ nhàng, hấp dẫn – đọc miễn phí tại VStory.",
+      "Tổng hợp light novel, fanfic tiếng Việt hay nhất. Phong cách kể chuyện nhẹ nhàng, hấp dẫn – đọc miễn phí tại VStory.",
   },
   {
     slug: "bach-hop",
@@ -161,24 +135,14 @@ export const genreSEOPages: GenreSEO[] = [
       "Tuyển tập truyện bách hợp, GL hay nhất. Đọc miễn phí trên VStory với cập nhật liên tục.",
   },
   {
-    slug: "mat-the",
-    name: "Mạt thế",
-    title: "Truyện Mạt Thế, Tận Thế Hay - Đọc Online Miễn Phí",
+    slug: "phieu-luu",
+    name: "Phiêu lưu",
+    title: "Truyện Phiêu Lưu & Hành Động Hay - Đọc Online Miễn Phí",
     description:
-      "Đọc truyện mạt thế, tận thế, sinh tồn hay nhất online miễn phí tại VStory. Hàng nghìn chương cập nhật mỗi ngày.",
-    heading: "Truyện Mạt Thế – Tận Thế",
+      "Đọc truyện phiêu lưu, hành động, mạt thế hay nhất online miễn phí tại VStory. Hàng nghìn chương cập nhật mỗi ngày.",
+    heading: "Truyện Phiêu Lưu – Hành Động",
     intro:
-      "Khám phá thế giới mạt thế với các câu chuyện sinh tồn gay cấn. Đọc miễn phí tại VStory.",
-  },
-  {
-    slug: "fanfic",
-    name: "Fanfic",
-    title: "Truyện Fanfic Hay - Đọc Online Miễn Phí",
-    description:
-      "Đọc fanfic hay nhất, đồng nhân các bộ truyện, phim nổi tiếng. Miễn phí trên VStory.",
-    heading: "Truyện Fanfic",
-    intro:
-      "Tổng hợp fanfiction hay nhất – sáng tác đồng nhân dựa trên các tác phẩm nổi tiếng. Đọc miễn phí trên VStory.",
+      "Khám phá thế giới phiêu lưu, hành động gay cấn. Đọc miễn phí tại VStory.",
   },
 ];
 

@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "Kênh liên hệ chính thức của VStory cho hỗ trợ, báo lỗi và hợp tác.",
     url: "https://vstory.vn/contact",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

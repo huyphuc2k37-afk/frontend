@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "Điều khoản dành cho Tác giả trên VStory. Chia sẻ doanh thu và quyền lợi.",
     url: "https://vstory.vn/author-policy",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

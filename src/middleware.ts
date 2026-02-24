@@ -4,25 +4,39 @@ const PRIMARY_HOST = "vstory.vn";
 const WWW_HOST = "www.vstory.vn";
 
 /**
- * 301 redirect map: old genre slugs → new category slugs.
+ * 301 redirect map: old / alternative genre slugs → canonical category slugs.
  * Keeps SEO juice when old URLs are crawled or bookmarked.
+ *
+ * Canonical slugs (DO NOT add these as keys):
+ *   tinh-cam, huyen-huyen, xuyen-khong, hoc-duong, kinh-di,
+ *   dam-my, bach-hop, phieu-luu, ngon-tinh, light-novel, khoa-hoc, co-dai
  */
 const GENRE_REDIRECTS: Record<string, string> = {
-  "ngon-tinh": "tinh-cam",
-  "dam-my": "tinh-cam",
-  "bach-hop": "tinh-cam",
-  "ngot-sung": "tinh-cam",
-  "tien-hiep": "gia-tuong-huyen-huyen",
-  "huyen-huyen": "gia-tuong-huyen-huyen",
-  "khoa-hoc-vien-tuong": "khoa-hoc-tuong-lai",
+  // Legacy "broad" slugs from previous category scheme
+  "gia-tuong-huyen-huyen": "huyen-huyen",
+  "kinh-di-tam-linh": "kinh-di",
+  "hoc-duong-do-thi": "hoc-duong",
+  "fanfic-light-novel": "light-novel",
+  "khoa-hoc-tuong-lai": "khoa-hoc",
+
+  // Auto-generated slugs from old seed_tags.js
+  "huyen-huyen-gia-tuong": "huyen-huyen",
+  "xuyen-khong-chuyen-sinh": "xuyen-khong",
+  "hoc-duong-doi-thuong": "hoc-duong",
+  "kinh-di-linh-di": "kinh-di",
+  "phieu-luu-hanh-dong": "phieu-luu",
+  "light-novel-fanfic": "light-novel",
+  "khoa-hoc-vien-tuong": "khoa-hoc",
+  "co-dai-kiem-hiep": "co-dai",
+
+  // Alternative / sub-genre slugs → parent category
+  "tien-hiep": "huyen-huyen",
   "trong-sinh": "xuyen-khong",
-  "kinh-di": "kinh-di-tam-linh",
-  "hoc-duong": "hoc-duong-do-thi",
-  "co-dai": "hoc-duong-do-thi",
-  "do-thi": "hoc-duong-do-thi",
-  "mat-the": "hoc-duong-do-thi",
-  "light-novel": "fanfic-light-novel",
-  "fanfic": "fanfic-light-novel",
+  "do-thi": "hoc-duong",
+  "mat-the": "phieu-luu",
+  "ngot-sung": "tinh-cam",
+  "fanfic": "light-novel",
+  "khoa-hoc-vien-tuong-2": "khoa-hoc",
 };
 
 export function middleware(request: NextRequest) {

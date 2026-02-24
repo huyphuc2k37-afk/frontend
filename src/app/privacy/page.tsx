@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "Chính sách bảo mật của VStory. Tìm hiểu cách chúng tôi bảo vệ dữ liệu của bạn.",
     url: "https://vstory.vn/privacy",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

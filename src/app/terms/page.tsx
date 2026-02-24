@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "Điều khoản sử dụng của VStory. Quy định về quyền và nghĩa vụ của người dùng.",
     url: "https://vstory.vn/terms",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

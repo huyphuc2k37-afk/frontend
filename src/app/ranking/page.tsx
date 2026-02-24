@@ -21,6 +21,7 @@ export const metadata: Metadata = {
       "Top truyện hay nhất, được đọc nhiều nhất trên VStory.",
     url: "https://vstory.vn/ranking",
     siteName: "VStory",
+    locale: "vi_VN",
     type: "website",
   },
 };

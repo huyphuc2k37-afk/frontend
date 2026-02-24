@@ -58,6 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url: SITE_URL + "/story/" + story.slug,
       siteName: "VStory",
+      locale: "vi_VN",
       type: "book" as any,
       images: story.id
         ? [
@@ -122,8 +123,10 @@ export default async function StoryPage({ params }: Props) {
             {
               "@type": "ListItem",
               position: 2,
-              name: story.genre?.split(",")[0]?.trim() || "Thể loại",
-              item: SITE_URL + "/explore?genre=" + encodeURIComponent(story.genre?.split(",")[0]?.trim() || ""),
+              name: story.category?.name || story.genre?.split(",")[0]?.trim() || "Thể loại",
+              item: story.category?.slug
+                ? SITE_URL + "/the-loai/" + story.category.slug
+                : SITE_URL + "/the-loai",
             },
             {
               "@type": "ListItem",
