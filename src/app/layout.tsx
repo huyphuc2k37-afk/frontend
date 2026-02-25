@@ -34,11 +34,9 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: "/favicon.ico?v=20260225", sizes: "16x16 32x32 48x48" },
       { url: "/favicon-48x48.png?v=20260225", sizes: "48x48", type: "image/png" },
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon.svg", type: "image/svg+xml" },
     ],
+    shortcut: "/favicon.ico?v=20260225",
     apple: "/icons/icon-192x192.png",
   },
   manifest: "/manifest.json",
