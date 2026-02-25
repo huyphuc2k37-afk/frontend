@@ -33,7 +33,11 @@ export const metadata: Metadata = {
     "web truyện",
   ],
   icons: {
-    icon: "/favicon.ico?v=20260212",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
     apple: "/icons/icon-192x192.png",
   },
   manifest: "/manifest.json",
