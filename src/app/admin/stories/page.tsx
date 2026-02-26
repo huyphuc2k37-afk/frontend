@@ -13,13 +13,17 @@ import {
   PencilSquareIcon,
   PhotoIcon,
   DocumentDuplicateIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminChapter {
   id: string;
   title: string;
   number: number;
+  content: string;
   wordCount: number;
+  authorNote: string | null;
   isLocked: boolean;
   price: number;
   createdAt: string;
@@ -35,6 +39,15 @@ export default function AdminStoriesPage() {
   const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(false);
+
+  // Chapter editing state
+  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
+  const [editChapterTitle, setEditChapterTitle] = useState("");
+  const [editChapterContent, setEditChapterContent] = useState("");
+  const [editChapterNote, setEditChapterNote] = useState("");
+  const [savingChapter, setSavingChapter] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [chapterResult, setChapterResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -156,8 +169,10 @@ export default function AdminStoriesPage() {
     }
     setExpandedStoryId(storyId);
     setLoadingChapters(true);
+    setEditingChapterId(null);
+    setChapterResult(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/stories/${storyId}/chapters`, {
+      const res = await fetch(`${API_BASE_URL}/api/mod/stories/${storyId}/chapters-full`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -165,6 +180,72 @@ export default function AdminStoriesPage() {
       }
     } catch {}
     setLoadingChapters(false);
+  };
+
+  const copyChapterContent = async (ch: AdminChapter) => {
+    const plainText = ch.content.replace(/<[^>]*>/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    try {
+      await navigator.clipboard.writeText(plainText);
+      setCopiedId(ch.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = plainText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedId(ch.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
+  const startEditChapter = (ch: AdminChapter) => {
+    setEditingChapterId(ch.id);
+    setEditChapterTitle(ch.title);
+    setEditChapterContent(ch.content);
+    setEditChapterNote(ch.authorNote || "");
+    setChapterResult(null);
+  };
+
+  const cancelEditChapter = () => {
+    setEditingChapterId(null);
+    setEditChapterTitle("");
+    setEditChapterContent("");
+    setEditChapterNote("");
+  };
+
+  const saveChapter = async () => {
+    if (!token || !editingChapterId) return;
+    setSavingChapter(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/mod/chapters/${editingChapterId}/edit`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editChapterTitle.trim(),
+          content: editChapterContent,
+          authorNote: editChapterNote || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChapters((prev) =>
+          prev.map((ch) =>
+            ch.id === editingChapterId
+              ? { ...ch, title: editChapterTitle.trim(), content: editChapterContent, authorNote: editChapterNote || null, wordCount: data.chapter?.wordCount ?? ch.wordCount }
+              : ch
+          )
+        );
+        setEditingChapterId(null);
+        setChapterResult({ type: "success", msg: `Đã cập nhật chương "${editChapterTitle.trim()}"` });
+      } else {
+        setChapterResult({ type: "error", msg: data.error || "Lỗi khi cập nhật chương" });
+      }
+    } catch {
+      setChapterResult({ type: "error", msg: "Lỗi kết nối" });
+    }
+    setSavingChapter(false);
   };
 
   const deleteChapter = async (chapterId: string, title: string) => {
@@ -330,6 +411,11 @@ export default function AdminStoriesPage() {
                             <p className="py-4 text-center text-caption text-gray-400">Truyện chưa có chương nào</p>
                           ) : (
                             <div className="py-2">
+                              {chapterResult && (
+                                <div className={`mb-2 mx-3 rounded-lg p-2 text-caption font-medium ${chapterResult.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                                  {chapterResult.msg}
+                                </div>
+                              )}
                               <table className="w-full">
                                 <thead>
                                   <tr className="text-[11px] font-semibold text-gray-400 uppercase">
@@ -338,37 +424,113 @@ export default function AdminStoriesPage() {
                                     <th className="px-3 py-2 text-center">Số chữ</th>
                                     <th className="px-3 py-2 text-center">Khóa</th>
                                     <th className="px-3 py-2 text-center">Ngày tạo</th>
-                                    <th className="px-3 py-2 text-center">Xóa</th>
+                                    <th className="px-3 py-2 text-center">Thao tác</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                   {chapters.map((ch) => (
-                                    <tr key={ch.id} className="hover:bg-white">
-                                      <td className="px-3 py-2 text-caption text-gray-500">{ch.number}</td>
-                                      <td className="px-3 py-2 text-body-sm text-gray-700">{ch.title}</td>
-                                      <td className="px-3 py-2 text-caption text-center text-gray-500">{ch.wordCount?.toLocaleString() || 0}</td>
-                                      <td className="px-3 py-2 text-center">
-                                        {ch.isLocked ? (
-                                          <span className="inline-flex items-center gap-0.5 text-amber-500 text-caption">
-                                            <LockClosedIcon className="h-3 w-3" /> {ch.price} xu
-                                          </span>
-                                        ) : (
-                                          <span className="text-caption text-gray-400">Miễn phí</span>
-                                        )}
-                                      </td>
-                                      <td className="px-3 py-2 text-caption text-center text-gray-400">
-                                        {new Date(ch.createdAt).toLocaleDateString("vi-VN")}
-                                      </td>
-                                      <td className="px-3 py-2 text-center">
-                                        <button
-                                          onClick={() => deleteChapter(ch.id, ch.title)}
-                                          className="rounded-lg p-1 text-red-400 hover:bg-red-50 hover:text-red-600"
-                                          title="Xóa chương"
-                                        >
-                                          <TrashIcon className="h-3.5 w-3.5" />
-                                        </button>
-                                      </td>
-                                    </tr>
+                                    <Fragment key={ch.id}>
+                                      <tr className="hover:bg-white">
+                                        <td className="px-3 py-2 text-caption text-gray-500">{ch.number}</td>
+                                        <td className="px-3 py-2 text-body-sm text-gray-700">{ch.title}</td>
+                                        <td className="px-3 py-2 text-caption text-center text-gray-500">{ch.wordCount?.toLocaleString() || 0}</td>
+                                        <td className="px-3 py-2 text-center">
+                                          {ch.isLocked ? (
+                                            <span className="inline-flex items-center gap-0.5 text-amber-500 text-caption">
+                                              <LockClosedIcon className="h-3 w-3" /> {ch.price} xu
+                                            </span>
+                                          ) : (
+                                            <span className="text-caption text-gray-400">Miễn phí</span>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-2 text-caption text-center text-gray-400">
+                                          {new Date(ch.createdAt).toLocaleDateString("vi-VN")}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                          <div className="flex items-center justify-center gap-1">
+                                            <button
+                                              onClick={() => copyChapterContent(ch)}
+                                              className="rounded-lg p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+                                              title="Copy nội dung"
+                                            >
+                                              {copiedId === ch.id ? (
+                                                <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+                                              ) : (
+                                                <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+                                              )}
+                                            </button>
+                                            <button
+                                              onClick={() => editingChapterId === ch.id ? cancelEditChapter() : startEditChapter(ch)}
+                                              className={`rounded-lg p-1 ${editingChapterId === ch.id ? "text-indigo-600 bg-indigo-50" : "text-indigo-400 hover:bg-indigo-50 hover:text-indigo-600"}`}
+                                              title="Sửa chương"
+                                            >
+                                              <PencilSquareIcon className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                              onClick={() => deleteChapter(ch.id, ch.title)}
+                                              className="rounded-lg p-1 text-red-400 hover:bg-red-50 hover:text-red-600"
+                                              title="Xóa chương"
+                                            >
+                                              <TrashIcon className="h-3.5 w-3.5" />
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                      {editingChapterId === ch.id && (
+                                        <tr>
+                                          <td colSpan={6} className="bg-indigo-50/30 px-4 py-3">
+                                            <div className="space-y-3 max-w-3xl">
+                                              <div>
+                                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">Tiêu đề chương</label>
+                                                <input
+                                                  value={editChapterTitle}
+                                                  onChange={(e) => setEditChapterTitle(e.target.value)}
+                                                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">Nội dung</label>
+                                                <textarea
+                                                  value={editChapterContent}
+                                                  onChange={(e) => setEditChapterContent(e.target.value)}
+                                                  rows={12}
+                                                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm font-mono leading-relaxed focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">Ghi chú tác giả</label>
+                                                <textarea
+                                                  value={editChapterNote}
+                                                  onChange={(e) => setEditChapterNote(e.target.value)}
+                                                  rows={2}
+                                                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                                                  placeholder="(tuỳ chọn)"
+                                                />
+                                              </div>
+                                              <div className="flex gap-2">
+                                                <button
+                                                  onClick={cancelEditChapter}
+                                                  className="rounded-lg border border-gray-200 px-4 py-2 text-caption font-medium text-gray-600 hover:bg-gray-50"
+                                                >
+                                                  Hủy
+                                                </button>
+                                                <button
+                                                  onClick={saveChapter}
+                                                  disabled={!editChapterTitle.trim() || !editChapterContent.trim() || savingChapter}
+                                                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-caption font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                                >
+                                                  {savingChapter ? (
+                                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                                  ) : (
+                                                    "Lưu chương"
+                                                  )}
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </Fragment>
                                   ))}
                                 </tbody>
                               </table>
