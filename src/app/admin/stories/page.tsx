@@ -12,6 +12,7 @@ import {
   LockClosedIcon,
   PencilSquareIcon,
   PhotoIcon,
+  DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminChapter {
@@ -184,6 +185,32 @@ export default function AdminStoriesPage() {
     );
   };
 
+  const [copying, setCopying] = useState<string | null>(null);
+  const [copyResult, setCopyResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  const copyStory = async (id: string, title: string) => {
+    if (!token) return;
+    if (!confirm(`Sao chép truyện "${title}"? Toàn bộ chương sẽ được copy sang truyện mới do bạn sở hữu.`)) return;
+    setCopying(id);
+    setCopyResult(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/mod/stories/${id}/copy`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCopyResult({ type: "success", msg: data.message || "Đã sao chép truyện thành công!" });
+        fetchStories();
+      } else {
+        setCopyResult({ type: "error", msg: data.error || "Lỗi khi sao chép" });
+      }
+    } catch {
+      setCopyResult({ type: "error", msg: "Lỗi kết nối" });
+    }
+    setCopying(null);
+  };
+
   const statusColors: Record<string, string> = {
     ongoing: "bg-blue-100 text-blue-700",
     completed: "bg-emerald-100 text-emerald-700",
@@ -199,6 +226,13 @@ export default function AdminStoriesPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-heading-md font-bold text-gray-900">Quản lý truyện</h2>
+
+      {/* Copy result notification */}
+      {copyResult && (
+        <div className={`rounded-xl p-3 text-body-sm font-medium ${copyResult.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+          {copyResult.msg}
+        </div>
+      )}
 
       <div className="relative max-w-md">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -262,6 +296,18 @@ export default function AdminStoriesPage() {
                             title="Sửa truyện"
                           >
                             <PencilSquareIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => copyStory(s.id, s.title)}
+                            disabled={copying === s.id}
+                            className="rounded-lg p-1.5 text-emerald-500 hover:bg-emerald-50 disabled:opacity-50"
+                            title="Sao chép truyện"
+                          >
+                            {copying === s.id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                            ) : (
+                              <DocumentDuplicateIcon className="h-4 w-4" />
+                            )}
                           </button>
                           <button
                             onClick={() => deleteStory(s.id, s.title)}
