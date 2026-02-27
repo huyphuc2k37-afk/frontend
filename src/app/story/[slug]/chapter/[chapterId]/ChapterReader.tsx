@@ -24,6 +24,7 @@ import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
+import InArticleAd from "@/components/ads/InArticleAd";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -430,8 +431,16 @@ export default function ReadChapterPage() {
                     if (!plainText) return null;
                     const count = paragraphCounts[idx] || 0;
 
+                    // Show in-article ad after paragraph 3, then every 8 paragraphs
+                    const showAd = paragraphs.length >= 5 && idx > 0 && (idx === 3 || (idx > 3 && (idx - 3) % 8 === 0));
+
                     return (
                       <div key={idx} className="group/para relative">
+                        {showAd && (
+                          <div className="my-6">
+                            <InArticleAd key={`ad-${idx}`} />
+                          </div>
+                        )}
                         <div className="flex items-start gap-0">
                           {/* Paragraph content */}
                           <div

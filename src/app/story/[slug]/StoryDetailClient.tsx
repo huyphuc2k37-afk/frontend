@@ -23,6 +23,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
+import InArticleAd from "@/components/ads/InArticleAd";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface Chapter {
@@ -501,6 +502,11 @@ export default function StoryDetailPage() {
                     </svg>
                   </button>
                 )}
+              </div>
+
+              {/* In-article ad between description and chapter list */}
+              <div className="my-4">
+                <InArticleAd />
               </div>
 
               {/* Chapter list */}

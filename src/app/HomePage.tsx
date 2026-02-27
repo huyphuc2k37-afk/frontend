@@ -18,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
+import InArticleAd from "@/components/ads/InArticleAd";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiStory {
@@ -560,6 +561,11 @@ export default function HomePage() {
 
         {/* ── CTA banner ── */}
         </>)}
+
+        {/* ── In-article ad before CTA ── */}
+        <div className="section-container py-4">
+          <InArticleAd />
+        </div>
 
         <section className="py-12">
           <div className="section-container">

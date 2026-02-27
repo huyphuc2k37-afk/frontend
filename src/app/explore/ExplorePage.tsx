@@ -7,6 +7,7 @@ import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
+import InArticleAd from "@/components/ads/InArticleAd";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -139,6 +140,11 @@ export default function ExplorePage() {
         {weeklyHot.length > 0 && (
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
         )}
+
+        {/* In-article ad after weekly hot */}
+        <div className="section-container py-4">
+          <InArticleAd />
+        </div>
 
         {!loading && allStories.length === 0 && (
           <div className="section-container py-20 text-center">
