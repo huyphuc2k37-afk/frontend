@@ -431,12 +431,13 @@ export default function ReadChapterPage() {
                     if (!plainText) return null;
                     const count = paragraphCounts[idx] || 0;
 
-                    // Show 1 in-article ad after the first paragraph
-                    const showAd = paragraphs.length >= 2 && idx === 1;
+                    // Show in-article ad: after paragraph 1 if multiple, or after last if only 1
+                    const showAdBefore = paragraphs.length >= 2 && idx === 1;
+                    const showAdAfterLast = paragraphs.length < 2 && idx === paragraphs.length - 1;
 
                     return (
                       <div key={idx} className="group/para relative">
-                        {showAd && (
+                        {showAdBefore && (
                           <div className="my-6">
                             <InArticleAd key={`ad-${idx}`} />
                           </div>
@@ -468,6 +469,11 @@ export default function ReadChapterPage() {
                             {count > 0 && <span>{count}</span>}
                           </button>
                         </div>
+                        {showAdAfterLast && (
+                          <div className="my-6">
+                            <InArticleAd key={`ad-after-${idx}`} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
