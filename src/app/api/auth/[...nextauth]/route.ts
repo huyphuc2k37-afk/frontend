@@ -7,6 +7,20 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const JWT_API_SECRET = process.env.JWT_API_SECRET || process.env.NEXTAUTH_SECRET;
 const AUTH_SYNC_SECRET = process.env.AUTH_SYNC_SECRET || process.env.NEXTAUTH_SECRET;
 
+/**
+ * Normalize Gmail addresses to prevent dot-trick abuse.
+ * Gmail ignores dots and everything after + in the local part.
+ */
+function normalizeEmail(email: string): string {
+  const [local, domain] = email.toLowerCase().trim().split("@");
+  if (!local || !domain) return email.toLowerCase().trim();
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    const cleaned = local.replace(/\./g, "").replace(/\+.*$/, "");
+    return `${cleaned}@gmail.com`;
+  }
+  return `${local}@${domain}`;
+}
+
 if (!JWT_API_SECRET || !AUTH_SYNC_SECRET) {
   throw new Error("Missing auth secrets: set JWT_API_SECRET and AUTH_SYNC_SECRET (or NEXTAUTH_SECRET fallback)");
 }
@@ -65,7 +79,7 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
-        token.email = user.email;
+        token.email = user.email ? normalizeEmail(user.email) : user.email;
         token.name = user.name;
         token.picture = user.image;
         token.role = (user as any).role || "reader";
@@ -75,6 +89,7 @@ const handler = NextAuth({
       }
       // For Google login, fetch role from backend if not set
       if (!token.role && token.email) {
+        const normalizedEmail = normalizeEmail(token.email);
         try {
           const res = await fetch(`${API_BASE_URL}/api/auth/sync`, {
             method: "POST",
@@ -82,7 +97,7 @@ const handler = NextAuth({
               "Content-Type": "application/json",
               "x-sync-secret": AUTH_SYNC_SECRET,
             },
-            body: JSON.stringify({ email: token.email, name: token.name, image: token.picture }),
+            body: JSON.stringify({ email: normalizedEmail, name: token.name, image: token.picture }),
           });
           const data = await res.json();
           if (data.user?.role) token.role = data.user.role;

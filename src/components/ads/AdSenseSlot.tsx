@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -18,6 +18,9 @@ const DEFAULT_SLOT = process.env.NEXT_PUBLIC_ADSENSE_SLOT_CHAPTER_BOTTOM || "133
 
 export default function AdSenseSlot({ slot, className }: Props) {
   const adSlot = slot || DEFAULT_SLOT;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [filled, setFilled] = useState(false);
+
   useEffect(() => {
     if (!adSlot) return;
     try {
@@ -26,18 +29,35 @@ export default function AdSenseSlot({ slot, className }: Props) {
     } catch {
       // ignore
     }
+
+    // Check if ad filled after a delay
+    const timer = setTimeout(() => {
+      const el = containerRef.current;
+      if (el) {
+        const ins = el.querySelector("ins");
+        if (ins && ins.offsetHeight > 0) {
+          setFilled(true);
+        }
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [adSlot]);
 
   if (!adSlot) return null;
 
   return (
-    <ins
-      className={`adsbygoogle${className ? ` ${className}` : ""}`}
-      style={{ display: "block" }}
-      data-ad-client={ADSENSE_CLIENT}
-      data-ad-slot={adSlot}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
-    />
+    <div
+      ref={containerRef}
+      className={`overflow-hidden transition-all duration-300 ${filled ? "opacity-100" : "max-h-0 opacity-0"}`}
+    >
+      <ins
+        className={`adsbygoogle${className ? ` ${className}` : ""}`}
+        style={{ display: "block" }}
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={adSlot}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </div>
   );
 }

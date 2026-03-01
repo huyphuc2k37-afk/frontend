@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -17,6 +17,8 @@ const IN_ARTICLE_SLOT = "1869731119";
 
 export default function InArticleAd({ className }: Props) {
   const pushed = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [filled, setFilled] = useState(false);
 
   useEffect(() => {
     if (pushed.current) return;
@@ -27,16 +29,33 @@ export default function InArticleAd({ className }: Props) {
     } catch {
       // ignore
     }
+
+    // Check if ad filled after a delay
+    const timer = setTimeout(() => {
+      const el = containerRef.current;
+      if (el) {
+        const ins = el.querySelector("ins");
+        if (ins && ins.offsetHeight > 0) {
+          setFilled(true);
+        }
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <ins
-      className={`adsbygoogle${className ? ` ${className}` : ""}`}
-      style={{ display: "block", textAlign: "center" }}
-      data-ad-layout="in-article"
-      data-ad-format="fluid"
-      data-ad-client={ADSENSE_CLIENT}
-      data-ad-slot={IN_ARTICLE_SLOT}
-    />
+    <div
+      ref={containerRef}
+      className={`overflow-hidden transition-all duration-300 ${filled ? "opacity-100" : "max-h-0 opacity-0"}`}
+    >
+      <ins
+        className={`adsbygoogle${className ? ` ${className}` : ""}`}
+        style={{ display: "block", textAlign: "center" }}
+        data-ad-layout="in-article"
+        data-ad-format="fluid"
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={IN_ARTICLE_SLOT}
+      />
+    </div>
   );
 }
