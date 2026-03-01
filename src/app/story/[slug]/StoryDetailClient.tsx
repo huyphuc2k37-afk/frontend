@@ -258,7 +258,10 @@ export default function StoryDetailPage() {
     });
   };
 
-  const descriptionLong = (story.description?.length ?? 0) > 500;
+  // Treat description as "long" if > 200 chars or > 4 lines — ensures collapse on mobile
+  const descriptionLong =
+    (story.description?.length ?? 0) > 200 ||
+    (story.description?.split(/\n/).filter((l) => l.trim()).length ?? 0) > 4;
 
   return (
     <>
@@ -471,14 +474,14 @@ export default function StoryDetailPage() {
             {/* Main content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Description */}
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm overflow-hidden">
                 <h2 className="mb-4 flex items-center gap-2 text-heading-sm font-bold text-gray-900">
                   <BookOpenIcon className="h-5 w-5 text-primary-500" />
                   Giới thiệu
                 </h2>
                 <div
                   className={`relative space-y-3 text-[15px] leading-[1.8] transition-all duration-300 ${
-                    !descExpanded && descriptionLong ? "max-h-[280px] overflow-hidden" : ""
+                    !descExpanded && descriptionLong ? "max-h-[200px] sm:max-h-[280px] overflow-hidden" : ""
                   }`}
                 >
                   {renderDescription(story.description || "")}
