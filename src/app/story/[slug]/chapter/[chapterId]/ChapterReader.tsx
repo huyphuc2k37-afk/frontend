@@ -431,9 +431,8 @@ export default function ReadChapterPage() {
                     if (!plainText) return null;
                     const count = paragraphCounts[idx] || 0;
 
-                    // Show 1 in-article ad at the midpoint of the chapter
-                    const midpoint = Math.floor(paragraphs.length / 2);
-                    const showAd = paragraphs.length >= 5 && idx === midpoint;
+                    // Show 1 in-article ad after the first paragraph
+                    const showAd = paragraphs.length >= 2 && idx === 1;
 
                     return (
                       <div key={idx} className="group/para relative">
