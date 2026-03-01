@@ -80,6 +80,20 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
           crossOrigin="anonymous"
         />
+        {/* Disable Google Auto Ads overlay/anchor/vignette — only show manual ad units */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* Hide Google auto-inserted anchor ads at top/bottom */
+              ins.adsbygoogle[data-anchor-status] { display: none !important; height: 0 !important; }
+              /* Hide Google vignette (full-page interstitial) ads */
+              .google-auto-placed { display: none !important; height: 0 !important; overflow: hidden !important; }
+              /* Hide top/bottom overlay ad containers */
+              div[id^="google_ads_iframe"][style*="position: fixed"] { display: none !important; }
+              iframe[id^="aswift_"][style*="position: fixed"] { display: none !important; }
+            `,
+          }}
+        />
       </head>
       <body>
         <AuthProvider>
