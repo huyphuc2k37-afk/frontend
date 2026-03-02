@@ -557,9 +557,9 @@ export default function ReadChapterPage() {
               </div>
             )}
 
-            {/* Ad 4: multiplex before comments */}
+            {/* Ad 4: before comments */}
             <div className="mt-6">
-              <MultiplexAd />
+              <AdSenseSlot slot="1336707630" />
             </div>
 
             {/* Chapter comments */}
