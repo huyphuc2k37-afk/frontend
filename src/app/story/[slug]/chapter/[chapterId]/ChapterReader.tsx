@@ -23,8 +23,8 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
-import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
+import MultiplexAd from "@/components/ads/MultiplexAd";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -543,9 +543,9 @@ export default function ReadChapterPage() {
               </div>
             )}
 
-            {/* Bottom-of-chapter ad */}
+            {/* Bottom-of-chapter multiplex ad */}
             <div className="mt-8">
-              <AdSenseSlot slot="1336707630" />
+              <MultiplexAd />
             </div>
 
             {/* Chapter comments */}

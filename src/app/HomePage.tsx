@@ -19,6 +19,7 @@ import {
 import Header from "@/components/Header";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
+import MultiplexAd from "@/components/ads/MultiplexAd";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiStory {
@@ -593,6 +594,11 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── Multiplex recommendation ad ── */}
+        <div className="section-container py-4">
+          <MultiplexAd />
+        </div>
       </main>
     </>
   );
