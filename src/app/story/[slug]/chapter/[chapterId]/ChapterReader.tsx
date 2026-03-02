@@ -23,6 +23,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
 import MultiplexAd from "@/components/ads/MultiplexAd";
 import { API_BASE_URL, authFetch } from "@/lib/api";
@@ -431,15 +432,23 @@ export default function ReadChapterPage() {
                     if (!plainText) return null;
                     const count = paragraphCounts[idx] || 0;
 
-                    // Show in-article ad: after paragraph 1 if multiple, or after last if only 1
-                    const showAdBefore = paragraphs.length >= 2 && idx === 1;
-                    const showAdAfterLast = paragraphs.length < 2 && idx === paragraphs.length - 1;
+                    // Ad 1: after first paragraph
+                    const showAdTop = paragraphs.length >= 2 ? idx === 1 : idx === 0;
+                    const adTopPosition = paragraphs.length >= 2 ? "before" : "after";
+                    // Ad 2: at midpoint of chapter
+                    const midpoint = Math.floor(paragraphs.length / 2);
+                    const showAdMid = paragraphs.length >= 4 && idx === midpoint;
 
                     return (
                       <div key={idx} className="group/para relative">
-                        {showAdBefore && (
+                        {showAdTop && adTopPosition === "before" && (
                           <div className="my-6">
-                            <InArticleAd key={`ad-${idx}`} />
+                            <InArticleAd key={`ad-top`} />
+                          </div>
+                        )}
+                        {showAdMid && (
+                          <div className="my-6">
+                            <AdSenseSlot slot="1336707630" />
                           </div>
                         )}
                         <div className="flex items-start gap-0">
@@ -469,9 +478,9 @@ export default function ReadChapterPage() {
                             {count > 0 && <span>{count}</span>}
                           </button>
                         </div>
-                        {showAdAfterLast && (
+                        {showAdTop && adTopPosition === "after" && (
                           <div className="my-6">
-                            <InArticleAd key={`ad-after-${idx}`} />
+                            <InArticleAd key={`ad-top-after`} />
                           </div>
                         )}
                       </div>
@@ -543,8 +552,13 @@ export default function ReadChapterPage() {
               </div>
             )}
 
-            {/* Bottom-of-chapter multiplex ad */}
+            {/* Ad 3: after chapter content */}
             <div className="mt-8">
+              <InArticleAd />
+            </div>
+
+            {/* Ad 4: multiplex before comments */}
+            <div className="mt-6">
               <MultiplexAd />
             </div>
 
