@@ -488,6 +488,11 @@ export default function ReadChapterPage() {
                   })}
                 </div>
 
+                {/* Ad 3: right after chapter content, before author note */}
+                <div className="mt-8">
+                  <InArticleAd />
+                </div>
+
                 {/* Author note */}
                 {chapter.authorNote && (
                   <div className={`mt-8 rounded-xl border p-5 transition-colors duration-300 ${darkMode ? 'border-primary-800 bg-primary-900/30' : 'border-primary-100 bg-primary-50'}`}>
@@ -551,11 +556,6 @@ export default function ReadChapterPage() {
                 )}
               </div>
             )}
-
-            {/* Ad 3: after chapter content */}
-            <div className="mt-8">
-              <InArticleAd />
-            </div>
 
             {/* Ad 4: multiplex before comments */}
             <div className="mt-6">
