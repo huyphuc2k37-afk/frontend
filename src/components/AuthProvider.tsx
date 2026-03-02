@@ -7,5 +7,12 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider
+      refetchOnWindowFocus={false}
+      refetchInterval={5 * 60} // refresh session every 5 minutes instead of on every tab switch
+    >
+      {children}
+    </SessionProvider>
+  );
 }
