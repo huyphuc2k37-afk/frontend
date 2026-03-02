@@ -10,7 +10,7 @@ export default function AuthProvider({
   return (
     <SessionProvider
       refetchOnWindowFocus={false}
-      refetchInterval={5 * 60} // refresh session every 5 minutes instead of on every tab switch
+      refetchInterval={3 * 60} // refresh session every 5 minutes instead of on every tab switch
     >
       {children}
     </SessionProvider>
