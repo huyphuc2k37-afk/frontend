@@ -86,18 +86,19 @@ const handler = NextAuth({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-sync-secret": AUTH_SYNC_SECRET,
+              "x-sync-secret": AUTH_SYNC_SECRET!,
             },
             body: JSON.stringify({ email: normalizedEmail, name: user.name, image: user.image }),
           });
           if (res.status === 403) {
-            // Email or IP is banned
-            return false;
+            return "/login?error=banned";
           }
-          const data = await res.json();
-          if (data.user) {
-            (user as any).id = data.user.id;
-            (user as any).role = data.user.role;
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+              (user as any).id = data.user.id;
+              (user as any).role = data.user.role;
+            }
           }
         } catch {
           // Allow sign-in if backend is temporarily down
@@ -126,7 +127,7 @@ const handler = NextAuth({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-sync-secret": AUTH_SYNC_SECRET,
+              "x-sync-secret": AUTH_SYNC_SECRET!,
             },
             body: JSON.stringify({ email: normalizedEmail, name: token.name, image: token.picture }),
           });
