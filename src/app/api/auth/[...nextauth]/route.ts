@@ -77,35 +77,6 @@ const handler = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      // Block banned emails on Google sign-in
-      if (account?.provider === "google" && user.email) {
-        const normalizedEmail = normalizeEmail(user.email);
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auth/sync`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-sync-secret": AUTH_SYNC_SECRET!,
-            },
-            body: JSON.stringify({ email: normalizedEmail, name: user.name, image: user.image }),
-          });
-          if (res.status === 403) {
-            return "/login?error=banned";
-          }
-          if (res.ok) {
-            const data = await res.json();
-            if (data.user) {
-              (user as any).id = data.user.id;
-              (user as any).role = data.user.role;
-            }
-          }
-        } catch {
-          // Allow sign-in if backend is temporarily down
-        }
-      }
-      return true;
-    },
     async jwt({ token, user, account }) {
       if (user) {
         token.email = user.email ? normalizeEmail(user.email) : user.email;
@@ -114,9 +85,6 @@ const handler = NextAuth({
         token.role = (user as any).role || "reader";
         if (account?.provider === "credentials") {
           token.sub = user.id;
-        }
-        if (account?.provider === "google" && (user as any).id) {
-          token.sub = (user as any).id;
         }
       }
       // For Google login, fetch role from backend if not set
@@ -127,15 +95,12 @@ const handler = NextAuth({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-sync-secret": AUTH_SYNC_SECRET!,
+              "x-sync-secret": AUTH_SYNC_SECRET,
             },
             body: JSON.stringify({ email: normalizedEmail, name: token.name, image: token.picture }),
           });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.user?.role) token.role = data.user.role;
-            if (data.user?.id) token.sub = data.user.id;
-          }
+          const data = await res.json();
+          if (data.user?.role) token.role = data.user.role;
         } catch {}
       }
       return token;
