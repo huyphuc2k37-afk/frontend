@@ -176,15 +176,31 @@ export default function HomePage() {
   const [allTabTotal, setAllTabTotal] = useState(0);
   const ALL_TAB_LIMIT = 18;
 
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/api/stories?limit=12`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.stories) setAllStories(data.stories);
-        setLoading(false);
-      })
-      .catch(() => { setLoading(false); setFetchError(true); });
+  const fetchStories = useCallback(async (retries = 3) => {
+    setLoading(true);
+    setFetchError(false);
+    for (let i = 0; i < retries; i++) {
+      try {
+        const r = await fetch(`${API_BASE_URL}/api/stories?limit=12`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data?.stories?.length) {
+          setAllStories(data.stories);
+          setLoading(false);
+          return;
+        }
+        // API returned ok but no stories — don't retry
+        break;
+      } catch {
+        // Wait before retrying (handles Render cold start ~30s)
+        if (i < retries - 1) await new Promise((ok) => setTimeout(ok, 3000));
+      }
+    }
+    setLoading(false);
+    setFetchError(true);
   }, []);
+
+  useEffect(() => { fetchStories(); }, [fetchStories]);
 
   // Fetch stories for "Tất cả truyện" tab
   const fetchAllTabStories = useCallback(async (genre: string | null, sort: string, page: number) => {
@@ -263,8 +279,16 @@ export default function HomePage() {
           <div className="section-container py-20 text-center">
             <BookOpenIcon className="mx-auto h-12 w-12 text-gray-300" />
             <p className="mt-4 text-body-lg text-gray-500">
-              {fetchError ? "Không thể tải dữ liệu. Vui lòng thử lại sau." : "Chưa có truyện nào. Hãy quay lại sau!"}
+              {fetchError ? "Không thể tải dữ liệu. Máy chủ đang khởi động, vui lòng thử lại." : "Chưa có truyện nào. Hãy quay lại sau!"}
             </p>
+            {fetchError && (
+              <button
+                onClick={() => fetchStories()}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary-500 px-6 py-2.5 text-body-sm font-medium text-white shadow-sm transition-all hover:bg-primary-600 hover:shadow-md"
+              >
+                Thử lại
+              </button>
+            )}
           </div>
         )}
 
