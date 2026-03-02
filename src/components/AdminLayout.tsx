@@ -20,6 +20,7 @@ import {
   MegaphoneIcon,
   BellAlertIcon,
   ChatBubbleLeftRightIcon,
+  ShieldExclamationIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
@@ -40,6 +41,7 @@ const sidebarItems = [
   { id: "announcements", label: "Thông báo", href: "/admin/announcements", icon: MegaphoneIcon },
   { id: "notifications", label: "Gửi TB cá nhân", href: "/admin/notifications", icon: BellAlertIcon },
   { id: "messages", label: "Nhắn tin tác giả", href: "/admin/messages", icon: ChatBubbleLeftRightIcon },
+  { id: "banned-ips", label: "Chặn IP spam", href: "/admin/banned-ips", icon: ShieldExclamationIcon },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
