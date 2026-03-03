@@ -101,7 +101,8 @@ const handler = NextAuth({
             }
           }
         } catch {
-          // Allow sign-in if backend is temporarily down
+          // Backend is down — BLOCK sign-in for safety (banned users could slip through)
+          return false;
         }
       }
       return true;
