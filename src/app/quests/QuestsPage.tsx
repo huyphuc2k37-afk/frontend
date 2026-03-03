@@ -15,9 +15,11 @@ import {
   HandRaisedIcon,
   SparklesIcon,
   ArrowPathIcon,
+  PlayCircleIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleSolid } from "@heroicons/react/24/solid";
 import { motion, AnimatePresence } from "framer-motion";
+import RewardedAdModal from "@/components/ads/RewardedAdModal";
 
 interface Quest {
   id: string;
@@ -75,6 +77,15 @@ const questMeta: Record<
     borderColor: "border-violet-200",
     bgColor: "bg-violet-50",
   },
+  watchAd: {
+    icon: PlayCircleIcon,
+    gradient: "from-emerald-400 to-teal-500",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    progressColor: "bg-emerald-400",
+    borderColor: "border-emerald-200",
+    bgColor: "bg-emerald-50",
+  },
 };
 
 export default function QuestsPage() {
@@ -86,6 +97,9 @@ export default function QuestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkinLoading, setCheckinLoading] = useState(false);
+  const [adWatchLoading, setAdWatchLoading] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
+  const [adCooldown, setAdCooldown] = useState(15);
   const [toast, setToast] = useState<{
     text: string;
     type: "success" | "error";
@@ -150,6 +164,53 @@ export default function QuestsPage() {
     } finally {
       setCheckinLoading(false);
     }
+  };
+
+  const handleWatchAd = async () => {
+    if (!token || adWatchLoading) return;
+    setAdWatchLoading(true);
+    setToast(null);
+    try {
+      // Step 1: Tell server we're starting to watch
+      const res = await authFetch("/api/quests/watch-ad/start", token, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setAdCooldown(data.cooldownSeconds || 15);
+        setShowAdModal(true);
+      } else {
+        setToast({ text: data.error || "Không thể xem quảng cáo", type: "error" });
+      }
+    } catch {
+      setToast({ text: "Lỗi kết nối server", type: "error" });
+    } finally {
+      setAdWatchLoading(false);
+    }
+  };
+
+  const handleAdComplete = async () => {
+    setShowAdModal(false);
+    if (!token) return;
+    try {
+      const res = await authFetch("/api/quests/watch-ad/complete", token, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({
+          text: data.message || "Xem quảng cáo thành công!",
+          type: "success",
+          coins: data.reward,
+        });
+        await fetchQuests();
+      } else {
+        setToast({ text: data.error || "Lỗi nhận thưởng", type: "error" });
+      }
+    } catch {
+      setToast({ text: "Lỗi kết nối server", type: "error" });
+    }
+  };
+
+  const handleAdCancel = () => {
+    setShowAdModal(false);
+    setToast({ text: "Đã hủy xem quảng cáo", type: "error" });
   };
 
   const completedCount = questData?.quests.filter((q) => q.completed).length ?? 0;
@@ -309,7 +370,8 @@ export default function QuestsPage() {
               const Icon = meta.icon;
               const isCheckin = quest.id === "checkin";
               const isRead = quest.id === "read";
-              const hasProgress = isRead && quest.target;
+              const isWatchAd = quest.id === "watchAd";
+              const hasProgress = (isRead || isWatchAd) && quest.target;
               const progressPct = hasProgress
                 ? ((quest.progress ?? 0) / quest.target!) * 100
                 : 0;
@@ -374,8 +436,8 @@ export default function QuestsPage() {
                           </div>
                         </div>
 
-                        {/* ── Reading progress bar ── */}
-                        {isRead && quest.target && (
+                        {/* ── Reading / Ad progress bar ── */}
+                        {hasProgress && quest.target && (
                           <div className="mt-3">
                             <div className="flex items-center justify-between text-caption">
                               <span
@@ -386,7 +448,11 @@ export default function QuestsPage() {
                                 }
                               >
                                 {quest.completed
-                                  ? "Đã đọc đủ 10 phút"
+                                  ? isWatchAd
+                                    ? `Đã xem đủ ${quest.target} quảng cáo`
+                                    : "Đã đọc đủ 10 phút"
+                                  : isWatchAd
+                                  ? `Đã xem: ${quest.progress ?? 0}/${quest.target} quảng cáo`
                                   : `Đang đọc: ${quest.progress ?? 0}/${quest.target} phút`}
                               </span>
                               <span
@@ -415,6 +481,45 @@ export default function QuestsPage() {
                               />
                             </div>
                           </div>
+                        )}
+
+                        {/* ── Watch ad button ── */}
+                        {isWatchAd && !quest.completed && (
+                          <button
+                            onClick={handleWatchAd}
+                            disabled={adWatchLoading}
+                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-body-sm font-bold text-white shadow-md shadow-emerald-200/50 transition-all hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg disabled:opacity-60"
+                          >
+                            {adWatchLoading ? (
+                              <>
+                                <svg
+                                  className="h-4 w-4 animate-spin"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                  />
+                                </svg>
+                                Đang tải...
+                              </>
+                            ) : (
+                              <>
+                                <PlayCircleIcon className="h-4 w-4" />
+                                Xem quảng cáo nhận {quest.reward} xu
+                              </>
+                            )}
+                          </button>
                         )}
 
                         {/* ── Check-in button ── */}
@@ -465,7 +570,7 @@ export default function QuestsPage() {
                             </span>
                           </div>
                         )}
-                        {!quest.completed && !isCheckin && (
+                        {!quest.completed && !isCheckin && !isWatchAd && (
                           <div className="mt-3">
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-caption font-medium text-gray-500 ring-1 ring-gray-200">
                               <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />
@@ -496,7 +601,7 @@ export default function QuestsPage() {
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
-                Tối đa nhận <strong>50 xu</strong> miễn phí mỗi ngày
+                Tối đa nhận <strong>100 xu</strong> miễn phí mỗi ngày
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
@@ -510,11 +615,24 @@ export default function QuestsPage() {
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
                 Xu nhận được có thể dùng để mua chương truyện trả phí
               </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
+                Xem mỗi quảng cáo nhận <strong>10 xu</strong>, tối đa <strong>5 lần</strong>/ngày
+              </li>
             </ul>
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Rewarded Ad Modal */}
+      {showAdModal && (
+        <RewardedAdModal
+          cooldownSeconds={adCooldown}
+          onComplete={handleAdComplete}
+          onCancel={handleAdCancel}
+        />
+      )}
     </>
   );
 }
