@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChatBubbleLeftRightIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
-const ZALO_PHONE = "0584375253";
+const ZALO_PHONE = "0358804519";
 const ZALO_LINK = `https://zalo.me/${ZALO_PHONE}`;
 
 export default function ZaloChatWidget() {
