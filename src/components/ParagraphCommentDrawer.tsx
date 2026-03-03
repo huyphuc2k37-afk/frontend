@@ -123,7 +123,6 @@ function InlineCommentItem({
                 isAdminUser ? "ring-2 ring-amber-400" : isAuthor ? "ring-2 ring-blue-400" : ""
               }`}
               style={{ width: depth > 0 ? 28 : 32, height: depth > 0 ? 28 : 32 }}
-              unoptimized
             />
           ) : (
             <div

@@ -109,7 +109,6 @@ function CommentItem({
               height={depth > 0 ? 32 : 36}
               className={`rounded-full object-cover ${avatarRing}`}
               style={{ width: depth > 0 ? 32 : 36, height: depth > 0 ? 32 : 36 }}
-              unoptimized
             />
           ) : (
             <div

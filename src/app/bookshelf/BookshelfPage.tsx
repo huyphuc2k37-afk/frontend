@@ -145,7 +145,6 @@ export default function BookshelfPage() {
                           fill
                           sizes="88px"
                           className="object-cover"
-                          unoptimized
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = "none";
                           }}

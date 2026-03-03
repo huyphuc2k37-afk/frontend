@@ -39,7 +39,6 @@ export default function AuthorProfileClient() {
             width={64}
             height={80}
             className="h-full w-full object-cover"
-            unoptimized
             onError={() => setVisible(false)}
           />
         ) : null}
@@ -160,7 +159,7 @@ export default function AuthorProfileClient() {
                 <div className="text-center">
                   {author.image ? (
                     <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border-2 border-gray-100">
-                      <Image src={author.image} alt="" width={96} height={96} className="h-full w-full object-cover" unoptimized />
+                      <Image src={author.image} alt="" width={96} height={96} className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">

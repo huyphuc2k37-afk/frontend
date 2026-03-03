@@ -431,7 +431,6 @@ export default function Header() {
                           width={34}
                           height={34}
                           className="h-[34px] w-[34px] rounded-full object-cover ring-2 ring-gray-100"
-                          unoptimized
                         />
                       ) : (
                         <UserCircleIcon className="h-9 w-9 text-gray-400" />

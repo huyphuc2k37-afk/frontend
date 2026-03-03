@@ -41,15 +41,6 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 365 },
       },
     },
-    // Cache Google fonts
-    {
-      urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "google-fonts",
-        expiration: { maxEntries: 20, maxAgeSeconds: 86400 * 365 },
-      },
-    },
   ],
 });
 
@@ -63,7 +54,24 @@ const nextConfig = {
       },
     ];
 
+    const securityHeaders = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+      },
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=63072000; includeSubDomains; preload",
+      },
+    ];
+
     return [
+      // Global security headers for all routes
+      { source: "/:path*", headers: securityHeaders },
+      // noindex for private / auth pages
       { source: "/login", headers: noIndexHeaders },
       { source: "/register", headers: noIndexHeaders },
       { source: "/author/register", headers: noIndexHeaders },
