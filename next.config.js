@@ -80,6 +80,10 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "backend-4nfb.onrender.com",
+      },
+      {
+        protocol: "https",
         hostname: "images.unsplash.com",
       },
       {

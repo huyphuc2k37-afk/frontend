@@ -8,6 +8,7 @@ const SITE_URL = "https://vstory.vn";
 type BackendSitemapResponse = {
   stories: { slug: string; updatedAt: string }[];
   chapters: { storySlug: string; chapterId: string; updatedAt: string }[];
+  authors?: { id: string; updatedAt: string }[];
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -71,9 +72,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
+    const authorUrls: MetadataRoute.Sitemap = (data.authors || []).map((a) => ({
+      url: `${SITE_URL}/author/${a.id}`,
+      lastModified: a.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.5,
+    }));
+
     // Google allows max 50,000 URLs per sitemap.
-    // Reserve slots for static + genre pages, fill the rest with chapters.
-    const reserved = staticUrls.length + genreUrls.length + storyUrls.length;
+    // Reserve slots for static + genre + story + author pages, fill the rest with chapters.
+    const reserved = staticUrls.length + genreUrls.length + storyUrls.length + authorUrls.length;
     const maxChapters = Math.max(0, 50000 - reserved);
     const chapterUrls: MetadataRoute.Sitemap = data.chapters
       .slice(0, maxChapters)
@@ -84,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.5,
       }));
 
-    return [...staticUrls, ...genreUrls, ...storyUrls, ...chapterUrls];
+    return [...staticUrls, ...genreUrls, ...storyUrls, ...authorUrls, ...chapterUrls];
   } catch {
     return [...staticUrls, ...genreUrls];
   }

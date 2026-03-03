@@ -52,7 +52,6 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
             fill
             sizes="(max-width: 640px) 50vw, 180px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            unoptimized
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
           {/* Status badge */}
@@ -110,7 +109,7 @@ function StoryCarousel({ title, stories, icon: Icon }: { title: string; stories:
 
         <div
           ref={scrollRef}
-          className="hide-scrollbar -mx-2 flex gap-4 overflow-x-auto px-2 snap-x"
+          className="hide-scrollbar -mx-2 flex min-h-[240px] gap-4 overflow-x-auto px-2 snap-x sm:min-h-[280px]"
         >
           {stories.map((story, i) => (
             <div key={story.id} className="w-[160px] flex-shrink-0 snap-start sm:w-[180px]">
@@ -133,7 +132,6 @@ function MiniCover({ src, alt }: { src: string; alt: string }) {
         fill
         sizes="40px"
         className="object-cover"
-        unoptimized
         onError={() => setImgSrc(PLACEHOLDER_COVER)}
       />
     </div>
@@ -161,10 +159,10 @@ const sortOptions = [
   { value: "likes", label: "Yêu thích" },
 ];
 
-export default function HomePage() {
+export default function HomePage({ initialStories = [] }: { initialStories?: ApiStory[] }) {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
-  const [allStories, setAllStories] = useState<ApiStory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allStories, setAllStories] = useState<ApiStory[]>(initialStories);
+  const [loading, setLoading] = useState(initialStories.length === 0);
   const [fetchError, setFetchError] = useState(false);
 
   // "Tất cả truyện" tab state
@@ -200,7 +198,11 @@ export default function HomePage() {
     setFetchError(true);
   }, []);
 
-  useEffect(() => { fetchStories(); }, [fetchStories]);
+  useEffect(() => {
+    // Skip fetch if SSR already provided stories
+    if (initialStories.length > 0) return;
+    fetchStories();
+  }, [fetchStories, initialStories.length]);
 
   // Fetch stories for "Tất cả truyện" tab
   const fetchAllTabStories = useCallback(async (genre: string | null, sort: string, page: number) => {

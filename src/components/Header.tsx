@@ -90,8 +90,13 @@ export default function Header() {
       } catch { /* ignore */ }
     };
     fetchBalance();
-    const interval = setInterval(fetchBalance, 60000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchBalance, 120000);
+    // Refresh when tab becomes visible
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchBalance();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); };
   }, [token]);
 
   // Close mobile menu on route change
@@ -112,8 +117,12 @@ export default function Header() {
       } catch { /* ignore */ }
     };
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchUnread, 60000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchUnread();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); };
   }, [token]);
 
   // Poll unread message count (author/mod/admin only)
@@ -128,8 +137,12 @@ export default function Header() {
       } catch { /* ignore */ }
     };
     fetchMsgUnread();
-    const interval = setInterval(fetchMsgUnread, 15000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchMsgUnread, 30000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchMsgUnread();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); };
   }, [token, canMessage]);
 
   // Determine messages page based on role

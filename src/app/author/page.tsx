@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trở thành tác giả – VStory",
+    description:
+      "Chia sẻ câu chuyện của bạn với hàng triệu độc giả. Nhận doanh thu, công cụ viết chuyên nghiệp.",
+  },
 };
 
 export default function Page() {

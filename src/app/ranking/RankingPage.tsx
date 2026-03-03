@@ -136,7 +136,6 @@ export default function RankingPage() {
                         fill
                         sizes="56px"
                         className="object-cover"
-                        unoptimized
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
                         }}

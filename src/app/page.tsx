@@ -4,6 +4,7 @@ import HomePage from "./HomePage";
 import ZaloChatWidget from "@/components/ZaloChatWidget";
 import Footer from "@/components/Footer";
 import { genreSEOPages } from "@/data/genreSlugs";
+import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
 
@@ -31,7 +32,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+export default async function Page() {
+  /* SSR: Fetch initial stories on the server for instant LCP + SEO visibility */
+  let initialStories: any[] = [];
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/stories?limit=12`, {
+      next: { revalidate: 60 }, // ISR: refresh every 60 seconds
+    });
+    if (res.ok) {
+      const data = await res.json();
+      initialStories = data?.stories || [];
+    }
+  } catch {
+    // Fallback to empty — client will retry
+  }
+
   /* WebSite JSON-LD — helps Google identify the homepage as the main site page */
   const websiteJsonLd = {
     "@context": "https://schema.org",
@@ -102,6 +117,11 @@ export default function Page() {
 
   return (
     <>
+      {/* SEO: H1 cho Google — visually hidden nhưng crawlable */}
+      <h1 className="sr-only">
+        VStory – Đọc Truyện Chữ Online Miễn Phí | Truyện Hay Cập Nhật Mỗi Ngày
+      </h1>
+
       {/* Structured data for sitelinks search box + organization */}
       <script
         type="application/ld+json"
@@ -112,7 +132,7 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
-      <HomePage />
+      <HomePage initialStories={initialStories} />
 
       {/* ── SSR SEO content ── */}
       <section className="border-t border-gray-100 bg-gray-50/50 py-10">

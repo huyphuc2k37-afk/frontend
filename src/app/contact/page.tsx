@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Liên hệ – VStory",
+    description:
+      "Kênh liên hệ chính thức của VStory cho hỗ trợ, báo lỗi và hợp tác.",
+  },
 };
 
 export default function Page() {

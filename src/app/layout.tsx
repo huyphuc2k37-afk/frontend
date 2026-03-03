@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-jakarta",
+});
 
 const SITE_URL = "https://vstory.vn";
 
@@ -70,14 +79,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" className={jakarta.variable} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#667eea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <script
-          async
+        <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
+          strategy="lazyOnload"
           crossOrigin="anonymous"
         />
         {/* Disable Google Auto Ads overlay/anchor/vignette — only show manual ad units */}

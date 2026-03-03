@@ -24,8 +24,42 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bảng Xếp Hạng Truyện Hay Nhất – VStory",
+    description:
+      "Top truyện hay nhất, được đọc nhiều nhất trên VStory.",
+  },
 };
 
 export default function Page() {
-  return <RankingPage />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Bảng Xếp Hạng Truyện Hay Nhất - VStory",
+    description:
+      "Xếp hạng truyện hay nhất trên VStory theo lượt đọc, yêu thích và đánh giá.",
+    url: "https://vstory.vn/ranking",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "VStory",
+      url: "https://vstory.vn",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      name: "Top Truyện Hot",
+      itemListOrder: "https://schema.org/ItemListOrderDescending",
+      numberOfItems: 50,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <RankingPage />
+    </>
+  );
 }

@@ -53,7 +53,6 @@ function StoryCard({ story }: { story: ApiStory }) {
           fill
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          unoptimized
           onError={() => setSrc(PLACEHOLDER)}
         />
         {story.status === "completed" && (

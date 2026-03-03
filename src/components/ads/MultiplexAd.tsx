@@ -30,12 +30,14 @@ export default function MultiplexAd({ className }: Props) {
   }, []);
 
   return (
-    <ins
-      className={`adsbygoogle${className ? ` ${className}` : ""}`}
-      style={{ display: "block" }}
-      data-ad-format="autorelaxed"
-      data-ad-client={ADSENSE_CLIENT}
-      data-ad-slot={MULTIPLEX_SLOT}
-    />
+    <div className="min-h-[250px]">
+      <ins
+        className={`adsbygoogle${className ? ` ${className}` : ""}`}
+        style={{ display: "block" }}
+        data-ad-format="autorelaxed"
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={MULTIPLEX_SLOT}
+      />
+    </div>
   );
 }

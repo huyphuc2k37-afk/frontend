@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Giới thiệu – VStory",
+    description:
+      "VStory là nền tảng đọc và viết truyện chữ dành cho người Việt.",
+  },
 };
 
 export default function Page() {

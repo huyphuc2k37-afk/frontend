@@ -34,7 +34,6 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             fill
             sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 180px"}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            unoptimized
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
 

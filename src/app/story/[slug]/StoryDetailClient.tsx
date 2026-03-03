@@ -281,7 +281,6 @@ export default function StoryDetailPage() {
                       fill
                       sizes="224px"
                       className="object-cover"
-                      unoptimized
                       onError={() => setShowCover(false)}
                     />
                   )}
@@ -302,7 +301,6 @@ export default function StoryDetailPage() {
                       width={24}
                       height={24}
                       className="h-6 w-6 rounded-full object-cover"
-                      unoptimized
                     />
                   )}
                   {story.author.name}
@@ -624,7 +622,6 @@ export default function StoryDetailPage() {
                       width={48}
                       height={48}
                       className="h-12 w-12 rounded-full object-cover"
-                      unoptimized
                     />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-heading-sm font-bold text-primary-600">

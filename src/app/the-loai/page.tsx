@@ -32,6 +32,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "vi_VN",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Thể Loại Truyện – VStory",
+    description:
+      "Khám phá tất cả thể loại truyện trên VStory. Đọc miễn phí hàng nghìn tác phẩm hay.",
+  },
 };
 
 interface ApiCategory {
@@ -63,8 +69,36 @@ async function getCategories(): Promise<ApiCategory[]> {
 export default async function GenreIndexPage() {
   const categories = await getCategories();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Thể Loại Truyện - VStory",
+    description:
+      "Khám phá tất cả thể loại truyện trên VStory: ngôn tình, đam mỹ, xuyên không, kinh dị, học đường.",
+    url: "https://vstory.vn/the-loai",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "VStory",
+      url: "https://vstory.vn",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      name: "Thể loại truyện",
+      itemListElement: categories.map((cat, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: cat.name,
+        url: `https://vstory.vn/the-loai/${cat.slug}`,
+      })),
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main className="min-h-screen">
         <section className="pb-4 pt-8 sm:pt-12">
