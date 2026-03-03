@@ -165,6 +165,9 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
   const [loading, setLoading] = useState(initialStories.length === 0);
   const [fetchError, setFetchError] = useState(false);
 
+  // Real ranking data from /api/ranking
+  const [rankingStories, setRankingStories] = useState<ApiStory[]>([]);
+
   // "Tất cả truyện" tab state
   const [allTabGenre, setAllTabGenre] = useState<string | null>(null);
   const [allTabSort, setAllTabSort] = useState("updatedAt");
@@ -203,6 +206,16 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
     if (initialStories.length > 0) return;
     fetchStories();
   }, [fetchStories, initialStories.length]);
+
+  // Fetch real ranking from dedicated API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/ranking?sort=views&limit=12`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setRankingStories(data);
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch stories for "Tất cả truyện" tab
   const fetchAllTabStories = useCallback(async (genre: string | null, sort: string, page: number) => {
@@ -263,7 +276,11 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
     }
   }, [activeTab, allStories]);
 
-  const hotStories = useMemo(() => [...allStories].sort((a, b) => b.views - a.views), [allStories]);
+  // Use real ranking data if available, fall back to local sort
+  const hotStories = useMemo(
+    () => rankingStories.length > 0 ? rankingStories : [...allStories].sort((a, b) => b.views - a.views),
+    [rankingStories, allStories]
+  );
   const completedStories = useMemo(() => allStories.filter((s) => s.status === "completed"), [allStories]);
 
   return (
