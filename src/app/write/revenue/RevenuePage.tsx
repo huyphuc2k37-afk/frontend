@@ -10,6 +10,7 @@ import {
   DocumentTextIcon,
   GiftIcon,
   SparklesIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
@@ -29,6 +30,7 @@ export default function RevenuePage() {
     totalTips: 0,
     purchaseRevenue: 0,
     tipRevenue: 0,
+    viewRevenue: 0,
     balance: 0,
     periodRevenue: 0,
     referralRevenue: 0,
@@ -54,6 +56,7 @@ export default function RevenuePage() {
           totalTips: data.totalTips || 0,
           purchaseRevenue: data.purchaseRevenue || 0,
           tipRevenue: data.tipRevenue || 0,
+          viewRevenue: data.viewRevenue || 0,
           balance: data.balance || 0,
           periodRevenue: data.periodRevenue || 0,
           referralRevenue: data.referralRevenue || 0,
@@ -182,6 +185,19 @@ export default function RevenuePage() {
             </div>
           </div>
         )}
+        <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-xl bg-teal-50 p-3">
+            <EyeIcon className="h-6 w-6 text-teal-500" />
+          </div>
+          <div>
+            <p className="text-heading-sm font-bold text-gray-900">
+              {formatXu(stats.viewRevenue)}
+            </p>
+            <p className="text-caption text-gray-500">
+              Từ lượt xem (2 xu/view)
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Revenue chart 30 days */}
@@ -208,6 +224,10 @@ export default function RevenuePage() {
                 <span className="h-2 w-2 rounded-full bg-rose-400" />
                 Xu ủng hộ
               </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-teal-400" />
+                Lượt xem
+              </span>
             </div>
           </div>
           <div className="mt-6 flex items-end gap-1" style={{ height: 180 }}>
@@ -217,6 +237,7 @@ export default function RevenuePage() {
                   {d.day}: {d.total.toLocaleString("vi-VN")} xu
                   {d.purchases > 0 && ` (bán: ${d.purchases.toLocaleString("vi-VN")})`}
                   {d.tips > 0 && ` (tip: ${d.tips.toLocaleString("vi-VN")})`}
+                  {d.views > 0 && ` (view: ${d.views.toLocaleString("vi-VN")})`}
                 </div>
                 <div className="w-full flex flex-col items-stretch" style={{ height: `${Math.max((d.total / maxChart) * 100, 2)}%` }}>
                   {d.purchases > 0 && (
@@ -233,6 +254,14 @@ export default function RevenuePage() {
                       animate={{ height: `${(d.tips / d.total) * 100}%` }}
                       transition={{ delay: 0.3 + i * 0.02, duration: 0.4 }}
                       className={`w-full bg-rose-400 ${d.purchases === 0 ? 'rounded-t-sm' : ''}`}
+                    />
+                  )}
+                  {d.views > 0 && (
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${(d.views / d.total) * 100}%` }}
+                      transition={{ delay: 0.3 + i * 0.02, duration: 0.4 }}
+                      className={`w-full bg-teal-400 ${d.purchases === 0 && d.tips === 0 ? 'rounded-t-sm' : ''}`}
                     />
                   )}
                   {d.total === 0 && (
@@ -311,10 +340,14 @@ export default function RevenuePage() {
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                         row.type === "tip"
                           ? "bg-rose-50 text-rose-600"
+                          : row.type === "view"
+                          ? "bg-teal-50 text-teal-600"
                           : "bg-blue-50 text-blue-600"
                       }`}>
                         {row.type === "tip" ? (
                           <><GiftIcon className="h-3 w-3" /> Ủng hộ</>
+                        ) : row.type === "view" ? (
+                          <><EyeIcon className="h-3 w-3" /> Lượt xem</>
                         ) : (
                           <><DocumentTextIcon className="h-3 w-3" /> Bán chương</>
                         )}
