@@ -5,8 +5,7 @@ import GenreLandingClient from "./GenreLandingClient";
 
 const SITE_URL = "https://vstory.vn";
 
-// Fully dynamic — do not pre-render at build time (API may be unreachable)
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR — regenerate at most every 1 hour
 export const dynamicParams = true;
 
 type Props = { params: { slug: string } };
@@ -62,10 +61,9 @@ async function getAllCategorySlugs(): Promise<{ slug: string }[]> {
   }
 }
 
-// No longer pre-generate — pages are fully dynamic
-// export async function generateStaticParams() {
-//   return await getAllCategorySlugs();
-// }
+export async function generateStaticParams() {
+  return await getAllCategorySlugs();
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getCategoryBySlug(params.slug);

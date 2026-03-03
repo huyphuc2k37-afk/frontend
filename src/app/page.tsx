@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import { genreSEOPages } from "@/data/genreSlugs";
 import { API_BASE_URL } from "@/lib/api";
 
+export const revalidate = 60; // ISR — regenerate homepage every 60 seconds
+
 const SITE_URL = "https://vstory.vn";
 
 export const metadata: Metadata = {
