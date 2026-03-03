@@ -339,6 +339,8 @@ export default function AdminStoriesPage() {
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Thể loại</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Chương</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Lượt xem</th>
+                  <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Ngày đăng</th>
+                  <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Cập nhật</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Trạng thái</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Thao tác</th>
                 </tr>
@@ -364,6 +366,12 @@ export default function AdminStoriesPage() {
                         </button>
                       </td>
                       <td className="px-4 py-3 text-body-sm text-center text-gray-600">{s.views?.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-caption text-center text-gray-500">
+                        {new Date(s.createdAt).toLocaleDateString("vi-VN")}
+                      </td>
+                      <td className="px-4 py-3 text-caption text-center text-gray-500">
+                        {new Date(s.updatedAt).toLocaleDateString("vi-VN")}
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold ${statusColors[s.status] || "bg-gray-100 text-gray-600"}`}>
                           {statusLabels[s.status] || s.status}
@@ -402,7 +410,7 @@ export default function AdminStoriesPage() {
                     </tr>
                     {expandedStoryId === s.id && (
                       <tr key={`${s.id}-chapters`}>
-                        <td colSpan={7} className="bg-gray-50/50 px-4 py-0">
+                        <td colSpan={9} className="bg-gray-50/50 px-4 py-0">
                           {loadingChapters ? (
                             <div className="flex items-center justify-center py-6">
                               <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
