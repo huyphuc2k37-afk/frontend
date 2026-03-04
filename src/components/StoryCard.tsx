@@ -33,6 +33,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             src={coverSrc}
             alt={`Bia truyện ${story.title}`}
             fill
+            unoptimized
             sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 180px"}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}

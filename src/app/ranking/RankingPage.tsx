@@ -135,6 +135,7 @@ export default function RankingPage() {
                         src={story.coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                         alt={story.title}
                         fill
+                        unoptimized
                         sizes="56px"
                         className="object-cover"
                         onError={(e) => {

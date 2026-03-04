@@ -38,6 +38,7 @@ export default function AuthorProfileClient() {
             alt={title}
             width={64}
             height={80}
+            unoptimized
             className="h-full w-full object-cover"
             onError={() => setVisible(false)}
           />

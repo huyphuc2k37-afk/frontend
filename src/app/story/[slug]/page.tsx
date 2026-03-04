@@ -88,7 +88,7 @@ export default async function StoryPage({ params }: Props) {
           name: story.title,
           description: story.description?.slice(0, 300),
           url: SITE_URL + "/story/" + story.slug,
-          image: API_BASE_URL + "/api/stories/" + story.id + "/cover",
+          image: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
           author: {
             "@type": "Person",
             name: story.author?.name,

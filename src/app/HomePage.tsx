@@ -52,6 +52,7 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
             src={coverSrc}
             alt={story.title}
             fill
+            unoptimized
             sizes="(max-width: 640px) 50vw, 180px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
@@ -132,6 +133,7 @@ function MiniCover({ src, alt }: { src: string; alt: string }) {
         src={imgSrc}
         alt={alt}
         fill
+        unoptimized
         sizes="40px"
         className="object-cover"
         onError={() => setImgSrc(PLACEHOLDER_COVER)}

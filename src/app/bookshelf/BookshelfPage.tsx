@@ -144,6 +144,7 @@ export default function BookshelfPage() {
                           src={bm.story.coverUrl || `${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
                           alt={bm.story.title}
                           fill
+                          unoptimized
                           sizes="88px"
                           className="object-cover"
                           onError={(e) => {
