@@ -32,6 +32,7 @@ interface ApiStory {
   views: number;
   likes: number;
   updatedAt: string;
+  coverUrl?: string | null;
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number; bookmarks: number };
 }
@@ -40,7 +41,8 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 /* ── Story Card (simple — cover + title + author) ── */
 function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
-  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
+  const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
+  const coverUrl = story.coverUrl || fallbackUrl;
   const [coverSrc, setCoverSrc] = useState(coverUrl);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
@@ -576,7 +578,7 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
 
                     {/* Cover mini */}
                     <MiniCover
-                      src={`${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
+                      src={story.coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                       alt={story.title}
                     />
 

@@ -34,6 +34,7 @@ interface ApiStory {
   views: number;
   likes: number;
   updatedAt: string;
+  coverUrl?: string | null;
   author: { id: string; name: string; image: string | null };
   _count: { chapters: number; bookmarks: number };
 }
@@ -42,7 +43,8 @@ const PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23e5e7eb'%3E%3Crect width='300' height='400'/%3E%3C/svg%3E";
 
 function StoryCard({ story }: { story: ApiStory }) {
-  const coverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
+  const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
+  const coverUrl = story.coverUrl || fallbackUrl;
   const [src, setSrc] = useState(coverUrl);
   return (
     <Link href={`/story/${story.slug}`} className="group block">

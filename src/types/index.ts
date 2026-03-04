@@ -10,6 +10,8 @@ export interface Story {
   title: string;
   slug: string;
   coverImage?: string | null;
+  /** Direct Supabase URL for cloud-stored covers (null if base64 or rejected) */
+  coverUrl?: string | null;
   description: string | null;
   genre: string;
   status: string;
