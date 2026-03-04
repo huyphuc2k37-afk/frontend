@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
 
-export const revalidate = 7200; // ISR — regenerate at most every 2 hours
+export const revalidate = 14400; // ISR — regenerate at most every 4 hours
 
 const SITE_URL = "https://vstory.vn";
 
@@ -11,7 +11,7 @@ type Props = { params: { slug: string; chapterId: string } };
 async function getChapter(chapterId: string) {
   try {
     const res = await fetch(API_BASE_URL + "/api/chapters/" + chapterId, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 7200 },
     });
     if (!res.ok) return null;
     return res.json();

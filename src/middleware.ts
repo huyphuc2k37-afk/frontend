@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Middleware runs on Edge Runtime by default in Next.js 14
+// Uses Edge Middleware Invocations quota (0/1M) instead of Fluid Active CPU
+
 const PRIMARY_HOST = "vstory.vn";
 const WWW_HOST = "www.vstory.vn";
 

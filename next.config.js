@@ -79,9 +79,23 @@ const nextConfig = {
       },
     ];
 
+    // Long-lived cache for static info pages (saves Function Invocations)
+    const staticCacheHeaders = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=86400, stale-while-revalidate=604800",
+      },
+    ];
+
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
+      // Static pages — cache in CDN for 1 day, stale-while-revalidate 7 days
+      { source: "/about", headers: staticCacheHeaders },
+      { source: "/terms", headers: staticCacheHeaders },
+      { source: "/privacy", headers: staticCacheHeaders },
+      { source: "/author-policy", headers: staticCacheHeaders },
+      { source: "/contact", headers: staticCacheHeaders },
       // noindex for private / auth pages
       { source: "/login", headers: noIndexHeaders },
       { source: "/register", headers: noIndexHeaders },

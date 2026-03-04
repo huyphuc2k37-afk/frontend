@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { API_BASE_URL } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // ISR — regenerate sitemap every 1 hour
 
 const SITE_URL = "https://vstory.vn";
 
@@ -58,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/sitemap`, {
       // Cache on Next side; backend also sets Cache-Control.
-      next: { revalidate: 3600 },
+      next: { revalidate: 7200 },
     });
 
     if (!res.ok) return [...staticUrls, ...genreUrls];
