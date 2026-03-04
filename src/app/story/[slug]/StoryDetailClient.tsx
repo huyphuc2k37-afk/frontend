@@ -95,7 +95,9 @@ export default function StoryDetailPage() {
   useEffect(() => {
     if (!slug) return;
     setShowCover(true);
-    fetch(`${API_BASE_URL}/api/stories/${slug}`)
+    fetch(`${API_BASE_URL}/api/stories/${slug}`, {
+      headers: { "X-Count-View": "1" },
+    })
       .then((r) => {
         if (!r.ok) throw new Error("Not found");
         return r.json();

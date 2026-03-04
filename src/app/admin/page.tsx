@@ -10,6 +10,9 @@ import {
   CurrencyDollarIcon,
   BanknotesIcon,
   ClockIcon,
+  EyeIcon,
+  GiftIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -45,6 +48,9 @@ export default function AdminDashboard() {
           totalWithdrawn: 0,
           pendingDeposits: 0,
           pendingWithdrawals: 0,
+          totalQuestXu: 0,
+          totalViewEarningsXu: 0,
+          totalViews: 0,
           _error: true,
         })
       );
@@ -63,14 +69,20 @@ export default function AdminDashboard() {
   const approvedDepositsAmount = stats.approvedDepositsAmount ?? stats.totalRevenue ?? 0;
   const grossContentRevenue = stats.grossContentRevenue ?? 0;
   const platformNetIncome = stats.platformNetIncome ?? 0;
+  const totalQuestXu = stats.totalQuestXu ?? 0;
+  const totalViewEarningsXu = stats.totalViewEarningsXu ?? 0;
+  const totalViews = stats.totalViews ?? 0;
 
   const cards = [
     { label: "Người dùng", value: stats.totalUsers, icon: UsersIcon, color: "text-blue-600 bg-blue-50", href: "/admin/users" },
     { label: "Truyện", value: stats.totalStories, icon: BookOpenIcon, color: "text-emerald-600 bg-emerald-50", href: "/admin/stories" },
     { label: "Chương", value: stats.totalChapters, icon: DocumentTextIcon, color: "text-purple-600 bg-purple-50", href: null },
+    { label: "Tổng lượt xem", value: new Intl.NumberFormat("vi-VN").format(totalViews), icon: EyeIcon, color: "text-cyan-600 bg-cyan-50", href: null },
     { label: "Tổng nạp (đã duyệt)", value: formatVND(approvedDepositsAmount) + "đ", icon: CurrencyDollarIcon, color: "text-amber-600 bg-amber-50", href: "/admin/deposits" },
     { label: "Doanh thu tổng (mua + tặng)", value: formatVND(grossContentRevenue) + "đ", icon: CurrencyDollarIcon, color: "text-indigo-600 bg-indigo-50", href: null },
     { label: "Thu nhập nền tảng (thực tế)", value: formatVND(platformNetIncome) + "đ", icon: CurrencyDollarIcon, color: "text-emerald-600 bg-emerald-50", href: null },
+    { label: "Xu từ nhiệm vụ (đã phát)", value: formatVND(totalQuestXu) + " xu", icon: TrophyIcon, color: "text-orange-600 bg-orange-50", href: null },
+    { label: "Xu từ views (tác giả nhận)", value: formatVND(totalViewEarningsXu) + " xu", icon: GiftIcon, color: "text-teal-600 bg-teal-50", href: null },
   ];
 
   const alerts = [
@@ -167,7 +179,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {cards.map((card, i) => {
           const inner = (
             <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md">
