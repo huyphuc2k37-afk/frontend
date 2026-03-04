@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
 
@@ -70,6 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ChapterPage({ params }: Props) {
   const chapter = await getChapter(params.chapterId);
+  if (!chapter) notFound();
 
   const jsonLd = chapter
     ? {
@@ -114,7 +116,7 @@ export default async function ChapterPage({ params }: Props) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
         />
       )}
       <ChapterReader />

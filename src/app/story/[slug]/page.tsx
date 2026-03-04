@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 import StoryDetailClient from "./StoryDetailClient";
 
@@ -79,6 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function StoryPage({ params }: Props) {
   const story = await getStory(params.slug);
+  if (!story) notFound();
 
   const jsonLd = story
     ? [
@@ -143,7 +145,7 @@ export default async function StoryPage({ params }: Props) {
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }}
         />
       ))}
       <StoryDetailClient />

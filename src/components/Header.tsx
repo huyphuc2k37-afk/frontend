@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bars3Icon,
@@ -17,7 +17,6 @@ import {
   PencilSquareIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  Cog6ToothIcon,
   ShieldCheckIcon,
   GiftIcon,
 } from "@heroicons/react/24/outline";
@@ -52,6 +51,7 @@ export default function Header() {
   const isAdmin = profile?.role === "admin";
   const isMod = profile?.role === "moderator";
   const pathname = usePathname();
+  const router = useRouter();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -226,7 +226,7 @@ export default function Header() {
                   className="w-full rounded-full border border-[#f0e6d0] bg-white/40 py-2 pl-10 pr-4 text-body-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-primary-400 focus:bg-white/70 focus:outline-none focus:ring-1 focus:ring-primary-200"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && searchQuery.trim()) {
-                      window.location.href = `/explore?q=${encodeURIComponent(searchQuery)}`;
+                      router.push(`/explore?q=${encodeURIComponent(searchQuery)}`);
                     }
                   }}
                 />
@@ -619,7 +619,7 @@ export default function Header() {
                       className="w-full rounded-xl border border-[#f0e6d0] bg-white/40 py-2.5 pl-10 pr-4 text-body-sm focus:border-primary-400 focus:bg-white/70 focus:outline-none"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && searchQuery.trim()) {
-                          window.location.href = `/explore?q=${encodeURIComponent(searchQuery)}`;
+                          router.push(`/explore?q=${encodeURIComponent(searchQuery)}`);
                         }
                       }}
                     />
