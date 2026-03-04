@@ -161,8 +161,8 @@ export default function RankingPage() {
                       </div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="hidden flex-shrink-0 text-right sm:block">
+                    {/* Stats — always visible */}
+                    <div className="flex-shrink-0 text-right">
                       <div className="flex items-center gap-1.5 text-body-sm font-semibold text-gray-900">
                         {activeTab === "views" ? (
                           <>
