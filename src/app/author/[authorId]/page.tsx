@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { API_BASE_URL } from "@/lib/api";
 import AuthorProfileClient from "./AuthorProfileClient";
 
-export const revalidate = 14400; // ISR — regenerate at most every 4 hours
+export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
 
 const SITE_URL = "https://vstory.vn";
 
@@ -11,7 +11,7 @@ type Props = { params: { authorId: string } };
 async function getAuthor(authorId: string) {
   try {
     const res = await fetch(API_BASE_URL + "/api/authors/" + authorId, {
-      next: { revalidate: 7200 },
+      next: { revalidate: 43200 },
     });
     if (!res.ok) return null;
     return res.json();

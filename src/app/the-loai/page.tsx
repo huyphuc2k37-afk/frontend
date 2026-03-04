@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
 
-export const revalidate = 14400; // ISR — regenerate at most every 4 hours
+export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
 
 export const metadata: Metadata = {
   title: "Thể Loại Truyện - Đọc Truyện Online Miễn Phí Tại VStory",
@@ -56,7 +56,7 @@ interface ApiCategory {
 async function getCategories(): Promise<ApiCategory[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/categories`, {
-      next: { revalidate: 7200 },
+      next: { revalidate: 43200 },
     });
     if (!res.ok) return [];
     const data = await res.json();

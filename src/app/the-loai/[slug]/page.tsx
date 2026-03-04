@@ -5,7 +5,7 @@ import GenreLandingClient from "./GenreLandingClient";
 
 const SITE_URL = "https://vstory.vn";
 
-export const revalidate = 14400; // ISR — regenerate at most every 4 hours
+export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
 export const dynamicParams = true;
 
 type Props = { params: { slug: string } };
@@ -39,7 +39,7 @@ interface ApiStory {
 async function getCategoryBySlug(slug: string): Promise<{ category: ApiCategory; stories: ApiStory[]; total: number } | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/categories/${slug}?pageSize=30&sort=updated`, {
-      next: { revalidate: 7200 },
+      next: { revalidate: 43200 },
     });
     if (!res.ok) return null;
     return await res.json();

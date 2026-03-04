@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { genreSEOPages } from "@/data/genreSlugs";
 import { API_BASE_URL } from "@/lib/api";
 
-export const revalidate = 600; // ISR — regenerate homepage every 10 minutes
+export const revalidate = 1800; // ISR — regenerate homepage every 30 minutes (Cloudflare CDN caches in between)
 
 const SITE_URL = "https://vstory.vn";
 
@@ -39,7 +39,7 @@ export default async function Page() {
   let initialStories: any[] = [];
   try {
     const res = await fetch(`${API_BASE_URL}/api/stories?limit=12`, {
-      next: { revalidate: 600 }, // ISR: refresh every 10 minutes
+      next: { revalidate: 1800 }, // ISR: refresh every 30 minutes
     });
     if (res.ok) {
       const data = await res.json();

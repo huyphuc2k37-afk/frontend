@@ -85,28 +85,65 @@ const nextConfig = {
         key: "Cache-Control",
         value: "public, max-age=86400, stale-while-revalidate=604800",
       },
+      { key: "CDN-Cache-Control", value: "max-age=86400" },
+    ];
+
+    // Cloudflare-friendly cache for ISR public pages
+    // Cloudflare respects CDN-Cache-Control for edge caching
+    const isrCacheHeaders = [
+      {
+        key: "CDN-Cache-Control",
+        value: "max-age=1800, stale-while-revalidate=86400",
+      },
+    ];
+
+    // Long ISR pages (story, chapter, author, genre)
+    const longIsrCacheHeaders = [
+      {
+        key: "CDN-Cache-Control",
+        value: "max-age=7200, stale-while-revalidate=86400",
+      },
+    ];
+
+    // Auth pages — never cache
+    const noCacheHeaders = [
+      {
+        key: "Cache-Control",
+        value: "private, no-cache, no-store, must-revalidate",
+      },
+      { key: "CDN-Cache-Control", value: "no-store" },
     ];
 
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
+      // Homepage ISR — Cloudflare caches 30min, stale-while-revalidate 1 day
+      { source: "/", headers: isrCacheHeaders },
+      // Public ISR pages — Cloudflare caches 2h, stale-while-revalidate 1 day
+      { source: "/story/:slug*", headers: longIsrCacheHeaders },
+      { source: "/the-loai/:slug*", headers: longIsrCacheHeaders },
+      { source: "/author/:authorId((?!register).)*", headers: longIsrCacheHeaders },
+      // Static explore/ranking — Cloudflare caches
+      { source: "/explore", headers: isrCacheHeaders },
+      { source: "/ranking", headers: isrCacheHeaders },
       // Static pages — cache in CDN for 1 day, stale-while-revalidate 7 days
       { source: "/about", headers: staticCacheHeaders },
       { source: "/terms", headers: staticCacheHeaders },
       { source: "/privacy", headers: staticCacheHeaders },
       { source: "/author-policy", headers: staticCacheHeaders },
       { source: "/contact", headers: staticCacheHeaders },
-      // noindex for private / auth pages
+      // Auth pages — NEVER cache in CDN (private user data)
+      { source: "/profile", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/wallet", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/bookshelf", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/quests", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/admin/:path*", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/mod/:path*", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      { source: "/write/:path*", headers: [...noIndexHeaders, ...noCacheHeaders] },
+      // noindex for login/register
       { source: "/login", headers: noIndexHeaders },
       { source: "/register", headers: noIndexHeaders },
       { source: "/author/register", headers: noIndexHeaders },
-      { source: "/profile", headers: noIndexHeaders },
-      { source: "/wallet", headers: noIndexHeaders },
-      { source: "/bookshelf", headers: noIndexHeaders },
-      { source: "/quests", headers: noIndexHeaders },
-      { source: "/admin/:path*", headers: noIndexHeaders },
-      { source: "/mod/:path*", headers: noIndexHeaders },
-      { source: "/write/:path*", headers: noIndexHeaders },
     ];
   },
   images: {

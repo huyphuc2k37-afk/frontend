@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { API_BASE_URL } from "@/lib/api";
 
-export const revalidate = 3600; // ISR — regenerate sitemap every 1 hour
+export const revalidate = 43200; // ISR — regenerate sitemap every 12 hours
 
 const SITE_URL = "https://vstory.vn";
 
