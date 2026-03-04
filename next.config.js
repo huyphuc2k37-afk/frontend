@@ -4,12 +4,13 @@ const withPWA = require("next-pwa")({
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
   runtimeCaching: [
-    // Cache API responses for story listing / ranking
+    // Cache API responses — NetworkFirst ensures fresh data (coverUrl etc.)
     {
       urlPattern: /\/api\/(stories|ranking|authors)/,
-      handler: "StaleWhileRevalidate",
+      handler: "NetworkFirst",
       options: {
         cacheName: "api-cache",
+        networkTimeoutSeconds: 8,
         expiration: { maxEntries: 100, maxAgeSeconds: 300 },
       },
     },
@@ -22,14 +23,24 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 7 }, // 7 days
       },
     },
-    // Cache cover images (network-first behavior to avoid stale 403/404 after moderation changes)
+    // Cache cover images from backend (fallback path)
     {
       urlPattern: /\/api\/stories\/.+\/cover/,
-      handler: "StaleWhileRevalidate",
+      handler: "CacheFirst",
       options: {
         cacheName: "cover-cache",
         cacheableResponse: { statuses: [200] },
-        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 7 }, // 7 days
+        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 7 },
+      },
+    },
+    // Cache cover images from Supabase CDN (direct path)
+    {
+      urlPattern: /ydmkavspdccylpnskfsg\.supabase\.co\/storage\/.+/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "supabase-cover-cache",
+        cacheableResponse: { statuses: [200] },
+        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 30 },
       },
     },
     // Cache static assets

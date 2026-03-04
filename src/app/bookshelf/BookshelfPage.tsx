@@ -25,6 +25,7 @@ interface BookmarkItem {
     genre: string;
     status: string;
     views: number;
+    coverUrl?: string | null;
     author: { name: string; image: string | null };
     _count: { chapters: number };
   };
@@ -140,7 +141,7 @@ export default function BookshelfPage() {
                     <Link href={`/story/${bm.story.slug}`} className="flex gap-4 p-4">
                       <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
                         <Image
-                          src={`${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
+                          src={bm.story.coverUrl || `${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
                           alt={bm.story.title}
                           fill
                           sizes="88px"

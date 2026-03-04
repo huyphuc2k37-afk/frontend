@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: story.id
         ? [
             {
-              url: API_BASE_URL + "/api/stories/" + story.id + "/cover",
+              url: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
               width: 400,
               height: 600,
               alt: story.title,
