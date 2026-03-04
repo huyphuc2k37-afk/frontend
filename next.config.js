@@ -93,7 +93,7 @@ const nextConfig = {
     const isrCacheHeaders = [
       {
         key: "CDN-Cache-Control",
-        value: "max-age=1800, stale-while-revalidate=86400",
+        value: "max-age=3600, stale-while-revalidate=86400",
       },
     ];
 
@@ -101,7 +101,7 @@ const nextConfig = {
     const longIsrCacheHeaders = [
       {
         key: "CDN-Cache-Control",
-        value: "max-age=7200, stale-while-revalidate=86400",
+        value: "max-age=14400, stale-while-revalidate=86400",
       },
     ];
 
@@ -117,9 +117,9 @@ const nextConfig = {
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
-      // Homepage ISR — Cloudflare caches 30min, stale-while-revalidate 1 day
+      // Homepage ISR — Cloudflare caches 1h, stale-while-revalidate 1 day
       { source: "/", headers: isrCacheHeaders },
-      // Public ISR pages — Cloudflare caches 2h, stale-while-revalidate 1 day
+      // Public ISR pages — Cloudflare caches 4h, stale-while-revalidate 1 day
       { source: "/story/:slug*", headers: longIsrCacheHeaders },
       { source: "/the-loai/:slug*", headers: longIsrCacheHeaders },
       { source: "/author/:authorId((?!register).)*", headers: longIsrCacheHeaders },
