@@ -5,7 +5,7 @@ import GenreLandingClient from "./GenreLandingClient";
 
 const SITE_URL = "https://vstory.vn";
 
-export const revalidate = 3600; // ISR — regenerate at most every 1 hour
+export const revalidate = 7200; // ISR — regenerate at most every 2 hours
 export const dynamicParams = true;
 
 type Props = { params: { slug: string } };

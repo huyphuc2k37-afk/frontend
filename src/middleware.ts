@@ -74,5 +74,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: [
+    /*
+     * Match all request paths EXCEPT:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico, robots.txt, sitemap.xml
+     * - public folder assets (icons, qr, sw, manifest, ads.txt, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|icons|qr|sw\\.js|workbox-|manifest\\.json|ads\\.txt|api/auth).*)",
+  ],
 };

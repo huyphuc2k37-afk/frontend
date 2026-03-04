@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { API_BASE_URL } from "@/lib/api";
 import StoryDetailClient from "./StoryDetailClient";
 
-export const revalidate = 3600; // ISR — regenerate at most every 1 hour
+export const revalidate = 7200; // ISR — regenerate at most every 2 hours
 
 const SITE_URL = "https://vstory.vn";
 

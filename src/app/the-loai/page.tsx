@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
 
-export const revalidate = 3600; // ISR — regenerate at most every 1 hour
+export const revalidate = 7200; // ISR — regenerate at most every 2 hours
 
 export const metadata: Metadata = {
   title: "Thể Loại Truyện - Đọc Truyện Online Miễn Phí Tại VStory",
