@@ -51,6 +51,8 @@ export default function AdminDashboard() {
           totalQuestXu: 0,
           totalViewEarningsXu: 0,
           totalAdminCreditXu: 0,
+          totalAuthorEarnings: 0,
+          totalXuInCirculation: 0,
           totalViews: 0,
           _error: true,
         })
@@ -73,19 +75,26 @@ export default function AdminDashboard() {
   const totalQuestXu = stats.totalQuestXu ?? 0;
   const totalViewEarningsXu = stats.totalViewEarningsXu ?? 0;
   const totalAdminCreditXu = stats.totalAdminCreditXu ?? 0;
+  const totalAuthorEarnings = stats.totalAuthorEarnings ?? 0;
+  const totalXuInCirculation = stats.totalXuInCirculation ?? 0;
   const totalViews = stats.totalViews ?? 0;
+  const taxTotal = stats.taxTotal ?? 0;
+  const authorNetPaid = stats.authorNetPaid ?? 0;
 
   const cards = [
     { label: "Người dùng", value: stats.totalUsers, icon: UsersIcon, color: "text-blue-600 bg-blue-50", href: "/admin/users" },
     { label: "Truyện", value: stats.totalStories, icon: BookOpenIcon, color: "text-emerald-600 bg-emerald-50", href: "/admin/stories" },
     { label: "Chương", value: stats.totalChapters, icon: DocumentTextIcon, color: "text-purple-600 bg-purple-50", href: null },
     { label: "Tổng lượt xem", value: new Intl.NumberFormat("vi-VN").format(totalViews), icon: EyeIcon, color: "text-cyan-600 bg-cyan-50", href: null },
+    { label: "Tổng xu đang lưu hành", value: formatVND(totalXuInCirculation) + " xu", icon: BanknotesIcon, color: "text-yellow-600 bg-yellow-50", href: null },
     { label: "Tổng nạp (đã duyệt)", value: formatVND(approvedDepositsAmount) + "đ", icon: CurrencyDollarIcon, color: "text-amber-600 bg-amber-50", href: "/admin/deposits" },
-    { label: "Doanh thu tổng (mua + tặng + admin)", value: formatVND(grossContentRevenue + totalAdminCreditXu) + " xu", icon: CurrencyDollarIcon, color: "text-indigo-600 bg-indigo-50", href: null },
-    { label: "Thu nhập nền tảng (thực tế)", value: formatVND(platformNetIncome) + "đ", icon: CurrencyDollarIcon, color: "text-emerald-600 bg-emerald-50", href: null },
-    { label: "Xu admin cộng cho tác giả", value: formatVND(totalAdminCreditXu) + " xu", icon: BanknotesIcon, color: "text-rose-600 bg-rose-50", href: null },
+    { label: "Doanh thu nội dung (mua + tặng)", value: formatVND(grossContentRevenue) + " xu", icon: CurrencyDollarIcon, color: "text-indigo-600 bg-indigo-50", href: null },
+    { label: "Tác giả nhận (65%)", value: formatVND(authorNetPaid) + " xu", icon: CurrencyDollarIcon, color: "text-green-600 bg-green-50", href: null },
+    { label: "Nền tảng giữ (30%)", value: formatVND(platformNetIncome) + " xu", icon: CurrencyDollarIcon, color: "text-emerald-600 bg-emerald-50", href: null },
+    { label: "Thuế (5%)", value: formatVND(taxTotal) + " xu", icon: CurrencyDollarIcon, color: "text-red-600 bg-red-50", href: null },
+    { label: "Xu admin cộng tác giả", value: formatVND(totalAdminCreditXu) + " xu", icon: BanknotesIcon, color: "text-rose-600 bg-rose-50", href: null },
     { label: "Xu từ nhiệm vụ (đã phát)", value: formatVND(totalQuestXu) + " xu", icon: TrophyIcon, color: "text-orange-600 bg-orange-50", href: null },
-    { label: "Xu từ views (tác giả nhận)", value: formatVND(totalViewEarningsXu) + " xu", icon: GiftIcon, color: "text-teal-600 bg-teal-50", href: null },
+    { label: "Xu từ views (tác giả)", value: formatVND(totalViewEarningsXu) + " xu", icon: GiftIcon, color: "text-teal-600 bg-teal-50", href: null },
   ];
 
   const alerts = [
