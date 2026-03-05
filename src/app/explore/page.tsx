@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ExplorePage from "./ExplorePage";
 
+export const revalidate = 3600; // ISR — regenerate at most every 1 hour
+
 export const metadata: Metadata = {
   title: "Khám Phá Truyện Hay - Đọc Truyện Online Miễn Phí | VStory",
   description:
