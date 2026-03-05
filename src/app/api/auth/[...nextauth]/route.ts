@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const JWT_API_SECRET = process.env.JWT_API_SECRET || process.env.NEXTAUTH_SECRET;
@@ -100,9 +100,10 @@ const handler = NextAuth({
               (user as any).role = data.user.role;
             }
           }
-        } catch {
-          // Backend is down — BLOCK sign-in for safety (banned users could slip through)
-          return false;
+        } catch (err) {
+          // Backend is down — allow sign-in but log the error
+          console.error("[NextAuth] signIn sync error:", err);
+          return true;
         }
       }
       return true;
@@ -147,16 +148,16 @@ const handler = NextAuth({
         (session.user as any).role = token.role || "reader";
       }
       // Create a JWT token that the frontend can send to the backend
-      (session as any).accessToken = jwt.sign(
-        {
-          sub: token.sub,
-          email: token.email,
-          name: token.name,
-          picture: token.picture,
-        },
-        JWT_API_SECRET,
-        { expiresIn: "7d" }
-      );
+      const secret = new TextEncoder().encode(JWT_API_SECRET);
+      (session as any).accessToken = await new SignJWT({
+        sub: token.sub,
+        email: token.email,
+        name: token.name,
+        picture: token.picture,
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("7d")
+        .sign(secret);
       return session;
     },
   },
