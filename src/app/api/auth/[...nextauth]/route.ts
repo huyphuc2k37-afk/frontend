@@ -25,22 +25,13 @@ if (!JWT_API_SECRET || !AUTH_SYNC_SECRET) {
   throw new Error("Missing auth secrets: set JWT_API_SECRET and AUTH_SYNC_SECRET (or NEXTAUTH_SECRET fallback)");
 }
 
-console.log("[NextAuth] ENV CHECK:", {
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "SET (" + process.env.GOOGLE_CLIENT_ID.substring(0, 10) + "...)" : "MISSING",
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "SET" : "MISSING",
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL || "NOT SET",
-  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? "SET" : "MISSING",
-  JWT_API_SECRET: JWT_API_SECRET ? "SET" : "MISSING",
-  API_BASE_URL,
-});
-
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: { params: { prompt: "consent", access_type: "offline", response_type: "code" } },
+      authorization: { params: { prompt: "select_account", access_type: "offline", response_type: "code" } },
       checks: ["state"],
     }),
     CredentialsProvider({
@@ -82,20 +73,8 @@ const handler = NextAuth({
       },
     }),
   ],
-  debug: true,
   pages: {
     signIn: "/login",
-  },
-  logger: {
-    error(code: string, metadata: any) {
-      console.error("[NextAuth ERROR]", code, JSON.stringify(metadata, null, 2));
-    },
-    warn(code: string) {
-      console.warn("[NextAuth WARN]", code);
-    },
-    debug(code: string, metadata: any) {
-      console.log("[NextAuth DEBUG]", code, JSON.stringify(metadata, null, 2));
-    },
   },
   session: {
     strategy: "jwt",
@@ -124,7 +103,6 @@ const handler = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      console.log("[NextAuth] signIn called:", { provider: account?.provider, email: user.email });
       // Block banned emails on Google sign-in
       if (account?.provider === "google" && user.email) {
         const normalizedEmail = normalizeEmail(user.email);
