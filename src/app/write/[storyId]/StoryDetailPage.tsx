@@ -364,19 +364,18 @@ export default function StoryDetailPage() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       setCoverError(null);
-                      if (file.size > 2 * 1024 * 1024) {
-                        setCoverError("Ảnh bìa tối đa 2MB");
+                      if (file.size > 5 * 1024 * 1024) {
+                        setCoverError("Ảnh bìa tối đa 5MB");
                         return;
                       }
                       try {
-                        const reader = new FileReader();
-                        reader.onload = () => { setEditCoverImage(String(reader.result)); setCoverChanged(true); };
-                        reader.onerror = () => setCoverError("Không thể đọc file ảnh");
-                        reader.readAsDataURL(file);
+                        const { compressImageClient } = await import("@/lib/compressImage");
+                        const compressed = await compressImageClient(file);
+                        setEditCoverImage(compressed); setCoverChanged(true);
                       } catch {
                         setCoverError("Không thể đọc file ảnh");
                       }
