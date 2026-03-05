@@ -9,15 +9,19 @@ const SITE_URL = "https://vstory.vn";
 type Props = { params: { authorId: string } };
 
 async function getAuthor(authorId: string) {
-  try {
-    const res = await fetch(API_BASE_URL + "/api/authors/" + authorId, {
-      next: { revalidate: 43200 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(API_BASE_URL + "/api/authors/" + authorId, {
+        next: { revalidate: 43200 },
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      if (attempt === 1) return null;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
   }
+  return null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

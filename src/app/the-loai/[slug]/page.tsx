@@ -37,15 +37,19 @@ interface ApiStory {
 }
 
 async function getCategoryBySlug(slug: string): Promise<{ category: ApiCategory; stories: ApiStory[]; total: number } | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/categories/${slug}?pageSize=30&sort=updated`, {
-      next: { revalidate: 43200 },
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/categories/${slug}?pageSize=30&sort=updated`, {
+        next: { revalidate: 43200 },
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      if (attempt === 1) return null;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
   }
+  return null;
 }
 
 async function getAllCategorySlugs(): Promise<{ slug: string }[]> {
