@@ -97,3 +97,31 @@
   background-size: 200% auto;
   animation: shimmer 3s linear infinite;
 }
+
+/* Dropdown / popup enter animations */
+@keyframes fadeInSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-in.fade-in.slide-in-from-top-1 {
+  animation: fadeInSlideDown 0.15s ease-out both;
+}
+.animate-in.slide-in-from-bottom-2 {
+  animation: fadeInSlideUp 0.2s ease-out both;
+}

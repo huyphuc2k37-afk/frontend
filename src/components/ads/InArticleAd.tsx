@@ -46,7 +46,8 @@ export default function InArticleAd({ className }: Props) {
   return (
     <div
       ref={containerRef}
-      className={`overflow-hidden transition-all duration-300 ${filled ? "opacity-100" : "max-h-0 opacity-0"}`}
+      className={`overflow-hidden transition-opacity duration-300 ${filled ? "opacity-100" : "opacity-0"}`}
+      style={{ minHeight: filled ? undefined : 0, contain: "layout" }}
     >
       <ins
         className={`adsbygoogle${className ? ` ${className}` : ""}`}

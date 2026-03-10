@@ -50,7 +50,7 @@ export default function Footer() {
 
           {/* Trang chính */}
           <div>
-            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-500">
               Trang chính
             </h4>
             <ul className="mt-3 space-y-2">
@@ -69,7 +69,7 @@ export default function Footer() {
 
           {/* Thể loại */}
           <div>
-            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-500">
               Thể loại
             </h4>
             <ul className="mt-3 space-y-2">
@@ -88,7 +88,7 @@ export default function Footer() {
 
           {/* Hỗ trợ */}
           <div>
-            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-500">
               Hỗ trợ
             </h4>
             <ul className="mt-3 space-y-2">
@@ -107,7 +107,7 @@ export default function Footer() {
 
           {/* Mạng xã hội */}
           <div>
-            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-500">
               Kết nối
             </h4>
             <ul className="mt-3 space-y-2">
@@ -129,7 +129,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 border-t border-[#f0e6d0]/50 pt-6 text-center">
-          <p className="text-caption text-gray-400">
+          <p className="text-caption text-gray-500">
             &copy; {new Date().getFullYear()} VStory. All rights reserved.
           </p>
         </div>

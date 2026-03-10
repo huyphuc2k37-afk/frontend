@@ -53,7 +53,6 @@ function StoryCard({ story }: { story: ApiStory }) {
           src={src}
           alt={story.title}
           fill
-          unoptimized
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => setSrc(PLACEHOLDER)}
@@ -68,7 +67,7 @@ function StoryCard({ story }: { story: ApiStory }) {
         {story.title}
       </h3>
       <p className="mt-0.5 text-caption text-gray-500">{story.author?.name}</p>
-      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
+      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-500">
         <span className="flex items-center gap-0.5">
           <EyeIcon className="h-3 w-3" />
           {story.views >= 1000

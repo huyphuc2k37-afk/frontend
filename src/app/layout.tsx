@@ -9,7 +9,7 @@ import { UserProfileProvider } from "@/contexts/UserProfileContext";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
   weight: ["400", "500", "600", "700"],
-  display: "swap",
+  display: "optional",
   variable: "--font-jakarta",
 });
 
@@ -42,7 +42,12 @@ export const metadata: Metadata = {
     "web truyện",
   ],
   icons: {
-    icon: "/favicon.ico?v=2",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
     apple: "/icons/icon-192x192.png",
   },
   manifest: "/manifest.json",
@@ -81,6 +86,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#667eea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="preconnect" href="https://backend-4nfb.onrender.com" />
+        <link rel="dns-prefetch" href="https://backend-4nfb.onrender.com" />
+        <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
+        <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
           strategy="lazyOnload"

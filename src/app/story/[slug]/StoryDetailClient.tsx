@@ -281,7 +281,6 @@ export default function StoryDetailPage() {
                       src={(story as any).coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                       alt={story.title}
                       fill
-                      unoptimized
                       sizes="224px"
                       className="object-cover"
                       onError={() => setShowCover(false)}

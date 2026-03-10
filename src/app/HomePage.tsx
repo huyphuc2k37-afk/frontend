@@ -52,14 +52,14 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
             src={coverSrc}
             alt={story.title}
             fill
-            unoptimized
+            priority={index < 6}
             sizes="(max-width: 640px) 50vw, 180px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
           {/* Status badge */}
           {story.status === "completed" && (
-            <span className="absolute left-2 top-2 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            <span className="absolute left-2 top-2 rounded-md bg-emerald-700 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
               Full
             </span>
           )}
@@ -133,7 +133,6 @@ function MiniCover({ src, alt }: { src: string; alt: string }) {
         src={imgSrc}
         alt={alt}
         fill
-        unoptimized
         sizes="40px"
         className="object-cover"
         onError={() => setImgSrc(PLACEHOLDER_COVER)}
@@ -521,7 +520,7 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
                 </div>
                 <Link
                   href="/explore?status=completed"
-                  className="flex items-center gap-1 text-body-sm font-medium text-primary-500 hover:underline"
+                  className="flex items-center gap-1 text-body-sm font-medium text-primary-700 hover:underline"
                 >
                   Xem tất cả
                   <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -549,7 +548,7 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
               </div>
               <Link
                 href="/ranking"
-                className="flex items-center gap-1 text-body-sm font-medium text-primary-500 hover:underline"
+                className="flex items-center gap-1 text-body-sm font-medium text-primary-700 hover:underline"
               >
                 Xem đầy đủ
                 <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -586,16 +585,16 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
 
                     {/* Info */}
                     <div className="min-w-0 flex-1">
-                      <h4 className="line-clamp-1 text-body-sm font-semibold text-gray-900">
+                      <h3 className="line-clamp-1 text-body-sm font-semibold text-gray-900">
                         {story.title}
-                      </h4>
+                      </h3>
                       <p className="text-caption text-gray-500">{story.author?.name}</p>
-                      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
+                      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-500">
                         <span className="flex items-center gap-0.5">
                           <EyeIcon className="h-3 w-3" />
                           {(story.views / 1000).toFixed(1)}K
                         </span>
-                        <span className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium">
+                        <span className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-600">
                           {story.genre?.split(",")[0]?.trim() || story.genre}
                         </span>
                       </div>

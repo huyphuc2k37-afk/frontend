@@ -24,12 +24,12 @@ export default function AnnouncementBanner() {
       .catch(() => {});
   }, []);
 
-  if (dismissed || announcements.length === 0) return null;
+  if (dismissed || announcements.length === 0) return <div className="h-0" />;
 
   const text = announcements.map((a) => a.message).join("  ★  ");
 
   return (
-    <div className="relative min-h-[36px] overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 text-white">
+    <div className="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 text-white" style={{ containIntrinsicSize: "0 36px", contentVisibility: "visible" }}>
       <div className="flex items-center">
         {/* Icon */}
         <div className="flex-shrink-0 bg-primary-700/50 px-3 py-2">

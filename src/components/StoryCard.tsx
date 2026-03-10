@@ -33,7 +33,6 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             src={coverSrc}
             alt={`Bia truyện ${story.title}`}
             fill
-            unoptimized
             sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 180px"}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
@@ -58,9 +57,9 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
           )}
 
           {/* Meta */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-caption text-gray-400">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-caption text-gray-500">
             {story.genre?.split(",").map((g: string) => g.trim()).filter(Boolean).slice(0, 2).map((g: string) => (
-              <span key={g} className="rounded-full bg-gray-100 px-2 py-0.5">{g}</span>
+              <span key={g} className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">{g}</span>
             ))}
             <span>&middot;</span>
             <span>{story.views > 0 ? `${(story.views / 1000).toFixed(1)}K đọc` : "0 đọc"}</span>

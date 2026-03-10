@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Bars3Icon,
   XMarkIcon,
@@ -279,14 +278,10 @@ export default function Header() {
                       )}
                     </button>
 
-                    <AnimatePresence>
+                    
                       {notificationsOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                          transition={{ duration: 0.12 }}
-                          className="fixed inset-x-3 top-16 z-[60] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:z-auto"
+                        <div
+                          className="fixed inset-x-3 top-16 z-[60] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-1 duration-150 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:z-auto"
                         >
                           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                             <div>
@@ -375,9 +370,9 @@ export default function Header() {
                               })
                             )}
                           </div>
-                        </motion.div>
+                        </div>
                       )}
-                    </AnimatePresence>
+                    
                   </div>
 
                   {/* Coin balance + CTA buttons */}
@@ -437,14 +432,10 @@ export default function Header() {
                       )}
                     </button>
 
-                    <AnimatePresence>
+                    
                       {userMenuOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                          transition={{ duration: 0.12 }}
-                          className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
+                        <div
+                          className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg animate-in fade-in slide-in-from-top-1 duration-150"
                         >
                           <div className="border-b border-gray-100 px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -564,9 +555,9 @@ export default function Header() {
                               Đăng xuất
                             </button>
                           </div>
-                        </motion.div>
+                        </div>
                       )}
-                    </AnimatePresence>
+                    
                   </div>
                 </>
               ) : (
@@ -598,14 +589,10 @@ export default function Header() {
           </div>
 
           {/* Mobile search bar */}
-          <AnimatePresence>
+          
             {searchOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden lg:hidden"
+              <div
+                className="overflow-hidden lg:hidden animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 <div className="pb-3">
                   <div className="relative">
@@ -625,20 +612,16 @@ export default function Header() {
                     />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          
         </div>
 
         {/* Mobile menu */}
-        <AnimatePresence>
+        
           {isOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-[#f0e6d0]/50 md:hidden"
+            <div
+              className="overflow-hidden border-t border-[#f0e6d0]/50 md:hidden animate-in fade-in slide-in-from-top-1 duration-150"
             >
               <nav className="bg-[#fdf9f0] px-4 py-3" aria-label="Mobile navigation">
                 {navLinks.map((link) => (
@@ -748,9 +731,9 @@ export default function Header() {
                   </>
                 )}
               </nav>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        
       </header>
 
       {/* Spacer so content doesn't go behind fixed header */}
