@@ -92,14 +92,37 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         {/* Auto-reload on chunk load failure (deploy cache mismatch) */}
         <Script id="chunk-error-recovery" strategy="beforeInteractive">{`
-          window.addEventListener('error', function(e) {
-            if (e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1 || e.message.indexOf('Loading CSS chunk') !== -1)) {
-              if (!sessionStorage.getItem('chunk_reload')) {
-                sessionStorage.setItem('chunk_reload', '1');
+          (function(){
+            function isChunkError(msg) {
+              if (!msg) return false;
+              return msg.indexOf('ChunkLoadError') !== -1
+                || msg.indexOf('Loading chunk') !== -1
+                || msg.indexOf('Loading CSS chunk') !== -1
+                || msg.indexOf('Failed to fetch dynamically imported') !== -1
+                || msg.indexOf('error loading dynamically imported module') !== -1;
+            }
+            function recover() {
+              if (sessionStorage.getItem('chunk_reload')) return;
+              sessionStorage.setItem('chunk_reload', '1');
+              // Clear SW cache then reload
+              if ('caches' in window) {
+                caches.keys().then(function(names) {
+                  names.forEach(function(name) {
+                    if (name.indexOf('static') !== -1 || name.indexOf('next') !== -1) caches.delete(name);
+                  });
+                }).finally(function() { window.location.reload(); });
+              } else {
                 window.location.reload();
               }
             }
-          });
+            window.addEventListener('error', function(e) { if (isChunkError(e.message)) recover(); });
+            window.addEventListener('unhandledrejection', function(e) {
+              var msg = e.reason ? (e.reason.message || String(e.reason)) : '';
+              if (isChunkError(msg)) recover();
+            });
+            // Clear flag on successful page load
+            window.addEventListener('load', function() { sessionStorage.removeItem('chunk_reload'); });
+          })();
         `}</Script>
       </head>
       <body>

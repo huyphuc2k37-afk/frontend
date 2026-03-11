@@ -89,11 +89,11 @@ const nextConfig = {
     ];
 
     // Cloudflare-friendly cache for ISR public pages
-    // Cloudflare respects CDN-Cache-Control for edge caching
+    // Short CDN TTL to avoid stale HTML after deploys; stale-while-revalidate for performance
     const isrCacheHeaders = [
       {
         key: "CDN-Cache-Control",
-        value: "max-age=3600, stale-while-revalidate=86400",
+        value: "max-age=60, stale-while-revalidate=3600",
       },
     ];
 
@@ -101,7 +101,7 @@ const nextConfig = {
     const longIsrCacheHeaders = [
       {
         key: "CDN-Cache-Control",
-        value: "max-age=14400, stale-while-revalidate=86400",
+        value: "max-age=300, stale-while-revalidate=3600",
       },
     ];
 
