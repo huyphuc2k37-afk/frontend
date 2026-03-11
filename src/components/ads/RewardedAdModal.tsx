@@ -1,18 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useState, useEffect, useCallback } from "react";
+import { XMarkIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
-  }
-}
-
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-5262734754559750";
-// Use a display ad slot for the rewarded ad overlay
-const REWARDED_AD_SLOT = "1869731119";
+const SMARTLINK_URL =
+  "https://www.effectivegatecpm.com/k8gij0ja?key=3269e3cb85ab313577ba4920065048fe";
 
 interface RewardedAdProps {
   /** Seconds the user must wait before they can close */
@@ -30,17 +22,13 @@ export default function RewardedAdModal({
 }: RewardedAdProps) {
   const [secondsLeft, setSecondsLeft] = useState(cooldownSeconds);
   const [canClose, setCanClose] = useState(false);
-  const adPushed = useRef(false);
+  const [linkOpened, setLinkOpened] = useState(false);
 
-  // Push the ad
+  // Open smartlink in new tab on mount
   useEffect(() => {
-    if (adPushed.current) return;
-    adPushed.current = true;
-    try {
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adsbygoogle.push({});
-    } catch {
-      // ignore
+    const w = window.open(SMARTLINK_URL, "_blank", "noopener,noreferrer");
+    if (w) {
+      setLinkOpened(true);
     }
   }, []);
 
@@ -69,79 +57,93 @@ export default function RewardedAdModal({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-black/90 backdrop-blur-sm">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-900/80">
-        <div className="flex items-center gap-2">
-          <span className="text-body-sm font-medium text-gray-300">
-            📢 Quảng cáo
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-body-sm font-semibold text-gray-800">
+            📢 Xem quảng cáo nhận xu
           </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {!canClose ? (
-            <div className="flex items-center gap-2">
-              <span className="text-caption text-gray-400">Đóng sau</span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-body-sm font-bold text-white tabular-nums">
-                {secondsLeft}
-              </span>
-            </div>
-          ) : (
+          {canClose && (
             <button
               onClick={handleClose}
-              className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-body-sm font-semibold text-white transition hover:bg-white/25"
+              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             >
-              <XMarkIcon className="h-4 w-4" />
-              Đóng & nhận xu
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Progress */}
+        <div className="mb-4">
+          <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-1000 ease-linear"
+              style={{
+                width: `${((cooldownSeconds - secondsLeft) / cooldownSeconds) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="text-center mb-5">
+          {canClose ? (
+            <>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                <span className="text-2xl">🎉</span>
+              </div>
+              <p className="text-body-md font-semibold text-gray-900">
+                Hoàn thành!
+              </p>
+              <p className="mt-1 text-caption text-gray-500">
+                Nhấn nút bên dưới để nhận xu thưởng
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+                <span className="text-2xl font-bold text-amber-600 tabular-nums">
+                  {secondsLeft}
+                </span>
+              </div>
+              <p className="text-body-sm text-gray-600">
+                Vui lòng chờ <span className="font-semibold">{secondsLeft}s</span> để nhận thưởng
+              </p>
+              {!linkOpened && (
+                <a
+                  href={SMARTLINK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-caption font-medium text-primary-600 hover:underline"
+                >
+                  <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                  Mở quảng cáo
+                </a>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {canClose ? (
+            <button
+              onClick={handleClose}
+              className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-body-sm font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600"
+            >
+              🪙 Nhận xu thưởng
+            </button>
+          ) : (
+            <button
+              onClick={onCancel}
+              className="flex-1 rounded-xl border border-gray-200 py-3 text-body-sm font-medium text-gray-500 transition hover:bg-gray-50"
+            >
+              Hủy bỏ
             </button>
           )}
         </div>
       </div>
-
-      {/* Countdown progress bar */}
-      <div className="h-1 w-full bg-gray-800">
-        <div
-          className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-1000 ease-linear"
-          style={{
-            width: `${((cooldownSeconds - secondsLeft) / cooldownSeconds) * 100}%`,
-          }}
-        />
-      </div>
-
-      {/* Ad content area */}
-      <div className="flex flex-1 items-center justify-center p-4 overflow-auto">
-        <div className="w-full max-w-2xl">
-          {/* Main AdSense ad */}
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block", minHeight: 250 }}
-            data-ad-client={ADSENSE_CLIENT}
-            data-ad-slot={REWARDED_AD_SLOT}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
-
-          {/* Fallback content shown while ad loads */}
-          <div className="mt-4 text-center">
-            <p className="text-caption text-gray-500">
-              {canClose
-                ? "✅ Bạn đã xem xong quảng cáo. Nhấn nút đóng để nhận xu!"
-                : `⏳ Vui lòng chờ ${secondsLeft} giây để nhận thưởng...`}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom: cancel link (only before timer ends) */}
-      {!canClose && (
-        <div className="px-4 py-3 text-center">
-          <button
-            onClick={onCancel}
-            className="text-caption text-gray-600 underline transition hover:text-gray-400"
-          >
-            Bỏ qua (không nhận xu)
-          </button>
-        </div>
-      )}
     </div>
   );
 }

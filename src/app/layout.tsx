@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -90,25 +89,6 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://backend-4nfb.onrender.com" />
         <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
-        {/* Disable Google Auto Ads overlay/anchor/vignette — only show manual ad units */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              /* Hide Google auto-inserted anchor ads at top/bottom */
-              ins.adsbygoogle[data-anchor-status] { display: none !important; height: 0 !important; }
-              /* Hide Google vignette (full-page interstitial) ads */
-              .google-auto-placed { display: none !important; height: 0 !important; overflow: hidden !important; }
-              /* Hide top/bottom overlay ad containers */
-              div[id^="google_ads_iframe"][style*="position: fixed"] { display: none !important; }
-              iframe[id^="aswift_"][style*="position: fixed"] { display: none !important; }
-            `,
-          }}
-        />
       </head>
       <body>
         <AuthProvider>
