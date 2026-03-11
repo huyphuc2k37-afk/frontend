@@ -101,19 +101,41 @@ export default function RootLayout({
                 || msg.indexOf('Failed to fetch dynamically imported') !== -1
                 || msg.indexOf('error loading dynamically imported module') !== -1;
             }
+            function buildCacheBustUrl() {
+              try {
+                var url = new URL(window.location.href);
+                // Use a short param name to avoid URL length issues
+                url.searchParams.set('__r', String(Date.now()));
+                return url.toString();
+              } catch (_) {
+                // Fallback for older browsers
+                var sep = window.location.href.indexOf('?') === -1 ? '?' : '&';
+                return window.location.href + sep + '__r=' + Date.now();
+              }
+            }
+            function clearCaches() {
+              if (!('caches' in window)) return Promise.resolve();
+              return caches.keys().then(function(names) {
+                return Promise.all(names.map(function(name) { return caches.delete(name); }));
+              }).catch(function(){});
+            }
+            function unregisterServiceWorkers() {
+              if (!('serviceWorker' in navigator)) return Promise.resolve();
+              return navigator.serviceWorker.getRegistrations().then(function(regs) {
+                return Promise.all(regs.map(function(r) { return r.unregister(); }));
+              }).catch(function(){});
+            }
             function recover() {
               if (sessionStorage.getItem('chunk_reload')) return;
               sessionStorage.setItem('chunk_reload', '1');
-              // Clear SW cache then reload
-              if ('caches' in window) {
-                caches.keys().then(function(names) {
-                  names.forEach(function(name) {
-                    if (name.indexOf('static') !== -1 || name.indexOf('next') !== -1) caches.delete(name);
-                  });
-                }).finally(function() { window.location.reload(); });
-              } else {
-                window.location.reload();
-              }
+              // 1) Drop SW + caches 2) Navigate to URL with query-bust
+              Promise.all([clearCaches(), unregisterServiceWorkers()]).finally(function() {
+                try {
+                  window.location.replace(buildCacheBustUrl());
+                } catch (_) {
+                  window.location.href = buildCacheBustUrl();
+                }
+              });
             }
             window.addEventListener('error', function(e) { if (isChunkError(e.message)) recover(); });
             window.addEventListener('unhandledrejection', function(e) {

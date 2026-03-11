@@ -79,31 +79,26 @@ const nextConfig = {
       },
     ];
 
-    // Long-lived cache for static info pages (saves Function Invocations)
-    const staticCacheHeaders = [
+    // HTML pages — avoid CDN caching to prevent stale chunk-hash HTML after deploys
+    const htmlNoCdnCacheHeaders = [
       {
         key: "Cache-Control",
-        value: "public, max-age=86400, stale-while-revalidate=604800",
+        value: "public, max-age=0, must-revalidate",
       },
-      { key: "CDN-Cache-Control", value: "max-age=86400" },
+      { key: "CDN-Cache-Control", value: "no-store" },
     ];
 
-    // Cloudflare-friendly cache for ISR public pages
-    // Short CDN TTL to avoid stale HTML after deploys; stale-while-revalidate for performance
-    const isrCacheHeaders = [
+    // Hashed Next.js assets — safe to cache long-term
+    const nextStaticAssetHeaders = [
       {
-        key: "CDN-Cache-Control",
-        value: "max-age=60, stale-while-revalidate=3600",
+        key: "Cache-Control",
+        value: "public, max-age=31536000, immutable",
       },
+      { key: "CDN-Cache-Control", value: "max-age=31536000, immutable" },
     ];
 
-    // Long ISR pages (story, chapter, author, genre)
-    const longIsrCacheHeaders = [
-      {
-        key: "CDN-Cache-Control",
-        value: "max-age=300, stale-while-revalidate=3600",
-      },
-    ];
+    // NOTE: Avoid caching HTML at the CDN. Any cached HTML can reference old hashed chunks
+    // that no longer exist after a new deploy, causing ChunkLoadError.
 
     // Auth pages — never cache
     const noCacheHeaders = [
@@ -117,21 +112,18 @@ const nextConfig = {
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
-      // Homepage ISR — Cloudflare caches 1h, stale-while-revalidate 1 day
-      { source: "/", headers: isrCacheHeaders },
-      // Public ISR pages — Cloudflare caches 4h, stale-while-revalidate 1 day
-      { source: "/story/:slug*", headers: longIsrCacheHeaders },
-      { source: "/the-loai/:slug*", headers: longIsrCacheHeaders },
-      { source: "/author/:authorId((?!register).)*", headers: longIsrCacheHeaders },
-      // Static explore/ranking — Cloudflare caches
-      { source: "/explore", headers: isrCacheHeaders },
-      { source: "/ranking", headers: isrCacheHeaders },
-      // Static pages — cache in CDN for 1 day, stale-while-revalidate 7 days
-      { source: "/about", headers: staticCacheHeaders },
-      { source: "/terms", headers: staticCacheHeaders },
-      { source: "/privacy", headers: staticCacheHeaders },
-      { source: "/author-policy", headers: staticCacheHeaders },
-      { source: "/contact", headers: staticCacheHeaders },
+      // Public pages — do NOT CDN-cache HTML (prevents stale chunk hashes)
+      { source: "/:path*", headers: htmlNoCdnCacheHeaders },
+      // Next.js hashed assets (override the catch-all)
+      { source: "/_next/static/:path*", headers: nextStaticAssetHeaders },
+      // Next image optimizer responses — cache briefly (override the catch-all)
+      {
+        source: "/_next/image",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600" },
+          { key: "CDN-Cache-Control", value: "max-age=3600" },
+        ],
+      },
       // Auth pages — NEVER cache in CDN (private user data)
       { source: "/profile", headers: [...noIndexHeaders, ...noCacheHeaders] },
       { source: "/wallet", headers: [...noIndexHeaders, ...noCacheHeaders] },
