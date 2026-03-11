@@ -23,9 +23,8 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
-import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
-import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
+import InArticleAd from "@/components/ads/InArticleAd";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -443,12 +442,12 @@ export default function ReadChapterPage() {
                       <div key={idx} className="group/para relative">
                         {showAdTop && adTopPosition === "before" && (
                           <div className="my-6">
-                            <AdsterraBanner key={`ad-top`} />
+                            <InArticleAd />
                           </div>
                         )}
                         {showAdMid && (
                           <div className="my-6">
-                            <AdsterraBanner />
+                            <InArticleAd />
                           </div>
                         )}
                         <div className="flex items-start gap-0">
@@ -480,7 +479,7 @@ export default function ReadChapterPage() {
                         </div>
                         {showAdTop && adTopPosition === "after" && (
                           <div className="my-6">
-                            <AdsterraBanner key={`ad-top-after`} />
+                            <InArticleAd />
                           </div>
                         )}
                       </div>
@@ -490,7 +489,7 @@ export default function ReadChapterPage() {
 
                 {/* Ad 3: right after chapter content, before author note */}
                 <div className="mt-8">
-                  <AdsterraBanner />
+                  <AdSenseSlot />
                 </div>
 
                 {/* Author note */}
@@ -559,7 +558,7 @@ export default function ReadChapterPage() {
 
             {/* Ad 4: before comments */}
             <div className="mt-6">
-              <AdsterraBanner />
+              <AdSenseSlot />
             </div>
 
             {/* Chapter comments */}
@@ -615,12 +614,6 @@ export default function ReadChapterPage() {
         </div>
       </main>
       <Footer />
-
-      {/* Adsterra popunder — once per session */}
-      <AdsterraPopunder />
-
-      {/* Adsterra SocialBar */}
-      <AdsterraSocialBar />
 
       {/* Paragraph comment drawer */}
       <ParagraphCommentDrawer

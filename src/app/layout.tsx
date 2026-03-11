@@ -15,6 +15,9 @@ const jakarta = Plus_Jakarta_Sans({
 
 const SITE_URL = "https://vstory.vn";
 
+const ADSENSE_CLIENT =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-5262734754559750";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -90,6 +93,16 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://backend-4nfb.onrender.com" />
         <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
+
+        {/* AdSense loader */}
+        <Script
+          id="adsense-loader"
+          strategy="afterInteractive"
+          async
+          crossOrigin="anonymous"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+        />
+
         {/* Auto-reload on chunk load failure (deploy cache mismatch) */}
         <Script id="chunk-error-recovery" strategy="beforeInteractive">{`
           (function(){

@@ -17,7 +17,8 @@ import {
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import InArticleAd from "@/components/ads/InArticleAd";
+import MultiplexAd from "@/components/ads/MultiplexAd";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiStory {
@@ -502,7 +503,7 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
 
         {/* ── Ad: between hot & completed ── */}
         <div className="section-container py-4">
-          <AdsterraBanner />
+          <InArticleAd />
         </div>
 
         {/* ── Hoàn thành ── */}
@@ -607,9 +608,9 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
         {/* ── CTA banner ── */}
         </>)}
 
-        {/* ── Adsterra banner before CTA ── */}
+        {/* ── Ad before CTA ── */}
         <div className="section-container py-4">
-          <AdsterraBanner />
+          <MultiplexAd />
         </div>
 
         <section className="py-12">
@@ -639,9 +640,9 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
           </div>
         </section>
 
-        {/* ── Adsterra recommendation ad ── */}
+        {/* ── Recommendation ad ── */}
         <div className="section-container py-4">
-          <AdsterraBanner />
+          <MultiplexAd />
         </div>
       </main>
     </>

@@ -6,7 +6,8 @@ import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import InArticleAd from "@/components/ads/InArticleAd";
+import MultiplexAd from "@/components/ads/MultiplexAd";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -131,18 +132,18 @@ export default function ExplorePage() {
           <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
         )}
 
-        {/* Adsterra banner between sections */}
+        {/* Ad between sections */}
         <div className="section-container py-4">
-          <AdsterraBanner />
+          <InArticleAd />
         </div>
 
         {weeklyHot.length > 0 && (
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
         )}
 
-        {/* Adsterra banner after weekly hot */}
+        {/* Ad after weekly hot */}
         <div className="section-container py-4">
-          <AdsterraBanner />
+          <MultiplexAd />
         </div>
 
         {!loading && allStories.length === 0 && (
