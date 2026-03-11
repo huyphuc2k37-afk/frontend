@@ -23,7 +23,9 @@ interface ChapterListItem {
   wordCount: number;
   approvalStatus: string;
   rejectionReason: string | null;
+  reviewedBy: string | null;
   reviewedAt: string | null;
+  reviewerName: string | null;
   createdAt: string;
   story: {
     id: string;
@@ -42,7 +44,9 @@ interface ChapterDetail {
   authorNote: string | null;
   approvalStatus: string;
   rejectionReason: string | null;
+  reviewedBy: string | null;
   reviewedAt: string | null;
+  reviewerName: string | null;
   createdAt: string;
   story: {
     id: string;
@@ -384,6 +388,12 @@ export default function ModChaptersPage() {
                         {" • "}bởi <span className="font-medium text-gray-700">{ch.story.author.name}</span>
                         {" • "}{ch.wordCount} từ
                       </p>
+                      {ch.reviewerName && ch.reviewedAt && (
+                        <p className="mt-0.5 text-[11px] text-gray-400">
+                          Duyệt bởi <span className="font-medium text-indigo-600">{ch.reviewerName}</span>
+                          {" • "}{formatDate(ch.reviewedAt)}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       {statusBadge(ch.approvalStatus)}
@@ -444,6 +454,12 @@ export default function ModChaptersPage() {
                           {statusBadge(selectedChapter.approvalStatus)}
                           <span className="text-[11px] text-gray-400">{selectedChapter.wordCount} từ • {selectedChapter.story.genre}</span>
                         </div>
+                        {selectedChapter.reviewerName && (
+                          <p className="mt-1.5 text-[11px] text-gray-500">
+                            Duyệt bởi <span className="font-medium text-indigo-600">{selectedChapter.reviewerName}</span>
+                            {selectedChapter.reviewedAt && <> • {formatDate(selectedChapter.reviewedAt)}</>}
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => setSelectedChapter(null)}

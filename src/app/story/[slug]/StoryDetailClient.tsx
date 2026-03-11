@@ -34,6 +34,7 @@ interface Chapter {
   isLocked: boolean;
   price: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface StoryDetail {
@@ -550,9 +551,9 @@ export default function StoryDetailPage() {
                           {ch.isLocked && (
                             <span className="text-amber-600 font-medium">{ch.price} xu</span>
                           )}
-                          <span>{ch.wordCount.toLocaleString()} chữ</span>
-                          <span className="hidden sm:inline">
-                            {new Date(ch.createdAt).toLocaleDateString("vi-VN")}
+                          <span className="hidden sm:inline">{ch.wordCount.toLocaleString()} chữ</span>
+                          <span>
+                            {new Date(ch.updatedAt || ch.createdAt).toLocaleDateString("vi-VN")}
                           </span>
                         </div>
                       </Link>

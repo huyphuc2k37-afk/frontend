@@ -36,6 +36,7 @@ interface Story {
   rejectionReason: string | null;
   reviewedBy: string | null;
   reviewedAt: string | null;
+  reviewerName: string | null;
   createdAt: string;
   updatedAt: string;
   author: Author;
@@ -45,7 +46,7 @@ interface Story {
 interface StoryDetail extends Story {
   coverImage: string | null;
   targetAudience: string | null;
-  chapters: { id: string; title: string; number: number; wordCount: number; approvalStatus?: string; createdAt: string }[];
+  chapters: { id: string; title: string; number: number; wordCount: number; approvalStatus?: string; reviewedBy?: string | null; reviewedAt?: string | null; reviewerName?: string | null; createdAt: string }[];
   _count: { chapters: number; bookmarks: number; comments: number };
 }
 
@@ -348,6 +349,12 @@ export default function ModStoriesPage() {
                         {" • "}{story.genre}
                         {" • "}{story._count.chapters} chương
                       </p>
+                      {story.reviewerName && story.reviewedAt && (
+                        <p className="mt-0.5 text-[11px] text-gray-400">
+                          Duyệt bởi <span className="font-medium text-indigo-600">{story.reviewerName}</span>
+                          {" • "}{formatDate(story.reviewedAt)}
+                        </p>
+                      )}
                       {story.description && (
                         <p className="mt-1.5 line-clamp-2 text-[12px] text-gray-400">{story.description}</p>
                       )}
@@ -465,6 +472,18 @@ export default function ModStoriesPage() {
                         <p className="text-[11px] font-medium text-gray-400">Đối tượng</p>
                         <p className="mt-0.5 font-medium text-gray-700">{selectedStory.targetAudience || "—"}</p>
                       </div>
+                      {selectedStory.reviewerName && (
+                        <div>
+                          <p className="text-[11px] font-medium text-gray-400">Người duyệt</p>
+                          <p className="mt-0.5 font-medium text-indigo-600">{selectedStory.reviewerName}</p>
+                        </div>
+                      )}
+                      {selectedStory.reviewedAt && (
+                        <div>
+                          <p className="text-[11px] font-medium text-gray-400">Ngày duyệt</p>
+                          <p className="mt-0.5 font-medium text-gray-700">{formatDate(selectedStory.reviewedAt)}</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Description */}
@@ -508,6 +527,12 @@ export default function ModStoriesPage() {
                                 )}
                                 {ch.approvalStatus === "rejected" && (
                                   <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-700">Từ chối</span>
+                                )}
+                                {ch.reviewerName && (
+                                  <span className="text-[9px] text-indigo-500" title={ch.reviewedAt ? formatDate(ch.reviewedAt) : ''}>{ch.reviewerName}</span>
+                                )}
+                                {ch.reviewedAt && (
+                                  <span className="text-[9px] text-gray-400">{formatDate(ch.reviewedAt)}</span>
                                 )}
                                 <span className="text-[10px] text-gray-400">{ch.wordCount} từ</span>
                               </div>
