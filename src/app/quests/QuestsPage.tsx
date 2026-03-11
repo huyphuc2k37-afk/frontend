@@ -499,7 +499,7 @@ export default function QuestsPage() {
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
-                Tối đa nhận <strong>100 xu</strong> miễn phí mỗi ngày
+                Tối đa nhận <strong>{questData?.maxDaily ?? 50} xu</strong> miễn phí mỗi ngày
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
