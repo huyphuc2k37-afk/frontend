@@ -20,6 +20,7 @@ import Header from "@/components/Header";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
 import MultiplexAd from "@/components/ads/MultiplexAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiStory {
@@ -609,9 +610,9 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
         {/* ── CTA banner ── */}
         </>)}
 
-        {/* ── In-article ad before CTA ── */}
+        {/* ── Adsterra banner before CTA ── */}
         <div className="section-container py-4">
-          <InArticleAd />
+          <AdsterraBanner />
         </div>
 
         <section className="py-12">

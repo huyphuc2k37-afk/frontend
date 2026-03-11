@@ -26,6 +26,8 @@ import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
 import MultiplexAd from "@/components/ads/MultiplexAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -443,7 +445,7 @@ export default function ReadChapterPage() {
                       <div key={idx} className="group/para relative">
                         {showAdTop && adTopPosition === "before" && (
                           <div className="my-6">
-                            <InArticleAd key={`ad-top`} />
+                            <AdsterraBanner key={`ad-top`} />
                           </div>
                         )}
                         {showAdMid && (
@@ -480,7 +482,7 @@ export default function ReadChapterPage() {
                         </div>
                         {showAdTop && adTopPosition === "after" && (
                           <div className="my-6">
-                            <InArticleAd key={`ad-top-after`} />
+                            <AdsterraBanner key={`ad-top-after`} />
                           </div>
                         )}
                       </div>
@@ -490,7 +492,7 @@ export default function ReadChapterPage() {
 
                 {/* Ad 3: right after chapter content, before author note */}
                 <div className="mt-8">
-                  <InArticleAd />
+                  <AdsterraBanner />
                 </div>
 
                 {/* Author note */}
@@ -615,6 +617,9 @@ export default function ReadChapterPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Adsterra popunder — once per session */}
+      <AdsterraPopunder />
 
       {/* Paragraph comment drawer */}
       <ParagraphCommentDrawer

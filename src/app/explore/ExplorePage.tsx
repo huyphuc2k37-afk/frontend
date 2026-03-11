@@ -8,6 +8,7 @@ import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -141,9 +142,9 @@ export default function ExplorePage() {
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
         )}
 
-        {/* In-article ad after weekly hot */}
+        {/* Adsterra banner after weekly hot */}
         <div className="section-container py-4">
-          <InArticleAd />
+          <AdsterraBanner />
         </div>
 
         {!loading && allStories.length === 0 && (

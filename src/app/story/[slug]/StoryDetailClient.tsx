@@ -24,6 +24,7 @@ import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import InArticleAd from "@/components/ads/InArticleAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface Chapter {
@@ -507,9 +508,9 @@ export default function StoryDetailPage() {
                 )}
               </div>
 
-              {/* In-article ad between description and chapter list */}
+              {/* Adsterra banner between description and chapter list */}
               <div className="my-4">
-                <InArticleAd />
+                <AdsterraBanner />
               </div>
 
               {/* Chapter list */}
