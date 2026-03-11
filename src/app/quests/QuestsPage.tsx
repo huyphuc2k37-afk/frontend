@@ -152,12 +152,12 @@ export default function QuestsPage() {
     }
   };
 
-  // Disable "watch ad" quest in UI to avoid policy issues with AdSense.
-  const visibleQuests = questData?.quests.filter((q) => q.id !== "watchAd") ?? [];
+  const quests = questData?.quests ?? [];
 
-  const completedCount = visibleQuests.filter((q) => q.completed).length;
-  const totalQuests = visibleQuests.length;
+  const completedCount = quests.filter((q) => q.completed).length;
+  const totalQuests = quests.length;
   const allCompleted = completedCount === totalQuests && totalQuests > 0;
+  const overallPct = totalQuests > 0 ? (completedCount / totalQuests) * 100 : 0;
 
   // ── Loading state ──
   if (status === "loading" || loading) {
@@ -291,7 +291,7 @@ export default function QuestsPage() {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{
-                      width: `${(completedCount / totalQuests) * 100}%`,
+                      width: `${overallPct}%`,
                     }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className={`h-full rounded-full ${
@@ -307,7 +307,7 @@ export default function QuestsPage() {
 
           {/* ── Quest cards ── */}
           <div className="space-y-3">
-            {visibleQuests.map((quest, idx) => {
+            {quests.map((quest, idx) => {
               const meta = questMeta[quest.id] || questMeta.checkin;
               const Icon = meta.icon;
               const isCheckin = quest.id === "checkin";
