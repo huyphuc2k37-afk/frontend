@@ -22,8 +22,6 @@ import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIco
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
-import AdSenseSlot from "@/components/ads/AdSenseSlot";
-import InArticleAd from "@/components/ads/InArticleAd";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
@@ -693,7 +691,7 @@ export default function StoryDetailPage() {
 
               {/* Sidebar ad */}
               <div className="py-2">
-                <AdSenseSlot slot="1336707630" />
+                <AdsterraBanner />
               </div>
             </div>
           </div>

@@ -17,9 +17,6 @@ import {
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
-import AdSenseSlot from "@/components/ads/AdSenseSlot";
-import InArticleAd from "@/components/ads/InArticleAd";
-import MultiplexAd from "@/components/ads/MultiplexAd";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -505,7 +502,7 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
 
         {/* ── Ad: between hot & completed ── */}
         <div className="section-container py-4">
-          <AdSenseSlot slot="1336707630" />
+          <AdsterraBanner />
         </div>
 
         {/* ── Hoàn thành ── */}
@@ -642,9 +639,9 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
           </div>
         </section>
 
-        {/* ── Multiplex recommendation ad ── */}
+        {/* ── Adsterra recommendation ad ── */}
         <div className="section-container py-4">
-          <MultiplexAd />
+          <AdsterraBanner />
         </div>
       </main>
     </>
