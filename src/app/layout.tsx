@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
@@ -89,6 +90,17 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://backend-4nfb.onrender.com" />
         <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
+        {/* Auto-reload on chunk load failure (deploy cache mismatch) */}
+        <Script id="chunk-error-recovery" strategy="beforeInteractive">{`
+          window.addEventListener('error', function(e) {
+            if (e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1 || e.message.indexOf('Loading CSS chunk') !== -1)) {
+              if (!sessionStorage.getItem('chunk_reload')) {
+                sessionStorage.setItem('chunk_reload', '1');
+                window.location.reload();
+              }
+            }
+          });
+        `}</Script>
       </head>
       <body>
         <AuthProvider>

@@ -43,13 +43,13 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 30 },
       },
     },
-    // Cache static assets
+    // Cache static assets — StaleWhileRevalidate ensures new deploys work
     {
       urlPattern: /\/_next\/static\/.*/,
-      handler: "CacheFirst",
+      handler: "StaleWhileRevalidate",
       options: {
         cacheName: "static-cache",
-        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 365 },
+        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 30 },
       },
     },
   ],
