@@ -39,6 +39,7 @@ export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
+  const [activeTags, setActiveTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allStories, setAllStories] = useState<ApiStory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +52,16 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  // Read ?q= from URL on mount
+  // Read URL params on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const q = urlParams.get("q") || "";
-    if (q) setSearchQuery(q);
+    const genre = urlParams.get("genre") || "";
+    const tag = urlParams.get("tag") || "";
+    const search = urlParams.get("search") || "";
+    if (q || search) setSearchQuery(q || search);
+    if (genre) setActiveGenre(genre);
+    if (tag) setActiveTags(tag.split(",").filter(Boolean));
   }, []);
 
   useEffect(() => {
@@ -64,6 +70,7 @@ export default function ExplorePage() {
     if (activeCategory) params.set("category", activeCategory);
     if (activeGenre) params.set("genre", activeGenre);
     if (activeStatus !== "all") params.set("status", activeStatus);
+    if (activeTags.length > 0) params.set("tags", activeTags.join(","));
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
     setLoading(true);
@@ -74,7 +81,7 @@ export default function ExplorePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeCategory, activeGenre, activeStatus, searchQuery]);
+  }, [activeCategory, activeGenre, activeStatus, activeTags, searchQuery]);
 
   // Since backend already filters by genre/status, allStories IS the filtered result
   const featured = allStories.slice(0, 8);
@@ -116,6 +123,8 @@ export default function ExplorePage() {
           onGenreChange={setActiveGenre}
           activeStatus={activeStatus}
           onStatusChange={setActiveStatus}
+          activeTags={activeTags}
+          onTagsChange={setActiveTags}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />

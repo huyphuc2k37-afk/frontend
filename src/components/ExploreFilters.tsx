@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import type { Story } from "@/types";
 import { genreGroups } from "@/data/genres";
+import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
   id: string;
@@ -18,6 +19,14 @@ interface ApiCategory {
   icon: string;
   color: string;
   _count: { stories: number };
+}
+
+interface ApiTag {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  storyCount: number;
 }
 
 interface ExploreFiltersProps {
@@ -29,6 +38,8 @@ interface ExploreFiltersProps {
   onGenreChange: (genre: string | null) => void;
   activeStatus: string;
   onStatusChange: (status: string) => void;
+  activeTags: string[];
+  onTagsChange: (tags: string[]) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
 }
@@ -39,6 +50,20 @@ const statusOptions = [
   { value: "completed", label: "Hoàn thành" },
 ];
 
+// Tag type labels for UI grouping
+const tagTypeLabels: Record<string, string> = {
+  genre: "Thể loại chi tiết",
+  relation: "Tuyến tình cảm",
+  ending: "Kết thúc",
+  tone: "Phong cách",
+  perspective: "Góc nhìn",
+  content: "Nội dung",
+  form: "Hình thức",
+};
+
+// Display order for tag type groups
+const tagTypeOrder = ["genre", "relation", "ending", "tone", "perspective", "content", "form"];
+
 export default function ExploreFilters({
   stories,
   categories,
@@ -48,10 +73,23 @@ export default function ExploreFilters({
   onGenreChange,
   activeStatus,
   onStatusChange,
+  activeTags,
+  onTagsChange,
   searchQuery,
   onSearchChange,
 }: ExploreFiltersProps) {
   const [query, setQuery] = useState(searchQuery || "");
+  const [tagGroups, setTagGroups] = useState<Record<string, ApiTag[]>>({});
+
+  // Fetch tags from API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/tags`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.tags) setTagGroups(data.tags);
+      })
+      .catch(() => {});
+  }, []);
 
   // Sync controlled searchQuery prop
   useEffect(() => {
@@ -83,7 +121,8 @@ export default function ExploreFilters({
         (s) =>
           s.title.toLowerCase().includes(q) ||
           (s.author?.name || "").toLowerCase().includes(q) ||
-          s.genre.toLowerCase().includes(q),
+          s.genre.toLowerCase().includes(q) ||
+          (s.storyTagList || []).some((t) => t.name.toLowerCase().includes(q)),
       )
       .slice(0, 5);
   }, [query, stories]);
@@ -101,8 +140,16 @@ export default function ExploreFilters({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const toggleTag = (slug: string) => {
+    if (activeTags.includes(slug)) {
+      onTagsChange(activeTags.filter((t) => t !== slug));
+    } else {
+      onTagsChange([...activeTags, slug]);
+    }
+  };
+
   const activeFiltersCount =
-    (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + (activeStatus !== "all" ? 1 : 0);
+    (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + activeTags.length + (activeStatus !== "all" ? 1 : 0);
 
   return (
     <section className="py-6 sm:py-8" aria-label="Bộ lọc">
@@ -260,7 +307,7 @@ export default function ExploreFilters({
                   {/* Divider */}
                   <div className="my-4 border-t border-gray-100" />
 
-                  {/* Thể loại chi tiết */}
+                  {/* Thể loại chi tiết (genre from hardcoded list) */}
                   <div>
                     <div className="mb-3 flex items-center justify-between">
                       <span className="text-body-sm font-semibold text-gray-700">
@@ -308,6 +355,50 @@ export default function ExploreFilters({
 
                   {/* Divider */}
                   <div className="my-4 border-t border-gray-100" />
+
+                  {/* Tags from database (relation, ending, tone, etc.) */}
+                  {tagTypeOrder
+                    .filter((type) => type !== "genre" && tagGroups[type]?.length > 0)
+                    .map((type) => (
+                    <div key={type}>
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-body-sm font-semibold text-gray-700">
+                          {tagTypeLabels[type] || type}
+                        </span>
+                        {activeTags.some((s) => tagGroups[type]?.some((t) => t.slug === s)) && (
+                          <button
+                            onClick={() => {
+                              const typeSlugs = tagGroups[type]?.map((t) => t.slug) || [];
+                              onTagsChange(activeTags.filter((s) => !typeSlugs.includes(s)));
+                            }}
+                            className="text-caption font-medium text-primary-600 hover:text-primary-700"
+                          >
+                            Xóa
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tagGroups[type]!.map((tag) => (
+                          <button
+                            key={tag.slug}
+                            onClick={() => toggleTag(tag.slug)}
+                            className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                              activeTags.includes(tag.slug)
+                                ? "bg-primary-600 text-white shadow-md"
+                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                            }`}
+                            aria-pressed={activeTags.includes(tag.slug)}
+                          >
+                            {tag.name}
+                            {tag.storyCount > 0 && (
+                              <span className="ml-1 text-[10px] opacity-60">({tag.storyCount})</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="my-4 border-t border-gray-100" />
+                    </div>
+                  ))}
                   <div>
                     <span className="mb-3 block text-body-sm font-semibold text-gray-700">
                       Trạng thái
@@ -337,6 +428,7 @@ export default function ExploreFilters({
                         onClick={() => {
                           onCategoryChange(null);
                           onGenreChange(null);
+                          onTagsChange([]);
                           onStatusChange("all");
                         }}
                         className="text-body-sm font-medium text-red-500 hover:text-red-600"
@@ -378,6 +470,25 @@ export default function ExploreFilters({
                   </button>
                 </span>
               )}
+              {activeTags.map((slug) => {
+                const allTags = Object.values(tagGroups).flat();
+                const tag = allTags.find((t) => t.slug === slug);
+                return (
+                  <span
+                    key={slug}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700"
+                  >
+                    {tag?.name || slug}
+                    <button
+                      onClick={() => toggleTag(slug)}
+                      className="ml-0.5 hover:text-primary-900"
+                      aria-label={`Xóa lọc ${tag?.name || slug}`}
+                    >
+                      <XMarkIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </span>
+                );
+              })}
               {activeStatus !== "all" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-accent-100 px-3 py-1 text-caption font-medium text-accent-700">
                   {statusOptions.find((o) => o.value === activeStatus)?.label}

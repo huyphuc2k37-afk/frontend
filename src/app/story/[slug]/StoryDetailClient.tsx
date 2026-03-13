@@ -53,6 +53,8 @@ interface StoryDetail {
   author: { id: string; name: string; image: string | null; bio: string | null };
   chapters: Chapter[];
   _count: { bookmarks: number; comments: number; storyLikes: number };
+  storyTagList?: { id: string; name: string; slug: string; type: string }[];
+  category?: { id: string; name: string; slug: string } | null;
 }
 
 interface CommentData {
@@ -337,11 +339,61 @@ export default function StoryDetailPage() {
 
                 {/* Tags */}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {story.genre && story.genre.split(", ").filter(Boolean).map((g) => (
-                    <span key={g} className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200">
-                      {g}
-                    </span>
-                  ))}
+                  {/* Category link */}
+                  {story.category && (
+                    <Link
+                      href={`/the-loai/${story.category.slug}`}
+                      className="rounded-full bg-blue-600/30 px-3 py-1 text-caption font-medium text-blue-200 hover:bg-blue-600/50 transition-colors"
+                    >
+                      {story.category.name}
+                    </Link>
+                  )}
+                  {/* StoryTagList (new system) — clickable links */}
+                  {story.storyTagList && story.storyTagList.length > 0 ? (
+                    <>
+                      {story.storyTagList.filter((t) => t.type === "genre").map((tag) => (
+                        <Link
+                          key={tag.slug}
+                          href={`/tag/${tag.slug}`}
+                          className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200 hover:bg-primary-600/50 transition-colors"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                      {story.storyTagList.filter((t) => t.type !== "genre").map((tag) => (
+                        <Link
+                          key={tag.slug}
+                          href={`/tag/${tag.slug}`}
+                          className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300 hover:bg-gray-600/50 transition-colors"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {/* Fallback: legacy genre string */}
+                      {story.genre && story.genre.split(", ").filter(Boolean).map((g) => (
+                        <Link
+                          key={g}
+                          href={`/explore?genre=${encodeURIComponent(g)}`}
+                          className="rounded-full bg-primary-600/30 px-3 py-1 text-caption font-medium text-primary-200 hover:bg-primary-600/50 transition-colors"
+                        >
+                          {g}
+                        </Link>
+                      ))}
+                      {/* Fallback: legacy tags string */}
+                      {story.tags && story.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/explore?search=${encodeURIComponent(tag)}`}
+                          className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300 hover:bg-gray-600/50 transition-colors"
+                        >
+                          {tag}
+                        </Link>
+                      ))}
+                    </>
+                  )}
                   <span
                     className={`rounded-full px-3 py-1 text-caption font-medium ${
                       story.status === "completed"
@@ -351,14 +403,6 @@ export default function StoryDetailPage() {
                   >
                     {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
                   </span>
-                  {story.tags && story.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-gray-700/50 px-3 py-1 text-caption text-gray-300"
-                    >
-                      {tag}
-                    </span>
-                  ))}
                 </div>
 
                 {/* Actions */}
