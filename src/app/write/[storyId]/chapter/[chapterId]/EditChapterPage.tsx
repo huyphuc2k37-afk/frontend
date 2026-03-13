@@ -208,13 +208,13 @@ export default function EditChapterPage() {
       {/* Lock settings */}
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h3 className="mb-4 text-body-sm font-semibold text-gray-700">Cài đặt chương</h3>
-        {chapter.number <= 10 ? (
+        {chapter.number <= 20 ? (
           <div className="flex items-start gap-3 rounded-xl bg-blue-50 px-4 py-3">
             <InformationCircleIcon className="h-5 w-5 flex-shrink-0 text-blue-500 mt-0.5" />
             <div>
               <p className="text-body-sm font-medium text-blue-800">Chương miễn phí</p>
               <p className="text-caption text-blue-600">
-                Đây là chương {chapter.number}. 10 chương đầu tiên bắt buộc miễn phí để thu hút độc giả.
+                Đây là chương {chapter.number}. 20 chương đầu tiên bắt buộc miễn phí để thu hút độc giả.
               </p>
             </div>
           </div>

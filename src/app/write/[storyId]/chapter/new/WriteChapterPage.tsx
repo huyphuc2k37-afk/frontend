@@ -31,7 +31,7 @@ export default function WriteChapterPage() {
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   const nextNumber = chapterCount !== null ? chapterCount + 1 : null;
-  const canLock = nextNumber !== null && nextNumber > 10;
+  const canLock = nextNumber !== null && nextNumber > 20;
 
   // Fetch current chapter count
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function WriteChapterPage() {
               <p className="text-body-sm font-medium text-blue-800">Chương miễn phí</p>
               <p className="text-caption text-blue-600">
                 {nextNumber !== null
-                  ? `Đây là chương ${nextNumber}. 10 chương đầu tiên bắt buộc miễn phí để thu hút độc giả.`
+                  ? `Đây là chương ${nextNumber}. 20 chương đầu tiên bắt buộc miễn phí để thu hút độc giả.`
                   : "Đang tải thông tin..."}
               </p>
             </div>

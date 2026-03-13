@@ -256,7 +256,7 @@ export default function BulkChapterPage() {
     setChapters((prev) =>
       prev.map((ch, i) => {
         const chapterNumber = existingCount + i + 1;
-        if (chapterNumber <= 10) return { ...ch, isLocked: false, price: 0 };
+        if (chapterNumber <= 20) return { ...ch, isLocked: false, price: 0 };
         return { ...ch, isLocked: defaultLocked, price: defaultLocked ? defaultPrice : 0 };
       })
     );
@@ -501,7 +501,7 @@ export default function BulkChapterPage() {
                   onChange={(e) => setDefaultLocked(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-400"
                 />
-                <span className="text-body-sm text-gray-700">Khóa chương từ chương 11 trở đi</span>
+                <span className="text-body-sm text-gray-700">Khóa chương từ chương 21 trở đi</span>
               </label>
               {defaultLocked && (
                 <div className="flex items-center gap-2">
@@ -526,7 +526,7 @@ export default function BulkChapterPage() {
               </button>
             </div>
             <p className="mt-2 text-[11px] text-gray-400">
-              10 chương đầu tiên luôn miễn phí theo quy định.
+              20 chương đầu tiên luôn miễn phí theo quy định.
             </p>
           </div>
 
@@ -657,9 +657,9 @@ export default function BulkChapterPage() {
                             className="w-24 rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
                           />
                         )}
-                        {chapterNumber <= 10 && (
+                        {chapterNumber <= 20 && (
                           <span className="text-[11px] text-gray-400">
-                            (10 chương đầu miễn phí)
+                            (20 chương đầu miễn phí)
                           </span>
                         )}
                       </div>
