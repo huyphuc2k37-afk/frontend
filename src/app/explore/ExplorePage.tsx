@@ -6,8 +6,7 @@ import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
-import InArticleAd from "@/components/ads/InArticleAd";
-import MultiplexAd from "@/components/ads/MultiplexAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -142,8 +141,8 @@ export default function ExplorePage() {
         )}
 
         {/* Ad between sections */}
-        <div className="section-container py-4">
-          <InArticleAd />
+        <div className="section-container py-4 flex justify-center">
+          <AdsterraBanner />
         </div>
 
         {weeklyHot.length > 0 && (
@@ -151,8 +150,8 @@ export default function ExplorePage() {
         )}
 
         {/* Ad after weekly hot */}
-        <div className="section-container py-4">
-          <MultiplexAd />
+        <div className="section-container py-4 flex justify-center">
+          <AdsterraBanner />
         </div>
 
         {!loading && allStories.length === 0 && (

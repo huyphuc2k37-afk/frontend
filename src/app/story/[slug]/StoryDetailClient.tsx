@@ -22,8 +22,7 @@ import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIco
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
-import InArticleAd from "@/components/ads/InArticleAd";
-import MultiplexAd from "@/components/ads/MultiplexAd";
+import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface Chapter {
@@ -553,8 +552,8 @@ export default function StoryDetailPage() {
               </div>
 
               {/* Ad between description and chapter list */}
-              <div className="my-4">
-                <InArticleAd />
+              <div className="my-4 flex justify-center">
+                <AdsterraBanner />
               </div>
 
               {/* Chapter list */}
@@ -736,8 +735,8 @@ export default function StoryDetailPage() {
               </div>
 
               {/* Sidebar ad */}
-              <div className="py-2">
-                <MultiplexAd />
+              <div className="py-2 flex justify-center">
+                <AdsterraBanner />
               </div>
             </div>
           </div>

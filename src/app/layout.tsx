@@ -5,6 +5,8 @@ import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
+import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
+import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
@@ -15,8 +17,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 const SITE_URL = "https://vstory.vn";
 
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-5262734754559750";
+
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -94,14 +95,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
 
-        {/* AdSense loader */}
-        <Script
-          id="adsense-loader"
-          strategy="afterInteractive"
-          async
-          crossOrigin="anonymous"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-        />
+
 
         {/* Auto-reload on chunk load failure (deploy cache mismatch) */}
         <Script id="chunk-error-recovery" strategy="beforeInteractive">{`
@@ -168,6 +162,8 @@ export default function RootLayout({
             </ThemeProvider>
           </UserProfileProvider>
         </AuthProvider>
+        <AdsterraPopunder />
+        <AdsterraSocialBar />
       </body>
     </html>
   );
