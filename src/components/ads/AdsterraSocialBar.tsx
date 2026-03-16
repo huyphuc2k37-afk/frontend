@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Adsterra Social Bar — floating social-style ad.
@@ -8,9 +9,19 @@ import { useEffect, useRef } from "react";
  */
 export default function AdsterraSocialBar() {
   const loaded = useRef(false);
+  const pathname = usePathname();
+
+  const isEligibleRoute =
+    pathname === "/" ||
+    pathname === "/explore" ||
+    pathname === "/ranking" ||
+    pathname.startsWith("/story/") ||
+    pathname.startsWith("/the-loai/") ||
+    pathname.startsWith("/tag/") ||
+    pathname.startsWith("/author/");
 
   useEffect(() => {
-    if (loaded.current) return;
+    if (!isEligibleRoute || loaded.current) return;
     loaded.current = true;
 
     const script = document.createElement("script");
@@ -20,8 +31,9 @@ export default function AdsterraSocialBar() {
 
     return () => {
       try { document.body.removeChild(script); } catch {}
+      loaded.current = false;
     };
-  }, []);
+  }, [isEligibleRoute]);
 
   return null;
 }

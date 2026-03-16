@@ -750,16 +750,22 @@ export default function Header() {
         className="block w-full"
       >
         {/* Desktop banner */}
-        <img
+        <Image
           src="/banner-pc.png"
           alt="SnapClip"
-          className="hidden md:block w-full h-auto"
+          width={970}
+          height={90}
+          sizes="100vw"
+          className="hidden h-auto w-full md:block"
         />
         {/* Mobile banner */}
-        <img
+        <Image
           src="/banner-mobile.png"
           alt="SnapClip"
-          className="block md:hidden w-full h-auto"
+          width={300}
+          height={50}
+          sizes="100vw"
+          className="block h-auto w-full md:hidden"
         />
       </a>
     </>

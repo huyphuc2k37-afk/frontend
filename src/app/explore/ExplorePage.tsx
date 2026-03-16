@@ -149,11 +149,6 @@ export default function ExplorePage() {
           <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
         )}
 
-        {/* Ad after weekly hot */}
-        <div className="section-container py-4 flex justify-center">
-          <AdsterraBanner />
-        </div>
-
         {!loading && allStories.length === 0 && (
           <div className="section-container py-20 text-center">
             <p className="text-body-lg text-gray-400">

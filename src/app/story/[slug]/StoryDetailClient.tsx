@@ -735,7 +735,7 @@ export default function StoryDetailPage() {
               </div>
 
               {/* Sidebar ad */}
-              <div className="py-2 flex justify-center">
+              <div className="hidden py-2 lg:flex lg:justify-center">
                 <AdsterraBanner />
               </div>
             </div>

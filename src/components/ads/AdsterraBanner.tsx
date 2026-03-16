@@ -1,13 +1,33 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function AdsterraBanner({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (loaded.current || !containerRef.current) return;
+    const element = containerRef.current;
+    if (!element || isVisible) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible || loaded.current || !containerRef.current) return;
     loaded.current = true;
 
     const container = containerRef.current;
@@ -36,13 +56,13 @@ export default function AdsterraBanner({ className }: { className?: string }) {
       container.innerHTML = "";
       loaded.current = false;
     };
-  }, []);
+  }, [isVisible]);
 
   return (
     <div
       ref={containerRef}
-      className={`flex items-center justify-center overflow-hidden ${className || ""}`}
-      style={{ minHeight: 250, minWidth: 300 }}
+      className={`mx-auto flex w-full max-w-[300px] items-center justify-center overflow-hidden ${className || ""}`}
+      style={{ minHeight: 250 }}
     />
   );
 }

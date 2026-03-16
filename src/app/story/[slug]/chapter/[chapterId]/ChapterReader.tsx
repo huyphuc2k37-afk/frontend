@@ -433,18 +433,9 @@ export default function ReadChapterPage() {
                     // Ad 1: after first paragraph
                     const showAdTop = paragraphs.length >= 2 ? idx === 1 : idx === 0;
                     const adTopPosition = paragraphs.length >= 2 ? "before" : "after";
-                    // Ad 2: at midpoint of chapter
-                    const midpoint = Math.floor(paragraphs.length / 2);
-                    const showAdMid = paragraphs.length >= 4 && idx === midpoint;
-
                     return (
                       <div key={idx} className="group/para relative">
                         {showAdTop && adTopPosition === "before" && (
-                          <div className="my-6 flex justify-center">
-                            <AdsterraBanner />
-                          </div>
-                        )}
-                        {showAdMid && (
                           <div className="my-6 flex justify-center">
                             <AdsterraBanner />
                           </div>
@@ -484,11 +475,6 @@ export default function ReadChapterPage() {
                       </div>
                     );
                   })}
-                </div>
-
-                {/* Ad 3: right after chapter content, before author note */}
-                <div className="mt-8 flex justify-center">
-                  <AdsterraBanner />
                 </div>
 
                 {/* Author note */}
@@ -555,7 +541,7 @@ export default function ReadChapterPage() {
               </div>
             )}
 
-            {/* Ad 4: before comments */}
+            {/* Ad before comments */}
             <div className="mt-6 flex justify-center">
               <AdsterraBanner />
             </div>

@@ -639,10 +639,6 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
           </div>
         </section>
 
-        {/* ── Recommendation ad ── */}
-        <div className="section-container py-4 flex justify-center">
-          <AdsterraBanner />
-        </div>
       </main>
     </>
   );
