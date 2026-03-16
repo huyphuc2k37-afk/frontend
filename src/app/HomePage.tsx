@@ -191,8 +191,10 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
   const [activeTab, setActiveTab] = useState<Tab>("recent");
   const [allStories, setAllStories] = useState<ApiStory[]>(initialStories);
   const [featuredStories, setFeaturedStories] = useState<ApiStory[]>(initialFeaturedStories);
+  const [featuredActiveIndex, setFeaturedActiveIndex] = useState(0);
   const [loading, setLoading] = useState(initialStories.length === 0);
   const [fetchError, setFetchError] = useState(false);
+  const featuredScrollRef = useRef<HTMLDivElement>(null);
 
   // Real ranking data from /api/ranking
   const [rankingStories, setRankingStories] = useState<ApiStory[]>([]);
@@ -245,6 +247,42 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
       })
       .catch(() => {});
   }, [initialFeaturedStories.length]);
+
+  useEffect(() => {
+    setFeaturedActiveIndex(0);
+  }, [featuredStories.length]);
+
+  useEffect(() => {
+    const container = featuredScrollRef.current;
+    if (!container || featuredStories.length === 0) return;
+
+    const updateActiveCard = () => {
+      const cards = Array.from(container.querySelectorAll<HTMLElement>("[data-featured-card='true']"));
+      if (cards.length === 0) return;
+
+      const containerCenter = container.scrollLeft + container.clientWidth / 2;
+      let closestIndex = 0;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      cards.forEach((card, index) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(cardCenter - containerCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      setFeaturedActiveIndex(closestIndex);
+    };
+
+    updateActiveCard();
+    container.addEventListener("scroll", updateActiveCard, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", updateActiveCard);
+    };
+  }, [featuredStories]);
 
   // Fetch real ranking from dedicated API
   useEffect(() => {
@@ -358,7 +396,55 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
               <SparklesIcon className="h-5 w-5 text-amber-500" />
               <h2 className="text-heading-md font-bold text-gray-900">Nổi bật hôm nay</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="-mx-4 md:hidden">
+              <div
+                ref={featuredScrollRef}
+                className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[12vw] pb-4 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                style={{ perspective: "1200px" }}
+              >
+                {featuredStories.map((story, i) => {
+                  const distance = i - featuredActiveIndex;
+                  const absDistance = Math.abs(distance);
+                  const rotateY = distance * -14;
+                  const translateY = absDistance === 0 ? 0 : 12;
+                  const scale = absDistance === 0 ? 1 : absDistance === 1 ? 0.94 : 0.9;
+                  const opacity = absDistance <= 1 ? 1 : 0.72;
+
+                  return (
+                    <div
+                      key={story.id}
+                      data-featured-card="true"
+                      className="w-[72vw] max-w-[280px] min-w-[72vw] snap-center transition-all duration-300"
+                      style={{
+                        transform: `rotateY(${rotateY}deg) translateY(${translateY}px) scale(${scale})`,
+                        opacity,
+                        transformStyle: "preserve-3d",
+                      }}
+                    >
+                      <SimpleCard story={story} index={i} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-1 flex items-center justify-center gap-1.5">
+                {featuredStories.map((story, i) => (
+                  <button
+                    key={story.id}
+                    type="button"
+                    aria-label={`Chuyển đến truyện nổi bật ${i + 1}`}
+                    onClick={() => {
+                      const container = featuredScrollRef.current;
+                      const cards = container?.querySelectorAll<HTMLElement>("[data-featured-card='true']");
+                      cards?.[i]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                    }}
+                    className={`h-2 rounded-full transition-all ${featuredActiveIndex === i ? "w-6 bg-amber-500" : "w-2 bg-amber-200"}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden grid-cols-2 gap-4 md:grid md:grid-cols-3 lg:grid-cols-5">
               {featuredStories.map((story, i) => (
                 <SimpleCard key={story.id} story={story} index={i} />
               ))}
