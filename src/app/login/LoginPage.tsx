@@ -46,6 +46,7 @@ type AuthMode = "login" | "register" | "verify";
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const urlError = searchParams.get("error");
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -54,7 +55,11 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    urlError === "banned"
+      ? "Tài khoản đã bị chặn hoặc email không phải @gmail.com. Chỉ hỗ trợ đăng nhập bằng Google (@gmail.com)."
+      : null
+  );
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -374,27 +379,27 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* Switch to register */}
+              {/* Switch to register — Google only */}
               <p className="mt-6 text-center text-body-sm text-gray-500">
                 Chưa có tài khoản?{" "}
                 <button
-                  onClick={() => { setMode("register"); setError(null); setSuccess(null); }}
+                  onClick={handleGoogle}
                   className="font-semibold text-primary-600 hover:text-primary-700"
                 >
-                  Đăng ký ngay
+                  Đăng ký bằng Google
                 </button>
               </p>
             </div>
           )}
 
-          {/* ======= REGISTER MODE ======= */}
+          {/* ======= REGISTER MODE — Google only ======= */}
           {mode === "register" && (
             <div>
               <h1 className="text-center text-heading-lg font-bold text-gray-900">
                 Đăng ký
               </h1>
               <p className="mt-2 text-center text-body-md text-gray-500">
-                Tạo tài khoản VStory miễn phí
+                Tạo tài khoản VStory miễn phí bằng Google
               </p>
 
               {error && (
@@ -412,78 +417,9 @@ export default function LoginPage() {
                 Đăng ký bằng Google
               </button>
 
-              {/* Divider */}
-              <div className="my-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-gray-200" />
-                <span className="text-caption text-gray-400">hoặc đăng ký bằng email</span>
-                <div className="h-px flex-1 bg-gray-200" />
-              </div>
-
-              {/* Register form */}
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Tên hiển thị"
-                    required
-                    className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                  />
-                </div>
-
-                <div className="relative">
-                  <EnvelopeIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    required
-                    className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                  />
-                </div>
-
-                <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mật khẩu (tối thiểu 6 ký tự)"
-                    required
-                    className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-11 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Xác nhận mật khẩu"
-                    required
-                    className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 text-body-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded-xl bg-primary-500 px-6 py-3 text-body-md font-semibold text-white shadow-sm transition-all hover:bg-primary-600 disabled:opacity-60"
-                >
-                  {loading ? "Đang đăng ký..." : "Đăng ký"}
-                </button>
-              </form>
+              <p className="mt-4 text-center text-caption text-gray-400">
+                Chỉ hỗ trợ đăng ký bằng tài khoản Google (@gmail.com)
+              </p>
 
               {/* Switch to login */}
               <p className="mt-6 text-center text-body-sm text-gray-500">
