@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiTag {
@@ -202,6 +203,11 @@ export default function TagPageClient({
                 {stories.map((s) => (
                   <StoryCard key={s.id} story={s} />
                 ))}
+              </div>
+
+              {/* Ad after story grid */}
+              <div className="py-4">
+                <AdsterraNativeBanner />
               </div>
 
               {/* Pagination */}

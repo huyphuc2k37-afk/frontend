@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface RankedStory {
@@ -109,6 +110,11 @@ export default function RankingPage() {
             <div className="mt-6 space-y-3">
               {stories.map((story, index) => (
                 <div key={story.id}>
+                  {index === 10 && (
+                    <div className="py-3">
+                      <AdsterraNativeBanner />
+                    </div>
+                  )}
                   <Link
                     href={`/story/${story.slug}`}
                     className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
@@ -198,6 +204,11 @@ export default function RankingPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Ad after ranking list */}
+        <div className="section-container py-4">
+          <AdsterraNativeBanner />
         </div>
       </main>
       <Footer />

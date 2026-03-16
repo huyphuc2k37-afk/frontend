@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -175,6 +176,11 @@ export default function GenreLandingClient({
               </div>
             </section>
 
+            {/* Ad between sections */}
+            <div className="section-container py-4">
+              <AdsterraNativeBanner />
+            </div>
+
             {/* Hot */}
             {hotStories.length > 0 && (
               <section className="py-6">
@@ -217,6 +223,9 @@ export default function GenreLandingClient({
         )}
 
         {/* CTA */}
+        <div className="section-container py-4">
+          <AdsterraNativeBanner />
+        </div>
         <section className="py-8">
           <div className="section-container text-center">
             <Link
