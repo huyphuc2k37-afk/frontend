@@ -25,6 +25,7 @@ interface ApiStory {
   title: string;
   slug: string;
   description: string | null;
+  featuredSlot?: number | null;
   genre: string;
   status: string;
   views: number;
@@ -42,6 +43,14 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
   const coverUrl = story.coverUrl || fallbackUrl;
   const [coverSrc, setCoverSrc] = useState(coverUrl);
+  const primaryGenre = story.genre?.split(",")[0]?.trim() || "Đang cập nhật";
+  const chapterCount = story._count?.chapters || 0;
+  const statusLabel = story.status === "completed"
+    ? "Hoàn thành"
+    : story.status === "paused"
+    ? "Tạm ngưng"
+    : "Đang viết";
+
   return (
     <Link href={`/story/${story.slug}`} className="group block">
       <div>
@@ -65,9 +74,27 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
         <h3 className="mt-2.5 line-clamp-1 text-body-sm font-semibold text-gray-900 transition-colors group-hover:text-primary-600">
           {story.title}
         </h3>
-        <p className="mt-0.5 text-caption text-gray-500">
+        <p className="mt-0.5 line-clamp-1 text-caption text-gray-500">
           {story.author?.name}
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-700">
+            {primaryGenre}
+          </span>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${story.status === "completed" ? "bg-emerald-50 text-emerald-700" : story.status === "paused" ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"}`}>
+            {statusLabel}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
+          <span className="inline-flex items-center gap-1">
+            <EyeIcon className="h-3.5 w-3.5" />
+            {story.views >= 1000 ? `${(story.views / 1000).toFixed(1)}K` : story.views}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <BookOpenIcon className="h-3.5 w-3.5" />
+            {chapterCount} chương
+          </span>
+        </div>
       </div>
     </Link>
   );
@@ -160,9 +187,10 @@ const sortOptions = [
   { value: "likes", label: "Yêu thích" },
 ];
 
-export default function HomePage({ initialStories = [] }: { initialStories?: ApiStory[] }) {
+export default function HomePage({ initialStories = [], initialFeaturedStories = [] }: { initialStories?: ApiStory[]; initialFeaturedStories?: ApiStory[] }) {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
   const [allStories, setAllStories] = useState<ApiStory[]>(initialStories);
+  const [featuredStories, setFeaturedStories] = useState<ApiStory[]>(initialFeaturedStories);
   const [loading, setLoading] = useState(initialStories.length === 0);
   const [fetchError, setFetchError] = useState(false);
 
@@ -207,6 +235,16 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
     if (initialStories.length > 0) return;
     fetchStories();
   }, [fetchStories, initialStories.length]);
+
+  useEffect(() => {
+    if (initialFeaturedStories.length > 0) return;
+    fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data?.stories)) setFeaturedStories(data.stories);
+      })
+      .catch(() => {});
+  }, [initialFeaturedStories.length]);
 
   // Fetch real ranking from dedicated API
   useEffect(() => {
@@ -313,6 +351,25 @@ export default function HomePage({ initialStories = [] }: { initialStories?: Api
         )}
 
         {!loading && allStories.length > 0 && (<>
+        {featuredStories.length > 0 && (
+        <section className="border-b border-[#f0e6d0]/50 py-6">
+          <div className="section-container">
+            <div className="mb-5 flex items-center gap-2">
+              <SparklesIcon className="h-5 w-5 text-amber-500" />
+              <h2 className="text-heading-md font-bold text-gray-900">Nổi bật hôm nay</h2>
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                Admin chọn
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              {featuredStories.map((story, i) => (
+                <SimpleCard key={story.id} story={story} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+        )}
+
         {/* ── Tabs section ── */}
         <section className="border-b border-[#f0e6d0]/50">
           <div className="section-container">

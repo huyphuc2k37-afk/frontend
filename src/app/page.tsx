@@ -37,13 +37,23 @@ export const metadata: Metadata = {
 export default async function Page() {
   /* SSR: Fetch initial stories on the server for instant LCP + SEO visibility */
   let initialStories: any[] = [];
+  let initialFeaturedStories: any[] = [];
   try {
-    const res = await fetch(`${API_BASE_URL}/api/stories?limit=12`, {
-      next: { revalidate: 3600 }, // ISR: refresh every 1 hour
-    });
-    if (res.ok) {
-      const data = await res.json();
+    const [storiesRes, featuredRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/stories?limit=12`, {
+        next: { revalidate: 3600 },
+      }),
+      fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`, {
+        next: { revalidate: 3600 },
+      }),
+    ]);
+    if (storiesRes.ok) {
+      const data = await storiesRes.json();
       initialStories = data?.stories || [];
+    }
+    if (featuredRes.ok) {
+      const data = await featuredRes.json();
+      initialFeaturedStories = data?.stories || [];
     }
   } catch {
     // Fallback to empty — client will retry
@@ -134,7 +144,7 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd).replace(/</g, '\\u003c') }}
       />
 
-      <HomePage initialStories={initialStories} />
+      <HomePage initialStories={initialStories} initialFeaturedStories={initialFeaturedStories} />
 
       {/* ── SSR SEO content ── */}
       <section className="border-t border-gray-100 bg-gray-50/50 py-10">

@@ -15,6 +15,7 @@ import {
   DocumentDuplicateIcon,
   ClipboardDocumentIcon,
   CheckIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminChapter {
@@ -61,6 +62,8 @@ export default function AdminStoriesPage() {
   const [editCoverBase64, setEditCoverBase64] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editResult, setEditResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [featureSavingId, setFeatureSavingId] = useState<string | null>(null);
+  const [featureResult, setFeatureResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   const openEditModal = async (storyId: string) => {
     if (!token) return;
@@ -248,6 +251,29 @@ export default function AdminStoriesPage() {
     setSavingChapter(false);
   };
 
+  const updateFeaturedSlot = async (storyId: string, featuredSlot: number | null) => {
+    if (!token) return;
+    setFeatureSavingId(storyId);
+    setFeatureResult(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/stories/${storyId}/featured-slot`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ featuredSlot }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFeatureResult({ type: "error", msg: data.error || "Không thể cập nhật vị trí đầu trang" });
+      } else {
+        setFeatureResult({ type: "success", msg: data.message || "Đã cập nhật khu nổi bật" });
+        fetchStories();
+      }
+    } catch {
+      setFeatureResult({ type: "error", msg: "Lỗi kết nối" });
+    }
+    setFeatureSavingId(null);
+  };
+
   const deleteChapter = async (chapterId: string, title: string) => {
     if (!token) return;
     if (!confirm(`Xóa chương "${title}"? Hành động này không thể hoàn tác.`)) return;
@@ -315,6 +341,12 @@ export default function AdminStoriesPage() {
         </div>
       )}
 
+      {featureResult && (
+        <div className={`rounded-xl p-3 text-body-sm font-medium ${featureResult.type === "success" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700"}`}>
+          {featureResult.msg}
+        </div>
+      )}
+
       <div className="relative max-w-md">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
@@ -337,6 +369,7 @@ export default function AdminStoriesPage() {
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Truyện</th>
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Tác giả</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Thể loại</th>
+                  <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Đầu web</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Chương</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Lượt xem</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Ngày đăng</th>
@@ -352,6 +385,24 @@ export default function AdminStoriesPage() {
                       <td className="px-4 py-3 text-body-sm font-medium text-gray-900 max-w-[200px] truncate">{s.title}</td>
                       <td className="px-4 py-3 text-body-sm text-gray-500">{s.author?.name}</td>
                       <td className="px-4 py-3 text-body-sm text-center text-gray-600">{s.genre}</td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <SparklesIcon className={`h-4 w-4 ${s.featuredSlot ? "text-amber-500" : "text-gray-300"}`} />
+                          <select
+                            value={s.featuredSlot ?? ""}
+                            disabled={featureSavingId === s.id}
+                            onChange={(e) => updateFeaturedSlot(s.id, e.target.value ? Number(e.target.value) : null)}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-caption text-gray-600 focus:border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-200 disabled:opacity-50"
+                          >
+                            <option value="">Không</option>
+                            <option value="1">Top 1</option>
+                            <option value="2">Top 2</option>
+                            <option value="3">Top 3</option>
+                            <option value="4">Top 4</option>
+                            <option value="5">Top 5</option>
+                          </select>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-body-sm text-center text-gray-600">
                         <button
                           onClick={() => toggleChapters(s.id)}
@@ -410,7 +461,7 @@ export default function AdminStoriesPage() {
                     </tr>
                     {expandedStoryId === s.id && (
                       <tr key={`${s.id}-chapters`}>
-                        <td colSpan={9} className="bg-gray-50/50 px-4 py-0">
+                        <td colSpan={10} className="bg-gray-50/50 px-4 py-0">
                           {loadingChapters ? (
                             <div className="flex items-center justify-center py-6">
                               <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
