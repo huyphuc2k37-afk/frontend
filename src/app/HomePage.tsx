@@ -400,37 +400,56 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
               <SparklesIcon className="h-5 w-5 text-amber-500" />
               <h2 className="text-heading-md font-bold text-gray-900">Nổi bật hôm nay</h2>
             </div>
-            <div className="-mx-4 md:hidden">
+            <div className="-mx-4 md:hidden" style={{ perspective: "1200px" }}>
               <div
                 ref={featuredScrollRef}
-                className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[14vw] pb-4 pt-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex snap-x snap-mandatory overflow-x-auto pb-4 pt-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                style={{ paddingLeft: "calc(50% - 28vw)", paddingRight: "calc(50% - 28vw)" }}
               >
                 {featuredDisplayStories.map((story, i) => {
                   const distance = i - featuredActiveIndex;
                   const absDistance = Math.abs(distance);
-                  const scale = absDistance === 0 ? 1 : absDistance === 1 ? 0.88 : 0.76;
-                  const opacity = absDistance === 0 ? 1 : absDistance === 1 ? 0.52 : 0.2;
-                  const translateY = absDistance === 0 ? 0 : absDistance === 1 ? 18 : 28;
-                  const translateX = distance === 0 ? 0 : distance > 0 ? -10 : 10;
-                  const zIndex = featuredDisplayStories.length - absDistance;
+                  const scale = absDistance === 0 ? 1 : absDistance === 1 ? 0.82 : 0.7;
+                  const opacity = absDistance === 0 ? 1 : absDistance === 1 ? 0.7 : 0.4;
+                  const rotateY = distance === 0 ? 0 : distance > 0 ? -35 : 35;
+                  const translateX = distance === 0 ? 0 : distance > 0 ? -20 : 20;
+                  const translateZ = absDistance === 0 ? 0 : absDistance === 1 ? -80 : -150;
+                  const zIndex = 10 - absDistance;
 
                   return (
                     <div
                       key={story.id}
                       data-featured-card="true"
-                      className="w-[72vw] max-w-[280px] min-w-[72vw] snap-center"
-                      style={{ zIndex }}
+                      className="w-[56vw] max-w-[220px] min-w-[56vw] snap-center"
+                      style={{ zIndex, marginLeft: i === 0 ? 0 : "-2vw", marginRight: i === featuredDisplayStories.length - 1 ? 0 : "-2vw" }}
                     >
                       <div
                         className="transition-all duration-300 ease-out"
                         style={{
-                          transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`,
+                          transform: `perspective(1200px) rotateY(${rotateY}deg) translateX(${translateX}px) translateZ(${translateZ}px) scale(${scale})`,
                           opacity,
-                          filter: absDistance === 0 ? "none" : "saturate(0.88)",
-                          transformOrigin: "center center",
+                          filter: absDistance === 0 ? "none" : `brightness(0.85) saturate(0.8)`,
+                          transformOrigin: distance <= 0 ? "right center" : "left center",
                         }}
                       >
-                        <SimpleCard story={story} index={i} />
+                        <Link href={`/story/${story.slug}`} className="group block">
+                          <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-100 shadow-lg ring-1 ring-black/5">
+                            <Image
+                              src={story.coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
+                              alt={story.title}
+                              fill
+                              priority
+                              sizes="56vw"
+                              className="object-cover"
+                            />
+                            {absDistance === 0 && (
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-10">
+                                <h3 className="line-clamp-2 text-sm font-bold text-white drop-shadow-sm">{story.title}</h3>
+                                <p className="mt-0.5 line-clamp-1 text-xs text-white/80">{story.author?.name}</p>
+                              </div>
+                            )}
+                          </div>
+                        </Link>
                       </div>
                     </div>
                   );
