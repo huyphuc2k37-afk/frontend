@@ -358,6 +358,10 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
     () => rankingStories.length > 0 ? rankingStories : [...allStories].sort((a, b) => b.views - a.views),
     [rankingStories, allStories]
   );
+  const featuredDisplayStories = useMemo(() => {
+    if (featuredStories.length > 0) return featuredStories;
+    return hotStories.slice(0, 5);
+  }, [featuredStories, hotStories]);
   const completedStories = useMemo(() => allStories.filter((s) => s.status === "completed"), [allStories]);
 
   return (
@@ -389,7 +393,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
         )}
 
         {!loading && allStories.length > 0 && (<>
-        {featuredStories.length > 0 && (
+        {featuredDisplayStories.length > 0 && (
         <section className="border-b border-[#f0e6d0]/50 py-6">
           <div className="section-container">
             <div className="mb-5 flex items-center gap-2">
@@ -402,7 +406,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
                 className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[12vw] pb-4 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 style={{ perspective: "1200px" }}
               >
-                {featuredStories.map((story, i) => {
+                {featuredDisplayStories.map((story, i) => {
                   const distance = i - featuredActiveIndex;
                   const absDistance = Math.abs(distance);
                   const rotateY = distance * -14;
@@ -428,7 +432,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
               </div>
 
               <div className="mt-1 flex items-center justify-center gap-1.5">
-                {featuredStories.map((story, i) => (
+                {featuredDisplayStories.map((story, i) => (
                   <button
                     key={story.id}
                     type="button"
@@ -445,7 +449,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
             </div>
 
             <div className="hidden grid-cols-2 gap-4 md:grid md:grid-cols-3 lg:grid-cols-5">
-              {featuredStories.map((story, i) => (
+              {featuredDisplayStories.map((story, i) => (
                 <SimpleCard key={story.id} story={story} index={i} />
               ))}
             </div>
