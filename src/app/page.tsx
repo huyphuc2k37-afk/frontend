@@ -40,7 +40,7 @@ export default async function Page() {
   let initialFeaturedStories: any[] = [];
   try {
     const [storiesRes, featuredRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/stories?limit=12`, {
+      fetch(`${API_BASE_URL}/api/stories?limit=14`, {
         next: { revalidate: 3600 },
       }),
       fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`, {

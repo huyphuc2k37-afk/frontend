@@ -211,7 +211,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
     setFetchError(false);
     for (let i = 0; i < retries; i++) {
       try {
-        const r = await fetch(`${API_BASE_URL}/api/stories?limit=12`);
+        const r = await fetch(`${API_BASE_URL}/api/stories?limit=14`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
         if (data?.stories?.length) {
@@ -357,9 +357,6 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
             <div className="mb-5 flex items-center gap-2">
               <SparklesIcon className="h-5 w-5 text-amber-500" />
               <h2 className="text-heading-md font-bold text-gray-900">Nổi bật hôm nay</h2>
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                Admin chọn
-              </span>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {featuredStories.map((story, i) => (
