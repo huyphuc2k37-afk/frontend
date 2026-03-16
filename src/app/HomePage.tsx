@@ -403,29 +403,35 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
             <div className="-mx-4 md:hidden">
               <div
                 ref={featuredScrollRef}
-                className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[12vw] pb-4 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                style={{ perspective: "1200px" }}
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[14vw] pb-4 pt-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               >
                 {featuredDisplayStories.map((story, i) => {
                   const distance = i - featuredActiveIndex;
                   const absDistance = Math.abs(distance);
-                  const rotateY = distance * -14;
-                  const translateY = absDistance === 0 ? 0 : 12;
-                  const scale = absDistance === 0 ? 1 : absDistance === 1 ? 0.94 : 0.9;
-                  const opacity = absDistance <= 1 ? 1 : 0.72;
+                  const scale = absDistance === 0 ? 1 : absDistance === 1 ? 0.88 : 0.76;
+                  const opacity = absDistance === 0 ? 1 : absDistance === 1 ? 0.52 : 0.2;
+                  const translateY = absDistance === 0 ? 0 : absDistance === 1 ? 18 : 28;
+                  const translateX = distance === 0 ? 0 : distance > 0 ? -10 : 10;
+                  const zIndex = featuredDisplayStories.length - absDistance;
 
                   return (
                     <div
                       key={story.id}
                       data-featured-card="true"
-                      className="w-[72vw] max-w-[280px] min-w-[72vw] snap-center transition-all duration-300"
-                      style={{
-                        transform: `rotateY(${rotateY}deg) translateY(${translateY}px) scale(${scale})`,
-                        opacity,
-                        transformStyle: "preserve-3d",
-                      }}
+                      className="w-[72vw] max-w-[280px] min-w-[72vw] snap-center"
+                      style={{ zIndex }}
                     >
-                      <SimpleCard story={story} index={i} />
+                      <div
+                        className="transition-all duration-300 ease-out"
+                        style={{
+                          transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`,
+                          opacity,
+                          filter: absDistance === 0 ? "none" : "saturate(0.88)",
+                          transformOrigin: "center center",
+                        }}
+                      >
+                        <SimpleCard story={story} index={i} />
+                      </div>
                     </div>
                   );
                 })}
