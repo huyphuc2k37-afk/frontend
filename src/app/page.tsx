@@ -44,7 +44,7 @@ export default async function Page() {
         next: { revalidate: 3600 },
       }),
       fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`, {
-        next: { revalidate: 3600 },
+        next: { revalidate: 60 },
       }),
     ]);
     if (storiesRes.ok) {

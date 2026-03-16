@@ -37,6 +37,8 @@ interface Story {
   reviewedBy: string | null;
   reviewedAt: string | null;
   reviewerName: string | null;
+  hasCover: boolean;
+  coverApprovalStatus?: string | null;
   createdAt: string;
   updatedAt: string;
   author: Author;
@@ -45,6 +47,7 @@ interface Story {
 
 interface StoryDetail extends Story {
   coverImage: string | null;
+  coverRejectionReason?: string | null;
   targetAudience: string | null;
   chapters: { id: string; title: string; number: number; wordCount: number; approvalStatus?: string; reviewedBy?: string | null; reviewedAt?: string | null; reviewerName?: string | null; createdAt: string }[];
   _count: { chapters: number; bookmarks: number; comments: number };
@@ -272,6 +275,28 @@ export default function ModStoriesPage() {
     }
   };
 
+  const coverBadge = (hasCover: boolean, coverApprovalStatus?: string | null) => {
+    if (!hasCover) {
+      return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700"><PhotoIcon className="h-3 w-3" /> Chưa có bìa</span>;
+    }
+
+    if (coverApprovalStatus === "approved") {
+      return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700"><PhotoIcon className="h-3 w-3" /> Có bìa đã duyệt</span>;
+    }
+
+    if (coverApprovalStatus === "rejected") {
+      return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700"><PhotoIcon className="h-3 w-3" /> Có bìa bị từ chối</span>;
+    }
+
+    if (coverApprovalStatus === "pending") {
+      return <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700"><PhotoIcon className="h-3 w-3" /> Có bìa chờ duyệt</span>;
+    }
+
+    return <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700"><PhotoIcon className="h-3 w-3" /> Có bìa</span>;
+  };
+
+  const canApproveSelectedStory = Boolean(selectedStory?.hasCover);
+
   return (
     <div className="space-y-5">
       <div>
@@ -361,6 +386,7 @@ export default function ModStoriesPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       {statusBadge(story.approvalStatus)}
+                      {coverBadge(story.hasCover, story.coverApprovalStatus)}
                       <span className="text-[10px] text-gray-400">{formatDate(story.createdAt)}</span>
                     </div>
                   </div>
@@ -423,7 +449,10 @@ export default function ModStoriesPage() {
                         <p className="mt-1 text-body-sm text-gray-500">
                           bởi <span className="font-medium text-gray-700">{selectedStory.author.name}</span> ({selectedStory.author.email})
                         </p>
-                        <div className="mt-2">{statusBadge(selectedStory.approvalStatus)}</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {statusBadge(selectedStory.approvalStatus)}
+                          {coverBadge(selectedStory.hasCover, selectedStory.coverApprovalStatus)}
+                        </div>
                       </div>
                       <button
                         onClick={() => setSelectedStory(null)}
@@ -465,6 +494,14 @@ export default function ModStoriesPage() {
                         <p className="mt-0.5 font-medium text-gray-700">{selectedStory._count.bookmarks}</p>
                       </div>
                       <div>
+                        <p className="text-[11px] font-medium text-gray-400">Ảnh bìa</p>
+                        <p className="mt-0.5 font-medium text-gray-700">{selectedStory.hasCover ? "Đã tải lên" : "Chưa có ảnh bìa"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-medium text-gray-400">Trạng thái bìa</p>
+                        <div className="mt-1">{coverBadge(selectedStory.hasCover, selectedStory.coverApprovalStatus)}</div>
+                      </div>
+                      <div>
                         <p className="text-[11px] font-medium text-gray-400">Ngày tạo</p>
                         <p className="mt-0.5 font-medium text-gray-700">{formatDate(selectedStory.createdAt)}</p>
                       </div>
@@ -487,6 +524,31 @@ export default function ModStoriesPage() {
                     </div>
 
                     {/* Description */}
+                    <div>
+                      <p className="text-[11px] font-medium text-gray-400">Xem trước ảnh bìa</p>
+                      <div className="mt-1 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+                        {selectedStory.coverImage ? (
+                          <div className="relative aspect-[3/4] w-full max-w-[220px]">
+                            <Image
+                              src={selectedStory.coverImage}
+                              alt={selectedStory.title}
+                              fill
+                              sizes="220px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex aspect-[3/4] w-full max-w-[220px] items-center justify-center text-gray-400">
+                            <div className="flex flex-col items-center gap-2 text-center">
+                              <PhotoIcon className="h-8 w-8" />
+                              <span className="text-[12px] font-medium">Truyện này chưa có ảnh bìa</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {selectedStory.description && (
                       <div>
                         <p className="text-[11px] font-medium text-gray-400">Mô tả</p>
@@ -550,6 +612,20 @@ export default function ModStoriesPage() {
                       </div>
                     )}
 
+                    {!selectedStory.hasCover && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                        <p className="text-[11px] font-medium text-amber-700">Chưa đủ điều kiện duyệt</p>
+                        <p className="mt-1 text-body-sm text-amber-800">Truyện chưa có ảnh bìa. Theo quy định hiện tại, kiểm duyệt viên không thể duyệt truyện này cho tới khi tác giả hoặc quản trị viên bổ sung bìa.</p>
+                      </div>
+                    )}
+
+                    {selectedStory.coverApprovalStatus === "rejected" && selectedStory.coverRejectionReason && (
+                      <div className="rounded-xl border border-red-200 bg-red-50 p-3">
+                        <p className="text-[11px] font-medium text-red-500">Lý do từ chối ảnh bìa</p>
+                        <p className="mt-1 text-body-sm text-red-700">{selectedStory.coverRejectionReason}</p>
+                      </div>
+                    )}
+
                     {/* View on site + Edit */}
                     <div className="flex flex-wrap gap-2">
                       {selectedStory.approvalStatus === "approved" && (
@@ -578,8 +654,9 @@ export default function ModStoriesPage() {
                       <div className="flex gap-3 border-t border-gray-100 pt-4">
                         <button
                           onClick={approveStory}
-                          disabled={actionLoading}
+                          disabled={actionLoading || !canApproveSelectedStory}
                           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-body-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                          title={!canApproveSelectedStory ? "Truyện chưa có ảnh bìa nên chưa thể duyệt" : undefined}
                         >
                           <CheckCircleIcon className="h-4 w-4" />
                           Duyệt truyện
@@ -603,8 +680,9 @@ export default function ModStoriesPage() {
                           {selectedStory.approvalStatus !== "approved" && (
                             <button
                               onClick={approveStory}
-                              disabled={actionLoading}
+                              disabled={actionLoading || !canApproveSelectedStory}
                               className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-body-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                              title={!canApproveSelectedStory ? "Truyện chưa có ảnh bìa nên chưa thể duyệt" : undefined}
                             >
                               <CheckCircleIcon className="h-4 w-4" />
                               Duyệt

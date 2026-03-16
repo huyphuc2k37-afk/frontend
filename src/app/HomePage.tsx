@@ -239,14 +239,20 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
   }, [fetchStories, initialStories.length]);
 
   useEffect(() => {
-    if (initialFeaturedStories.length > 0) return;
-    fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`)
+    const controller = new AbortController();
+
+    fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data?.stories)) setFeaturedStories(data.stories);
       })
       .catch(() => {});
-  }, [initialFeaturedStories.length]);
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     setFeaturedActiveIndex(0);
