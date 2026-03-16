@@ -23,6 +23,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface Chapter {
@@ -552,8 +553,8 @@ export default function StoryDetailPage() {
               </div>
 
               {/* Ad between description and chapter list */}
-              <div className="my-4 flex justify-center">
-                <AdsterraBanner />
+              <div className="my-4">
+                <AdsterraNativeBanner />
               </div>
 
               {/* Chapter list */}
@@ -735,8 +736,8 @@ export default function StoryDetailPage() {
               </div>
 
               {/* Sidebar ad */}
-              <div className="hidden py-2 lg:flex lg:justify-center">
-                <AdsterraBanner />
+              <div className="hidden py-2 lg:block">
+                <AdsterraNativeBanner />
               </div>
             </div>
           </div>

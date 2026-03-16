@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-const POPUNDER_COOLDOWN_MS = 12 * 60 * 60 * 1000;
-const POPUNDER_DELAY_MS = 15000;
-const POPUNDER_MIN_SCROLL = 400;
+const POPUNDER_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+const POPUNDER_DELAY_MS = 10000;
+const POPUNDER_MIN_SCROLL = 300;
 
 /**
  * Adsterra Popunder — triggers once per session on user interaction.
@@ -15,10 +15,14 @@ export default function AdsterraPopunder() {
   const loaded = useRef(false);
   const pathname = usePathname();
 
+  // Popunder on all public pages for maximum CPM
   const isEligibleRoute =
     pathname === "/" ||
     pathname === "/explore" ||
-    pathname === "/ranking";
+    pathname === "/ranking" ||
+    pathname.startsWith("/story/") ||
+    pathname.startsWith("/the-loai/") ||
+    pathname.startsWith("/tag/");
 
   useEffect(() => {
     if (!isEligibleRoute || loaded.current) {

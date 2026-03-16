@@ -6,7 +6,7 @@ import ExploreFilters from "@/components/ExploreFilters";
 import Carousel from "@/components/Carousel";
 import SectionsGrid from "@/components/SectionsGrid";
 import Footer from "@/components/Footer";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -141,8 +141,8 @@ export default function ExplorePage() {
         )}
 
         {/* Ad between sections */}
-        <div className="section-container py-4 flex justify-center">
-          <AdsterraBanner />
+        <div className="section-container py-4">
+          <AdsterraNativeBanner />
         </div>
 
         {weeklyHot.length > 0 && (

@@ -10,8 +10,7 @@ import { usePathname } from "next/navigation";
 export default function AdsterraSocialBar() {
   const loaded = useRef(false);
   const pathname = usePathname();
-  const isChapterPage = pathname.startsWith("/story/") && pathname.includes("/chapter/");
-
+  // Social Bar on all public pages including chapter pages
   const isEligibleRoute =
     pathname === "/" ||
     pathname === "/explore" ||
@@ -22,7 +21,7 @@ export default function AdsterraSocialBar() {
     pathname.startsWith("/author/");
 
   useEffect(() => {
-    if (!isEligibleRoute || isChapterPage || loaded.current) return;
+    if (!isEligibleRoute || loaded.current) return;
     loaded.current = true;
 
     const script = document.createElement("script");
@@ -34,7 +33,7 @@ export default function AdsterraSocialBar() {
       try { document.body.removeChild(script); } catch {}
       loaded.current = false;
     };
-  }, [isChapterPage, isEligibleRoute]);
+  }, [isEligibleRoute]);
 
   return null;
 }
