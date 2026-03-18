@@ -87,6 +87,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className={jakarta.variable} suppressHydrationWarning>
       <head>
+        <meta name="monetag" content="b8c5921c362e5e8e2d904e2505cb35aa" />
         <meta name="theme-color" content="#667eea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
