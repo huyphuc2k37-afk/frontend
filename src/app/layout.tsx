@@ -154,6 +154,18 @@ export default function RootLayout({
             window.addEventListener('load', function() { sessionStorage.removeItem('chunk_reload'); });
           })();
         `}</Script>
+        <Script id="monetag-inpage-push" strategy="afterInteractive">{`
+          (function(s){
+            s.dataset.zone='10751275';
+            s.src='https://nap5k.com/tag.min.js';
+          })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+        `}</Script>
+        <Script id="monetag-vignette" strategy="afterInteractive">{`
+          (function(s){
+            s.dataset.zone='10751281';
+            s.src='https://izcle.com/vignette.min.js';
+          })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+        `}</Script>
       </head>
       <body>
         <AuthProvider>
