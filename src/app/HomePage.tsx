@@ -19,6 +19,7 @@ import {
 import Header from "@/components/Header";
 import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
+import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface ApiStory {
   id: string;
@@ -27,6 +28,11 @@ interface ApiStory {
   description: string | null;
   featuredSlot?: number | null;
   genre: string;
+  storyOrigin?: string;
+  originalTitle?: string | null;
+  originalAuthor?: string | null;
+  originalLanguage?: string | null;
+  translatorName?: string | null;
   status: string;
   views: number;
   likes: number;
@@ -45,6 +51,7 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
   const [coverSrc, setCoverSrc] = useState(coverUrl);
   const primaryGenre = story.genre?.split(",")[0]?.trim() || "Đang cập nhật";
   const chapterCount = story._count?.chapters || 0;
+  const translated = isTranslatedStory(story);
   const statusLabel = story.status === "completed"
     ? "Hoàn thành"
     : story.status === "paused"
@@ -70,6 +77,11 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
               Full
             </span>
           )}
+          {translated && (
+            <span className="absolute right-2 top-2 rounded-md bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              Dịch
+            </span>
+          )}
         </div>
         <h3 className="mt-2.5 line-clamp-1 text-body-sm font-semibold text-gray-900 transition-colors group-hover:text-primary-600">
           {story.title}
@@ -81,6 +93,11 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
           <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-700">
             {primaryGenre}
           </span>
+          {translated && (
+            <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
+              Truyện dịch
+            </span>
+          )}
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${story.status === "completed" ? "bg-emerald-50 text-emerald-700" : story.status === "paused" ? "bg-amber-50 text-amber-700" : "bg-sky-50 text-sky-700"}`}>
             {statusLabel}
           </span>
@@ -198,6 +215,7 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
 
   // Real ranking data from /api/ranking
   const [rankingStories, setRankingStories] = useState<ApiStory[]>([]);
+  const [translatedStories, setTranslatedStories] = useState<ApiStory[]>([]);
 
   // "Tất cả truyện" tab state
   const [allTabGenre, setAllTabGenre] = useState<string | null>(null);
@@ -296,6 +314,15 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) setRankingStories(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/stories?story_origin=translated&sort=updatedAt&limit=10`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data?.stories)) setTranslatedStories(data.stories);
       })
       .catch(() => {});
   }, []);
@@ -613,6 +640,9 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
         {/* ── Truyện hot carousel ── */}
         <div>
           <StoryCarousel title="Truyện Hot" stories={hotStories} icon={FireIcon} />
+          {translatedStories.length > 0 && (
+            <StoryCarousel title="Truyện dịch mới cập nhật" stories={translatedStories} icon={ClockIcon} />
+          )}
         </div>
 
         {/* ── Ad: between hot & completed ── */}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Story } from "@/types";
 import { API_BASE_URL } from "@/lib/api";
+import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface StoryCardProps {
   story: Story;
@@ -19,6 +20,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
   const coverUrl = story.coverUrl || fallbackUrl;
   const [coverSrc, setCoverSrc] = useState(coverUrl);
+  const translated = isTranslatedStory(story);
 
   return (
     <Link href={`/story/${story.slug}`} className="block">
@@ -37,6 +39,11 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setCoverSrc(PLACEHOLDER_COVER)}
           />
+          {translated && (
+            <span className="absolute right-2 top-2 rounded-md bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              Dịch
+            </span>
+          )}
 
           {/* Gradient overlay at bottom */}
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
@@ -66,6 +73,7 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
                   <span key={g} className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">{g}</span>
                 ))
             }
+            {translated && <span className="rounded-full bg-sky-50 px-2 py-0.5 text-sky-700">Truyện dịch</span>}
             <span>&middot;</span>
             <span>{story.views > 0 ? `${(story.views / 1000).toFixed(1)}K đọc` : "0 đọc"}</span>
             {story.status && (

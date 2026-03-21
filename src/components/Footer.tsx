@@ -3,6 +3,7 @@ import Link from "next/link";
 const footerLinks = {
   explore: [
     { label: "Khám phá truyện", href: "/explore" },
+    { label: "Truyện dịch", href: "/truyen-dich" },
     { label: "Bảng xếp hạng", href: "/ranking" },
     { label: "Thể loại truyện", href: "/the-loai" },
     { label: "Trở thành tác giả", href: "/author" },

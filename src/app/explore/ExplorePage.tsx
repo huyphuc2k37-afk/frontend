@@ -24,6 +24,11 @@ interface ApiStory {
   slug: string;
   description: string | null;
   genre: string;
+  storyOrigin?: string;
+  originalTitle?: string | null;
+  originalAuthor?: string | null;
+  originalLanguage?: string | null;
+  translatorName?: string | null;
   status: string;
   views: number;
   likes: number;
@@ -35,6 +40,7 @@ interface ApiStory {
 
 export default function ExplorePage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [activeOrigin, setActiveOrigin] = useState<string>("all");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string>("all");
@@ -57,15 +63,18 @@ export default function ExplorePage() {
     const q = urlParams.get("q") || "";
     const genre = urlParams.get("genre") || "";
     const tag = urlParams.get("tag") || "";
+    const origin = urlParams.get("origin") || "";
     const search = urlParams.get("search") || "";
     if (q || search) setSearchQuery(q || search);
     if (genre) setActiveGenre(genre);
     if (tag) setActiveTags(tag.split(",").filter(Boolean));
+    if (origin === "translated" || origin === "original") setActiveOrigin(origin);
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("limit", "40");
+    if (activeOrigin !== "all") params.set("story_origin", activeOrigin);
     if (activeCategory) params.set("category", activeCategory);
     if (activeGenre) params.set("genre", activeGenre);
     if (activeStatus !== "all") params.set("status", activeStatus);
@@ -80,7 +89,12 @@ export default function ExplorePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [activeCategory, activeGenre, activeStatus, activeTags, searchQuery]);
+  }, [activeOrigin, activeCategory, activeGenre, activeStatus, activeTags, searchQuery]);
+
+  const pageTitle = activeOrigin === "translated" ? "Khám phá truyện dịch" : "Khám phá truyện";
+  const pageDescription = activeOrigin === "translated"
+    ? "Tìm truyện dịch theo thể loại, xuất xứ, hashtag và trạng thái cập nhật."
+    : "Tìm câu chuyện yêu thích của bạn trong hàng nghìn tựa truyện.";
 
   // Since backend already filters by genre/status, allStories IS the filtered result
   const featured = allStories.slice(0, 8);
@@ -104,10 +118,10 @@ export default function ExplorePage() {
         <section className="pb-4 pt-8 sm:pt-12">
           <div className="section-container">
             <h1 className="text-display-sm text-gray-900 sm:text-display-md">
-              Khám phá truyện
+              {pageTitle}
             </h1>
             <p className="mt-2 text-body-lg text-gray-500">
-              Tìm câu chuyện yêu thích của bạn trong hàng nghìn tựa truyện.
+              {pageDescription}
             </p>
           </div>
         </section>
@@ -116,6 +130,8 @@ export default function ExplorePage() {
         <ExploreFilters
           stories={allStories}
           categories={categories}
+          activeOrigin={activeOrigin}
+          onOriginChange={setActiveOrigin}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
           activeGenre={activeGenre}

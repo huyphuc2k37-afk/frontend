@@ -20,6 +20,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { API_BASE_URL } from "@/lib/api";
 import { genreGroups } from "@/data/genres";
+import { STORY_ORIGIN_OPTIONS } from "@/lib/storyOrigin";
 
 /* ────── Constants ────── */
 
@@ -40,6 +41,7 @@ interface ApiTag {
 
 const TAG_TYPE_LABELS: Record<string, string> = {
   genre: "Thể loại",
+  origin: "Xuất xứ",
   setting: "Bối cảnh",
   tone: "Phong cách",
   relation: "Quan hệ",
@@ -107,6 +109,14 @@ export default function CreateStoryPage() {
   const [genres, setGenres] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeTagCat, setActiveTagCat] = useState("genre");
+  const [storyOrigin, setStoryOrigin] = useState<"original" | "translated">("original");
+  const [originalTitle, setOriginalTitle] = useState("");
+  const [originalAuthor, setOriginalAuthor] = useState("");
+  const [originalLanguage, setOriginalLanguage] = useState("");
+  const [translatorName, setTranslatorName] = useState("");
+  const [translationGroup, setTranslationGroup] = useState("");
+  const [sourceName, setSourceName] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
   // API-driven categories & tags
   const [apiCategories, setApiCategories] = useState<ApiCategory[]>([]);
   const [apiTags, setApiTags] = useState<ApiTag[]>([]);
@@ -211,9 +221,11 @@ export default function CreateStoryPage() {
     if (!title.trim()) e.title = "Vui lòng nhập tên truyện";
     if (!description.trim()) e.description = "Vui lòng nhập giới thiệu";
     if (genres.length === 0) e.genre = "Vui lòng chọn ít nhất 1 thể loại";
+    if (storyOrigin === "translated" && !originalTitle.trim()) e.originalTitle = "Truyện dịch cần có tên gốc";
+    if (storyOrigin === "translated" && !originalLanguage.trim()) e.originalLanguage = "Truyện dịch cần có ngôn ngữ gốc";
     setErrors(e);
     return Object.keys(e).length === 0;
-  }, [title, description, genres]);
+  }, [title, description, genres, storyOrigin, originalTitle, originalLanguage]);
 
   const generateSlug = (text: string) =>
     text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -231,6 +243,14 @@ export default function CreateStoryPage() {
 
     const body = {
       title, slug, description, genre: genres.join(", "),
+      storyOrigin,
+      originalTitle: storyOrigin === "translated" ? originalTitle || undefined : undefined,
+      originalAuthor: storyOrigin === "translated" ? originalAuthor || undefined : undefined,
+      originalLanguage: storyOrigin === "translated" ? originalLanguage || undefined : undefined,
+      translatorName: storyOrigin === "translated" ? translatorName || undefined : undefined,
+      translationGroup: storyOrigin === "translated" ? translationGroup || undefined : undefined,
+      sourceName: storyOrigin === "translated" ? sourceName || undefined : undefined,
+      sourceUrl: storyOrigin === "translated" ? sourceUrl || undefined : undefined,
       categoryId: selectedCategoryId || undefined,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       coverImage: coverImage || undefined,
@@ -426,6 +446,64 @@ export default function CreateStoryPage() {
                           {errors.description && <p className="mt-1 text-caption text-red-500">{errors.description}</p>}
                         </div>
                       </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-white p-6 shadow-card">
+                      <div className="mb-3 flex items-center justify-between">
+                        <label className="text-body-sm font-semibold text-gray-700">Nguồn truyện</label>
+                        <span className="text-caption text-gray-400">Bắt buộc với truyện dịch</span>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {STORY_ORIGIN_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setStoryOrigin(option.value)}
+                            className={`rounded-2xl border px-4 py-4 text-left transition-all ${
+                              storyOrigin === option.value
+                                ? "border-primary-400 bg-primary-50 shadow-sm"
+                                : "border-gray-200 bg-white hover:border-gray-300"
+                            }`}
+                          >
+                            <p className="text-body-sm font-semibold text-gray-800">{option.label}</p>
+                            <p className="mt-1 text-caption text-gray-500">{option.description}</p>
+                          </button>
+                        ))}
+                      </div>
+
+                      {storyOrigin === "translated" && (
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Tên gốc <span className="text-red-500">*</span></label>
+                            <input value={originalTitle} onChange={(e) => setOriginalTitle(e.target.value)} className={`w-full rounded-xl border px-4 py-3 text-body-md focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${errors.originalTitle ? "border-red-400" : "border-gray-300 focus:border-primary-500"}`} />
+                            {errors.originalTitle && <p className="mt-1 text-caption text-red-500">{errors.originalTitle}</p>}
+                          </div>
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Ngôn ngữ gốc <span className="text-red-500">*</span></label>
+                            <input value={originalLanguage} onChange={(e) => setOriginalLanguage(e.target.value)} placeholder="Trung, Hàn, Nhật, Anh..." className={`w-full rounded-xl border px-4 py-3 text-body-md focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${errors.originalLanguage ? "border-red-400" : "border-gray-300 focus:border-primary-500"}`} />
+                            {errors.originalLanguage && <p className="mt-1 text-caption text-red-500">{errors.originalLanguage}</p>}
+                          </div>
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Tác giả gốc</label>
+                            <input value={originalAuthor} onChange={(e) => setOriginalAuthor(e.target.value)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-body-md focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Người dịch</label>
+                            <input value={translatorName} onChange={(e) => setTranslatorName(e.target.value)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-body-md focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Nhóm dịch</label>
+                            <input value={translationGroup} onChange={(e) => setTranslationGroup(e.target.value)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-body-md focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                          </div>
+                          <div>
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Tên nguồn</label>
+                            <input value={sourceName} onChange={(e) => setSourceName(e.target.value)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-body-md focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="mb-1.5 block text-body-sm font-semibold text-gray-700">Link nguồn</label>
+                            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." className="w-full rounded-xl border border-gray-300 px-4 py-3 text-body-md focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20" />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Category */}

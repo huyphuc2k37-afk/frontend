@@ -24,6 +24,7 @@ import {
 import { useStudio } from "@/components/StudioLayout";
 import { API_BASE_URL } from "@/lib/api";
 import { genreGroups } from "@/data/genres";
+import { STORY_ORIGIN_OPTIONS, isTranslatedStory } from "@/lib/storyOrigin";
 
 interface Chapter {
   id: string;
@@ -55,6 +56,7 @@ interface ApiTag {
 
 const TAG_TYPE_LABELS: Record<string, string> = {
   genre: "Thể loại",
+  origin: "Xuất xứ",
   setting: "Bối cảnh",
   tone: "Phong cách",
   relation: "Quan hệ",
@@ -72,6 +74,14 @@ interface StoryDetail {
   description: string;
   genre: string;
   tags: string | null;
+  storyOrigin?: string;
+  originalTitle?: string | null;
+  originalAuthor?: string | null;
+  originalLanguage?: string | null;
+  translatorName?: string | null;
+  translationGroup?: string | null;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
   categoryId: string | null;
   category: { id: string; name: string; slug: string } | null;
   storyTagList: ApiTag[];
@@ -104,6 +114,14 @@ export default function StoryDetailPage() {
   const [coverChanged, setCoverChanged] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [editGenres, setEditGenres] = useState<string[]>([]);
+  const [editStoryOrigin, setEditStoryOrigin] = useState<"original" | "translated">("original");
+  const [editOriginalTitle, setEditOriginalTitle] = useState("");
+  const [editOriginalAuthor, setEditOriginalAuthor] = useState("");
+  const [editOriginalLanguage, setEditOriginalLanguage] = useState("");
+  const [editTranslatorName, setEditTranslatorName] = useState("");
+  const [editTranslationGroup, setEditTranslationGroup] = useState("");
+  const [editSourceName, setEditSourceName] = useState("");
+  const [editSourceUrl, setEditSourceUrl] = useState("");
   const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [editTagIds, setEditTagIds] = useState<string[]>([]);
   const [activeTagType, setActiveTagType] = useState("genre");
@@ -131,6 +149,14 @@ export default function StoryDetailPage() {
         setEditCoverImage(data.coverImage || null);
         setCoverChanged(false);
         setEditGenres(data.genre ? data.genre.split(", ").map((g: string) => g.trim()).filter(Boolean) : []);
+        setEditStoryOrigin(data.storyOrigin === "translated" ? "translated" : "original");
+        setEditOriginalTitle(data.originalTitle || "");
+        setEditOriginalAuthor(data.originalAuthor || "");
+        setEditOriginalLanguage(data.originalLanguage || "");
+        setEditTranslatorName(data.translatorName || "");
+        setEditTranslationGroup(data.translationGroup || "");
+        setEditSourceName(data.sourceName || "");
+        setEditSourceUrl(data.sourceUrl || "");
         setEditCategoryId(data.categoryId || "");
         setEditTagIds((data.storyTagList || []).map((t: ApiTag) => t.id));
         setLoading(false);
@@ -192,6 +218,14 @@ export default function StoryDetailPage() {
           status: editStatus,
           ...(coverChanged ? { coverImage: editCoverImage } : {}),
           genre: editGenres.join(", "),
+          storyOrigin: editStoryOrigin,
+          originalTitle: editStoryOrigin === "translated" ? editOriginalTitle : null,
+          originalAuthor: editStoryOrigin === "translated" ? editOriginalAuthor : null,
+          originalLanguage: editStoryOrigin === "translated" ? editOriginalLanguage : null,
+          translatorName: editStoryOrigin === "translated" ? editTranslatorName : null,
+          translationGroup: editStoryOrigin === "translated" ? editTranslationGroup : null,
+          sourceName: editStoryOrigin === "translated" ? editSourceName : null,
+          sourceUrl: editStoryOrigin === "translated" ? editSourceUrl : null,
           categoryId: editCategoryId || null,
           tagIds: editTagIds,
         }),
@@ -322,6 +356,14 @@ export default function StoryDetailPage() {
                     setEditCoverImage(story.coverImage || null);
                     setCoverChanged(false);
                     setEditGenres(story.genre ? story.genre.split(", ").map((g) => g.trim()).filter(Boolean) : []);
+                    setEditStoryOrigin(story.storyOrigin === "translated" ? "translated" : "original");
+                    setEditOriginalTitle(story.originalTitle || "");
+                    setEditOriginalAuthor(story.originalAuthor || "");
+                    setEditOriginalLanguage(story.originalLanguage || "");
+                    setEditTranslatorName(story.translatorName || "");
+                    setEditTranslationGroup(story.translationGroup || "");
+                    setEditSourceName(story.sourceName || "");
+                    setEditSourceUrl(story.sourceUrl || "");
                     setEditCategoryId(story.categoryId || "");
                     setEditTagIds((story.storyTagList || []).map((t) => t.id));
                     setCoverError(null);
@@ -420,6 +462,60 @@ export default function StoryDetailPage() {
                 <option value="paused">Tạm ngưng</option>
               </select>
             </div>
+
+            <div>
+              <label className="mb-2 block text-caption font-medium text-gray-700">Nguồn truyện</label>
+              <div className="grid gap-2 md:grid-cols-2">
+                {STORY_ORIGIN_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setEditStoryOrigin(option.value)}
+                    className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                      editStoryOrigin === option.value
+                        ? "border-primary-400 bg-primary-50"
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <p className="text-body-sm font-semibold text-gray-800">{option.label}</p>
+                    <p className="mt-1 text-[11px] text-gray-500">{option.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {editStoryOrigin === "translated" && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Tên gốc</label>
+                  <input value={editOriginalTitle} onChange={(e) => setEditOriginalTitle(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Ngôn ngữ gốc</label>
+                  <input value={editOriginalLanguage} onChange={(e) => setEditOriginalLanguage(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Tác giả gốc</label>
+                  <input value={editOriginalAuthor} onChange={(e) => setEditOriginalAuthor(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Người dịch</label>
+                  <input value={editTranslatorName} onChange={(e) => setEditTranslatorName(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Nhóm dịch</label>
+                  <input value={editTranslationGroup} onChange={(e) => setEditTranslationGroup(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Tên nguồn</label>
+                  <input value={editSourceName} onChange={(e) => setEditSourceName(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-caption font-medium text-gray-700">Link nguồn</label>
+                  <input value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                </div>
+              </div>
+            )}
 
             {/* Category */}
             <div>
@@ -542,6 +638,11 @@ export default function StoryDetailPage() {
             ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
+              {isTranslatedStory(story) && (
+                <span className="rounded-md bg-sky-50 px-2.5 py-1 text-caption font-medium text-sky-700">
+                  Truyện dịch
+                </span>
+              )}
               {story.category && (
                 <span className="rounded-md bg-primary-50 px-2.5 py-1 text-caption font-medium text-primary-700">
                   {story.category.name}
@@ -571,6 +672,17 @@ export default function StoryDetailPage() {
                     {tag.name}
                   </span>
                 ))}
+              </div>
+            )}
+            {isTranslatedStory(story) && (
+              <div className="grid gap-2 rounded-xl border border-sky-100 bg-sky-50/60 p-4 text-body-sm text-gray-700 sm:grid-cols-2">
+                <p><strong>Tên gốc:</strong> {story.originalTitle || "Chưa cập nhật"}</p>
+                <p><strong>Ngôn ngữ gốc:</strong> {story.originalLanguage || "Chưa cập nhật"}</p>
+                {story.originalAuthor && <p><strong>Tác giả gốc:</strong> {story.originalAuthor}</p>}
+                {story.translatorName && <p><strong>Người dịch:</strong> {story.translatorName}</p>}
+                {story.translationGroup && <p><strong>Nhóm dịch:</strong> {story.translationGroup}</p>}
+                {story.sourceName && <p><strong>Nguồn:</strong> {story.sourceName}</p>}
+                {story.sourceUrl && <p className="sm:col-span-2"><strong>Link nguồn:</strong> <a href={story.sourceUrl} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">{story.sourceUrl}</a></p>}
               </div>
             )}
             <p className="text-body-sm text-gray-600 leading-relaxed">{story.description}</p>

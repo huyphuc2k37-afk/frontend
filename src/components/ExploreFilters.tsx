@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Story } from "@/types";
 import { genreGroups } from "@/data/genres";
 import { API_BASE_URL } from "@/lib/api";
+import { STORY_ORIGIN_OPTIONS, getStoryOriginLabel } from "@/lib/storyOrigin";
 
 interface ApiCategory {
   id: string;
@@ -32,6 +33,8 @@ interface ApiTag {
 interface ExploreFiltersProps {
   stories: Story[];
   categories: ApiCategory[];
+  activeOrigin: string;
+  onOriginChange: (origin: string) => void;
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
   activeGenre: string | null;
@@ -53,6 +56,7 @@ const statusOptions = [
 // Tag type labels for UI grouping
 const tagTypeLabels: Record<string, string> = {
   genre: "Thể loại chi tiết",
+  origin: "Xuất xứ",
   relation: "Tuyến tình cảm",
   ending: "Kết thúc",
   tone: "Phong cách",
@@ -62,11 +66,13 @@ const tagTypeLabels: Record<string, string> = {
 };
 
 // Display order for tag type groups
-const tagTypeOrder = ["genre", "relation", "ending", "tone", "perspective", "content", "form"];
+const tagTypeOrder = ["genre", "origin", "relation", "ending", "tone", "perspective", "content", "form"];
 
 export default function ExploreFilters({
   stories,
   categories,
+  activeOrigin,
+  onOriginChange,
   activeCategory,
   onCategoryChange,
   activeGenre,
@@ -149,7 +155,7 @@ export default function ExploreFilters({
   };
 
   const activeFiltersCount =
-    (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + activeTags.length + (activeStatus !== "all" ? 1 : 0);
+    (activeOrigin !== "all" ? 1 : 0) + (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + activeTags.length + (activeStatus !== "all" ? 1 : 0);
 
   return (
     <section className="py-6 sm:py-8" aria-label="Bộ lọc">
@@ -267,6 +273,49 @@ export default function ExploreFilters({
                 className="overflow-hidden"
               >
                 <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-card sm:p-5">
+                  <div>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-body-sm font-semibold text-gray-700">
+                        Loại truyện
+                      </span>
+                      {activeOrigin !== "all" && (
+                        <button
+                          onClick={() => onOriginChange("all")}
+                          className="text-caption font-medium text-primary-600 hover:text-primary-700"
+                        >
+                          Xóa bộ lọc
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => onOriginChange("all")}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                          activeOrigin === "all"
+                            ? "bg-primary-600 text-white shadow-md"
+                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        Tất cả
+                      </button>
+                      {STORY_ORIGIN_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => onOriginChange(option.value)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                            activeOrigin === option.value
+                              ? "bg-primary-600 text-white shadow-md"
+                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="my-4 border-t border-gray-100" />
+
                   {/* Thể loại */}
                   <div>
                     <div className="mb-3 flex items-center justify-between">
@@ -426,6 +475,7 @@ export default function ExploreFilters({
                     <div className="mt-4 border-t border-gray-100 pt-4">
                       <button
                         onClick={() => {
+                          onOriginChange("all");
                           onCategoryChange(null);
                           onGenreChange(null);
                           onTagsChange([]);
@@ -446,6 +496,18 @@ export default function ExploreFilters({
           {!showFilters && activeFiltersCount > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="text-caption text-gray-400">Đang lọc:</span>
+              {activeOrigin !== "all" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
+                  {getStoryOriginLabel(activeOrigin)}
+                  <button
+                    onClick={() => onOriginChange("all")}
+                    className="ml-0.5 hover:text-primary-900"
+                    aria-label={`Xóa lọc ${activeOrigin}`}
+                  >
+                    <XMarkIcon className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              )}
               {activeCategory && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
                   {categories.find((c) => c.slug === activeCategory)?.name || activeCategory}

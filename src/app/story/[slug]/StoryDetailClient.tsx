@@ -25,6 +25,7 @@ import CommentSection from "@/components/CommentSection";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL, authFetch } from "@/lib/api";
+import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface Chapter {
   id: string;
@@ -45,6 +46,14 @@ interface StoryDetail {
   description: string;
   genre: string;
   tags: string | null;
+  storyOrigin?: string;
+  originalTitle?: string | null;
+  originalAuthor?: string | null;
+  originalLanguage?: string | null;
+  translatorName?: string | null;
+  translationGroup?: string | null;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
   status: string;
   views: number;
   likes: number;
@@ -84,6 +93,7 @@ export default function StoryDetailPage() {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
+  const translated = isTranslatedStory(story || {});
 
   // Close share menu when clicking outside
   useEffect(() => {
@@ -394,6 +404,14 @@ export default function StoryDetailPage() {
                       ))}
                     </>
                   )}
+                  {translated && (
+                    <Link
+                      href="/truyen-dich"
+                      className="rounded-full bg-sky-600/30 px-3 py-1 text-caption font-medium text-sky-200 hover:bg-sky-600/50 transition-colors"
+                    >
+                      Truyện dịch
+                    </Link>
+                  )}
                   <span
                     className={`rounded-full px-3 py-1 text-caption font-medium ${
                       story.status === "completed"
@@ -404,6 +422,49 @@ export default function StoryDetailPage() {
                     {story.status === "completed" ? "Hoàn thành" : "Đang ra"}
                   </span>
                 </div>
+
+                {translated && (
+                  <div className="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Tên gốc</p>
+                      <p className="mt-1 text-body-sm text-white">{story.originalTitle || "Chưa cập nhật"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Ngôn ngữ gốc</p>
+                      <p className="mt-1 text-body-sm text-white">{story.originalLanguage || "Chưa cập nhật"}</p>
+                    </div>
+                    {story.originalAuthor && (
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Tác giả gốc</p>
+                        <p className="mt-1 text-body-sm text-white">{story.originalAuthor}</p>
+                      </div>
+                    )}
+                    {story.translatorName && (
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Người dịch</p>
+                        <p className="mt-1 text-body-sm text-white">{story.translatorName}</p>
+                      </div>
+                    )}
+                    {story.translationGroup && (
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Nhóm dịch</p>
+                        <p className="mt-1 text-body-sm text-white">{story.translationGroup}</p>
+                      </div>
+                    )}
+                    {(story.sourceName || story.sourceUrl) && (
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Nguồn</p>
+                        {story.sourceUrl ? (
+                          <a href={story.sourceUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-body-sm text-sky-300 hover:text-sky-200 hover:underline">
+                            {story.sourceName || story.sourceUrl}
+                          </a>
+                        ) : (
+                          <p className="mt-1 text-body-sm text-white">{story.sourceName}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="mt-6 flex flex-wrap gap-3">

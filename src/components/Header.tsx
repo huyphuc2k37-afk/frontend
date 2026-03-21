@@ -27,6 +27,7 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 const navLinks = [
   { label: "Trang chủ", href: "/" },
   { label: "Khám phá", href: "/explore" },
+  { label: "Truyện dịch", href: "/truyen-dich" },
   { label: "Bảng xếp hạng", href: "/ranking" },
   { label: "Tác giả", href: "/author" },
 ];

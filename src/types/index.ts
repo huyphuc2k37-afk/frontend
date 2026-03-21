@@ -14,6 +14,14 @@ export interface Story {
   coverUrl?: string | null;
   description: string | null;
   genre: string;
+  storyOrigin?: string;
+  originalTitle?: string | null;
+  originalAuthor?: string | null;
+  originalLanguage?: string | null;
+  translatorName?: string | null;
+  translationGroup?: string | null;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
   status: string;
   views: number;
   likes: number;

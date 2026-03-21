@@ -13,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
+import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface ApiCategory {
   id: string;
@@ -31,6 +32,7 @@ interface ApiStory {
   slug: string;
   description: string | null;
   genre: string;
+  storyOrigin?: string;
   status: string;
   views: number;
   likes: number;
@@ -47,6 +49,7 @@ function StoryCard({ story }: { story: ApiStory }) {
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
   const coverUrl = story.coverUrl || fallbackUrl;
   const [src, setSrc] = useState(coverUrl);
+  const translated = isTranslatedStory(story);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
@@ -61,6 +64,11 @@ function StoryCard({ story }: { story: ApiStory }) {
         {story.status === "completed" && (
           <span className="absolute left-2 top-2 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
             Full
+          </span>
+        )}
+        {translated && (
+          <span className="absolute right-2 top-2 rounded-md bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            Dịch
           </span>
         )}
       </div>
