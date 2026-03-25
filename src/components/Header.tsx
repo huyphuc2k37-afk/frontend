@@ -743,32 +743,7 @@ export default function Header() {
       {/* Scrolling announcement banner */}
       <AnnouncementBanner />
 
-      {/* SnapClip Ad Banner */}
-      <a
-        href="https://snapclip.pro/vi/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full"
-      >
-        {/* Desktop banner */}
-        <Image
-          src="/banner-pc.png"
-          alt="SnapClip"
-          width={970}
-          height={90}
-          sizes="100vw"
-          className="hidden h-auto w-full md:block"
-        />
-        {/* Mobile banner */}
-        <Image
-          src="/banner-mobile.png"
-          alt="SnapClip"
-          width={300}
-          height={50}
-          sizes="100vw"
-          className="block h-auto w-full md:hidden"
-        />
-      </a>
+      {/* SnapClip Ad Banner — disabled */}
     </>
   );
 }

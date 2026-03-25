@@ -5,8 +5,9 @@ import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
-import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
-import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
+// ads disabled
+// import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
+// import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
@@ -87,7 +88,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className={jakarta.variable} suppressHydrationWarning>
       <head>
-        <meta name="monetag" content="b8c5921c362e5e8e2d904e2505cb35aa" />
+        {/* monetag disabled */}
         <meta name="theme-color" content="#667eea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -154,18 +155,7 @@ export default function RootLayout({
             window.addEventListener('load', function() { sessionStorage.removeItem('chunk_reload'); });
           })();
         `}</Script>
-        <Script id="monetag-inpage-push" strategy="afterInteractive">{`
-          (function(s){
-            s.dataset.zone='10751275';
-            s.src='https://nap5k.com/tag.min.js';
-          })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-        `}</Script>
-        <Script id="monetag-vignette" strategy="afterInteractive">{`
-          (function(s){
-            s.dataset.zone='10751281';
-            s.src='https://izcle.com/vignette.min.js';
-          })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-        `}</Script>
+        {/* monetag scripts disabled */}
       </head>
       <body>
         <AuthProvider>
@@ -175,8 +165,7 @@ export default function RootLayout({
             </ThemeProvider>
           </UserProfileProvider>
         </AuthProvider>
-        <AdsterraPopunder />
-        <AdsterraSocialBar />
+        {/* ads disabled */}
       </body>
     </html>
   );
