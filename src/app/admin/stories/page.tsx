@@ -16,6 +16,7 @@ import {
   ClipboardDocumentIcon,
   CheckIcon,
   SparklesIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminChapter {
@@ -295,6 +296,43 @@ export default function AdminStoriesPage() {
   const [copying, setCopying] = useState<string | null>(null);
   const [copyResult, setCopyResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
+  // Boost views state
+  const [boostStory, setBoostStory] = useState<{ id: string; title: string; views: number } | null>(null);
+  const [boostAmount, setBoostAmount] = useState("");
+  const [boostSaving, setBoostSaving] = useState(false);
+  const [boostResult, setBoostResult] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+
+  const openBoostModal = (s: any) => {
+    setBoostStory({ id: s.id, title: s.title, views: s.views || 0 });
+    setBoostAmount("");
+    setBoostResult(null);
+  };
+
+  const submitBoost = async () => {
+    if (!token || !boostStory) return;
+    const amount = parseInt(boostAmount);
+    if (!amount || amount < 1) return;
+    setBoostSaving(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/stories/${boostStory.id}/boost-views`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBoostResult({ type: "success", msg: data.message });
+        fetchStories();
+        setTimeout(() => setBoostStory(null), 1500);
+      } else {
+        setBoostResult({ type: "error", msg: data.error || "Lỗi khi cộng views" });
+      }
+    } catch {
+      setBoostResult({ type: "error", msg: "Lỗi kết nối" });
+    }
+    setBoostSaving(false);
+  };
+
   const copyStory = async (id: string, title: string) => {
     if (!token) return;
     if (!confirm(`Sao chép truyện "${title}"? Toàn bộ chương sẽ được copy sang truyện mới do bạn sở hữu.`)) return;
@@ -436,6 +474,13 @@ export default function AdminStoriesPage() {
                             title="Sửa truyện"
                           >
                             <PencilSquareIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => openBoostModal(s)}
+                            className="rounded-lg p-1.5 text-cyan-500 hover:bg-cyan-50"
+                            title="Cộng views"
+                          >
+                            <ArrowTrendingUpIcon className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => copyStory(s.id, s.title)}
@@ -615,6 +660,82 @@ export default function AdminStoriesPage() {
             <span className="flex items-center px-3 text-caption text-gray-500">Trang {page}</span>
             <button disabled={stories.length < 20} onClick={() => setPage(page + 1)}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-caption font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">Sau</button>
+          </div>
+        </div>
+      )}
+
+      {/* Boost views modal */}
+      {boostStory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-100">
+                <ArrowTrendingUpIcon className="h-5 w-5 text-cyan-600" />
+              </div>
+              <div>
+                <h3 className="text-body-lg font-bold text-gray-900">Cộng views</h3>
+                <p className="text-caption text-gray-500 truncate max-w-[220px]">{boostStory.title}</p>
+              </div>
+            </div>
+
+            <p className="mb-3 text-body-sm text-gray-600">
+              Hiện tại: <span className="font-semibold text-gray-900">{boostStory.views.toLocaleString()}</span> lượt xem
+            </p>
+
+            {boostResult && (
+              <div className={`mb-3 rounded-xl p-3 text-body-sm font-medium ${boostResult.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                {boostResult.msg}
+              </div>
+            )}
+
+            <div className="mb-2">
+              <label className="block text-[12px] font-semibold text-gray-600 mb-1">Số views cần cộng</label>
+              <input
+                type="number"
+                min="1"
+                max="1000000"
+                value={boostAmount}
+                onChange={(e) => setBoostAmount(e.target.value)}
+                placeholder="VD: 5000"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[500, 1000, 5000, 10000, 50000].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setBoostAmount(String(v))}
+                  className="rounded-lg border border-gray-200 px-3 py-1 text-caption font-medium text-gray-600 hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700"
+                >
+                  +{v.toLocaleString()}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBoostStory(null)}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={submitBoost}
+                disabled={!boostAmount || parseInt(boostAmount) < 1 || boostSaving}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-cyan-600 py-2.5 text-body-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+              >
+                {boostSaving ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <ArrowTrendingUpIcon className="h-4 w-4" />
+                    Cộng views
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
