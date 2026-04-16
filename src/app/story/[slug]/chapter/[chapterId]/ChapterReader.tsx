@@ -24,6 +24,7 @@ import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
+import AdSenseInArticle from "@/components/ads/AdSenseInArticle";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 
 interface ChapterData {
@@ -455,7 +456,7 @@ export default function ReadChapterPage() {
                         )}
                         {showAdMid && (
                           <div className="my-6 flex justify-center">
-                            <AdsterraBanner />
+                            <AdSenseInArticle />
                           </div>
                         )}
                         {showAdLate && (

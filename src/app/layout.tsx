@@ -88,7 +88,13 @@ export default function RootLayout({
   return (
     <html lang="vi" className={jakarta.variable} suppressHydrationWarning>
       <head>
-        {/* monetag disabled */}
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <meta name="theme-color" content="#667eea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

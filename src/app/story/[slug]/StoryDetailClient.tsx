@@ -24,6 +24,7 @@ import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import AdsterraBanner from "@/components/ads/AdsterraBanner";
 import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
+import AdSenseInArticle from "@/components/ads/AdSenseInArticle";
 import { API_BASE_URL, authFetch } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
 
@@ -615,7 +616,7 @@ export default function StoryDetailPage() {
 
               {/* Ad between description and chapter list */}
               <div className="my-4">
-                <AdsterraNativeBanner />
+                <AdSenseInArticle />
               </div>
 
               {/* Chapter list */}
