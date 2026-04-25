@@ -33,9 +33,9 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 7 },
       },
     },
-    // Cache cover images from Supabase CDN (direct path)
+    // Cache cover images from any Supabase project CDN (direct path)
     {
-      urlPattern: /ydmkavspdccylpnskfsg\.supabase\.co\/storage\/.+/,
+      urlPattern: /[a-z0-9-]+\.supabase\.co\/storage\/.+/,
       handler: "CacheFirst",
       options: {
         cacheName: "supabase-cover-cache",
@@ -150,7 +150,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "ydmkavspdccylpnskfsg.supabase.co",
+        hostname: "**.supabase.co",
       },
       {
         protocol: "https",

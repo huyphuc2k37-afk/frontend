@@ -18,8 +18,8 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 export default function StoryCard({ story, variant = "default" }: StoryCardProps) {
   const isFeatured = variant === "featured";
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
-  const coverUrl = story.coverUrl || fallbackUrl;
-  const [coverSrc, setCoverSrc] = useState(coverUrl);
+  const initialCoverSrc = story.coverUrl || fallbackUrl;
+  const [coverSrc, setCoverSrc] = useState(initialCoverSrc);
   const translated = isTranslatedStory(story);
 
   return (
@@ -36,8 +36,15 @@ export default function StoryCard({ story, variant = "default" }: StoryCardProps
             alt={`Bia truyện ${story.title}`}
             fill
             sizes={isFeatured ? "280px" : "(max-width: 640px) 50vw, 180px"}
+            unoptimized
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={() => setCoverSrc(PLACEHOLDER_COVER)}
+            onError={() => {
+              if (coverSrc !== fallbackUrl) {
+                setCoverSrc(fallbackUrl);
+                return;
+              }
+              setCoverSrc(PLACEHOLDER_COVER);
+            }}
           />
           {translated && (
             <span className="absolute right-2 top-2 rounded-md bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">

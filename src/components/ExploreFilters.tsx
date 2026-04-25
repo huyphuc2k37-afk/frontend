@@ -204,7 +204,9 @@ export default function ExploreFilters({
                     id="search-listbox"
                     role="listbox"
                   >
-                    {suggestions.map((s) => (
+                    {suggestions.map((s) => {
+                      const coverSrc = s.coverUrl || `${API_BASE_URL}/api/stories/${s.id}/cover?v=${encodeURIComponent(s.updatedAt || "2")}`;
+                      return (
                       <li
                         key={s.id}
                         className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-primary-50"
@@ -216,15 +218,13 @@ export default function ExploreFilters({
                         }}
                       >
                         <div className="relative h-10 w-8 flex-shrink-0 overflow-hidden rounded bg-gray-100">
-                          {s.coverImage && (
                           <Image
-                            src={s.coverImage}
+                            src={coverSrc}
                             alt=""
                             fill
                             sizes="32px"
                             className="object-cover"
                           />
-                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-body-sm font-medium text-gray-900">
@@ -235,7 +235,8 @@ export default function ExploreFilters({
                           </div>
                         </div>
                       </li>
-                    ))}
+                      );
+                    })}
                   </motion.ul>
                 )}
               </AnimatePresence>

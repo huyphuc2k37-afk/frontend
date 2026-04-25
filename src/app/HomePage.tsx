@@ -47,8 +47,8 @@ const PLACEHOLDER_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 /* ── Story Card (simple — cover + title + author) ── */
 function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
-  const coverUrl = story.coverUrl || fallbackUrl;
-  const [coverSrc, setCoverSrc] = useState(coverUrl);
+  const initialCoverSrc = story.coverUrl || fallbackUrl;
+  const [coverSrc, setCoverSrc] = useState(initialCoverSrc);
   const primaryGenre = story.genre?.split(",")[0]?.trim() || "Đang cập nhật";
   const chapterCount = story._count?.chapters || 0;
   const translated = isTranslatedStory(story);
@@ -68,8 +68,15 @@ function SimpleCard({ story, index }: { story: ApiStory; index: number }) {
             fill
             priority={index < 6}
             sizes="(max-width: 640px) 50vw, 180px"
+            unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={() => setCoverSrc(PLACEHOLDER_COVER)}
+            onError={() => {
+              if (coverSrc !== fallbackUrl) {
+                setCoverSrc(fallbackUrl);
+                return;
+              }
+              setCoverSrc(PLACEHOLDER_COVER);
+            }}
           />
           {/* Status badge */}
           {story.status === "completed" && (
@@ -167,8 +174,9 @@ function StoryCarousel({ title, stories, icon: Icon }: { title: string; stories:
   );
 }
 
-function MiniCover({ src, alt }: { src: string; alt: string }) {
-  const [imgSrc, setImgSrc] = useState(src);
+function MiniCover({ src, fallbackSrc, alt }: { src?: string | null; fallbackSrc: string; alt: string }) {
+  const initialSrc = src || fallbackSrc;
+  const [imgSrc, setImgSrc] = useState(initialSrc);
   return (
     <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
       <Image
@@ -176,8 +184,15 @@ function MiniCover({ src, alt }: { src: string; alt: string }) {
         alt={alt}
         fill
         sizes="40px"
+        unoptimized
         className="object-cover"
-        onError={() => setImgSrc(PLACEHOLDER_COVER)}
+        onError={() => {
+          if (imgSrc !== fallbackSrc) {
+            setImgSrc(fallbackSrc);
+            return;
+          }
+          setImgSrc(PLACEHOLDER_COVER);
+        }}
       />
     </div>
   );
@@ -722,7 +737,8 @@ export default function HomePage({ initialStories = [], initialFeaturedStories =
 
                     {/* Cover mini */}
                     <MiniCover
-                      src={story.coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
+                      src={story.coverUrl}
+                      fallbackSrc={`${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
                       alt={story.title}
                     />
 
