@@ -139,6 +139,10 @@ const nextConfig = {
     ];
   },
   images: {
+    // Netlify's Next.js runtime can return 402 for the built-in image optimizer
+    // (/_next/image) depending on plan/quota. Covers are remote images, so we
+    // prefer serving them directly rather than through the optimizer.
+    unoptimized: process.env.NETLIFY === "true",
     remotePatterns: [
       {
         protocol: "https",
