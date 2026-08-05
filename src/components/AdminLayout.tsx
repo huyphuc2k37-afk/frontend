@@ -4,26 +4,18 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
-  HomeIcon,
-  UsersIcon,
-  BookOpenIcon,
-  CurrencyDollarIcon,
-  BanknotesIcon,
-  Bars3Icon,
-  XMarkIcon,
-  ArrowRightOnRectangleIcon,
-  ChevronLeftIcon,
-  ShieldCheckIcon,
-  UserCircleIcon,
-  MegaphoneIcon,
-  BellAlertIcon,
-  ChatBubbleLeftRightIcon,
-  ShieldExclamationIcon,
-} from "@heroicons/react/24/outline";
+  Home, Users, BookOpen, DollarSign, Banknote,
+  Menu, X, LogOut, ChevronLeft, ShieldCheck, Megaphone,
+  Bell, MessageSquare, ShieldAlert, BarChart3, ChevronLeft as BackIcon,
+} from "lucide-react";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { ThemeSwitcher } from "./ui/ThemeSwitcher";
+import { Avatar } from "./ui/Avatar";
+import { Button } from "./ui/Button";
+import { useUIStore } from "@/stores/uiStore";
 
 interface AdminContextType {
   token: string | null;
@@ -33,15 +25,16 @@ const AdminContext = createContext<AdminContextType>({ token: null });
 export const useAdmin = () => useContext(AdminContext);
 
 const sidebarItems = [
-  { id: "dashboard", label: "Tổng quan", href: "/admin", icon: HomeIcon },
-  { id: "users", label: "Người dùng", href: "/admin/users", icon: UsersIcon },
-  { id: "stories", label: "Truyện", href: "/admin/stories", icon: BookOpenIcon },
-  { id: "deposits", label: "Nạp xu", href: "/admin/deposits", icon: CurrencyDollarIcon },
-  { id: "withdrawals", label: "Rút tiền", href: "/admin/withdrawals", icon: BanknotesIcon },
-  { id: "announcements", label: "Thông báo", href: "/admin/announcements", icon: MegaphoneIcon },
-  { id: "notifications", label: "Gửi TB cá nhân", href: "/admin/notifications", icon: BellAlertIcon },
-  { id: "messages", label: "Nhắn tin tác giả", href: "/admin/messages", icon: ChatBubbleLeftRightIcon },
-  { id: "banned-ips", label: "Chặn IP spam", href: "/admin/banned-ips", icon: ShieldExclamationIcon },
+  { id: "dashboard", label: "Tổng quan", href: "/admin", icon: Home },
+  { id: "revenue", label: "Doanh thu", href: "/admin/revenue", icon: BarChart3 },
+  { id: "users", label: "Người dùng", href: "/admin/users", icon: Users },
+  { id: "stories", label: "Truyện", href: "/admin/stories", icon: BookOpen },
+  { id: "deposits", label: "Nạp xu", href: "/admin/deposits", icon: DollarSign },
+  { id: "withdrawals", label: "Rút tiền", href: "/admin/withdrawals", icon: Banknote },
+  { id: "announcements", label: "Thông báo", href: "/admin/announcements", icon: Megaphone },
+  { id: "notifications", label: "Gửi TB cá nhân", href: "/admin/notifications", icon: Bell },
+  { id: "messages", label: "Nhắn tin tác giả", href: "/admin/messages", icon: MessageSquare },
+  { id: "banned-ips", label: "Chặn IP spam", href: "/admin/banned-ips", icon: ShieldAlert },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -51,6 +44,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminName, setAdminName] = useState("");
+  const [adminImage, setAdminImage] = useState<string | null>(null);
+  const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed["admin"] ?? false);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
 
   const token = (session as any)?.accessToken || null;
 
@@ -70,6 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             return;
           }
           setAdminName(data.name);
+          setAdminImage(data.image ?? null);
           setLoading(false);
         })
         .catch(() => router.push("/"));
@@ -82,10 +79,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-red-500 border-t-transparent" />
-          <p className="mt-4 text-body-sm text-gray-500">Đang tải Admin Panel...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-destructive border-t-transparent" />
+          <p className="mt-4 text-body-sm text-muted-foreground">Đang tải Admin Panel...</p>
         </div>
       </div>
     );
@@ -96,9 +93,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname.startsWith(href);
   };
 
+  const sidebarWidth = sidebarCollapsed ? "lg:w-16" : "lg:w-64";
+  const showLabels = !sidebarCollapsed;
+
   return (
     <AdminContext.Provider value={{ token }}>
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-muted">
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
@@ -109,76 +109,91 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-900 shadow-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 transform bg-sidebar text-sidebar-foreground shadow-xl transition-all duration-300 lg:static lg:translate-x-0",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full",
+            sidebarWidth
+          )}
+          style={{ backgroundColor: "#0f0f14" }}
         >
           <div className="flex h-full flex-col">
             {/* Logo */}
-            <div className="flex items-center justify-between border-b border-gray-800 px-5 py-4">
-              <Link href="/admin" className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500 shadow-md">
-                  <ShieldCheckIcon className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <Link href="/admin" className="flex items-center gap-2.5 overflow-hidden">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive shadow-md">
+                  <ShieldCheck className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <span className="text-heading-sm font-bold text-white">VStory</span>
-                  <p className="text-[10px] font-medium tracking-wide text-gray-400">ADMIN PANEL</p>
-                </div>
+                {showLabels && (
+                  <div>
+                    <span className="text-heading-sm font-bold text-white">VStory</span>
+                    <p className="text-[10px] font-medium tracking-wide text-gray-400">ADMIN PANEL</p>
+                  </div>
+                )}
               </Link>
-              <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 lg:hidden">
-                <XMarkIcon className="h-5 w-5" />
+              <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 lg:hidden">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Admin info */}
-            <div className="mx-4 mt-4 rounded-xl bg-gray-800 p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500">
-                  <ShieldCheckIcon className="h-4 w-4 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-body-sm font-semibold text-white">{adminName}</p>
-                  <p className="text-[10px] text-gray-400">Administrator</p>
+            {showLabels && (
+              <div className="mx-4 mt-4 rounded-xl bg-white/5 p-3">
+                <div className="flex items-center gap-3">
+                  <Avatar src={adminImage} fallback={adminName} size="md" />
+                  <div className="min-w-0">
+                    <p className="truncate text-body-sm font-semibold text-white">{adminName}</p>
+                    <p className="text-[10px] text-gray-400">Administrator</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Nav */}
             <nav className="mt-4 flex-1 space-y-1 px-3">
               {sidebarItems.map((item) => {
                 const active = isActive(item.href);
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium transition-all ${
+                    title={!showLabels ? item.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium transition-all",
                       active
-                        ? "bg-red-500/10 text-red-400"
-                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                    }`}
+                        ? "bg-destructive/15 text-destructive"
+                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                    )}
                   >
-                    <item.icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-red-400" : ""}`} />
-                    {item.label}
+                    <Icon className={cn("h-5 w-5 shrink-0", active && "text-destructive")} />
+                    {showLabels && <span>{item.label}</span>}
                   </Link>
                 );
               })}
             </nav>
 
             {/* Bottom */}
-            <div className="border-t border-gray-800 p-3">
+            <div className="border-t border-white/10 p-3">
+              <button
+                onClick={() => toggleSidebar("admin")}
+                className="hidden w-full items-center gap-3 rounded-xl px-4 py-2 text-body-sm text-gray-400 hover:bg-white/5 hover:text-white lg:flex"
+              >
+                <ChevronLeft className={cn("h-5 w-5 transition-transform", sidebarCollapsed && "rotate-180")} />
+                {showLabels && <span>Thu gọn</span>}
+              </button>
               <Link
                 href="/"
-                className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white"
+                className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white"
               >
-                <ChevronLeftIcon className="h-5 w-5" />
-                Về trang chủ
+                <BackIcon className="h-5 w-5" />
+                {showLabels && <span>Về trang chủ</span>}
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium text-red-400 hover:bg-red-500/10"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-body-sm font-medium text-destructive hover:bg-destructive/10"
               >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                Đăng xuất
+                <LogOut className="h-5 w-5" />
+                {showLabels && <span>Đăng xuất</span>}
               </button>
             </div>
           </div>
@@ -186,17 +201,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-md sm:px-6">
+          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-md sm:px-6">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden"
+                aria-label="Mở menu"
               >
-                <Bars3Icon className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </button>
-              <h1 className="text-body-md font-semibold text-gray-900">
+              <h1 className="text-body-md font-semibold text-foreground">
                 {sidebarItems.find((i) => isActive(i.href))?.label || "Admin"}
               </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeSwitcher />
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>

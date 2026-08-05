@@ -31,6 +31,8 @@ export default function RevenuePage() {
     purchaseRevenue: 0,
     tipRevenue: 0,
     viewRevenue: 0,
+    viewCount: 0,
+    viewRate: 2,
     balance: 0,
     periodRevenue: 0,
     referralRevenue: 0,
@@ -38,7 +40,12 @@ export default function RevenuePage() {
 
   const [revenueHistory, setRevenueHistory] = useState<any[]>([]);
   const [topStories, setTopStories] = useState<any[]>([]);
+  const [revenueByChapter, setRevenueByChapter] = useState<any[]>([]);
   const [dailyChart, setDailyChart] = useState<any[]>([]);
+  const [monthlyChart, setMonthlyChart] = useState<any[]>([]);
+  const [yearlyChart, setYearlyChart] = useState<any[]>([]);
+  // A7: Chuyển tab giữa 3 chart: ngày / tháng / năm
+  const [chartMode, setChartMode] = useState<"day" | "month" | "year">("day");
 
   const fetchRevenue = useCallback(async () => {
     if (!token) return;
@@ -57,13 +64,18 @@ export default function RevenuePage() {
           purchaseRevenue: data.purchaseRevenue || 0,
           tipRevenue: data.tipRevenue || 0,
           viewRevenue: data.viewRevenue || 0,
+          viewCount: data.totalViews || 0,
+          viewRate: data.viewRate || 2,
           balance: data.balance || 0,
           periodRevenue: data.periodRevenue || 0,
           referralRevenue: data.referralRevenue || 0,
         });
         setRevenueHistory(data.recentSales || []);
         setTopStories(data.topStories || []);
+        setRevenueByChapter(data.revenueByChapter || []);
         setDailyChart(data.dailyChart || []);
+        setMonthlyChart(data.monthlyChart || []);
+        setYearlyChart(data.yearlyChart || []);
       }
     } catch {}
   }, [token, period]);
@@ -75,7 +87,13 @@ export default function RevenuePage() {
   const formatXu = (n: number) =>
     new Intl.NumberFormat("vi-VN").format(n) + " xu";
 
-  const maxChart = Math.max(...dailyChart.map((d: any) => d.total), 1);
+  // A7: Tính max theo chart mode hiện tại
+  const currentChart =
+    chartMode === "day" ? dailyChart : chartMode === "month" ? monthlyChart : yearlyChart;
+  const maxChart = Math.max(...currentChart.map((d: any) => d.total), 1);
+  const chartTitle =
+    chartMode === "day" ? "Doanh thu 30 ngày" : chartMode === "month" ? "Doanh thu 12 tháng" : "Doanh thu 5 năm";
+  const chartLabelKey = chartMode === "day" ? "day" : chartMode === "month" ? "label" : "label";
 
   return (
     <div className="space-y-6">
@@ -194,47 +212,66 @@ export default function RevenuePage() {
               {formatXu(stats.viewRevenue)}
             </p>
             <p className="text-caption text-gray-500">
-              Từ lượt xem (2 xu/view)
+              Từ lượt xem ({(stats.viewCount ?? 0).toLocaleString("vi-VN")} lượt × {stats.viewRate ?? 2} xu)
             </p>
           </div>
         </div>
       </div>
 
-      {/* Revenue chart 30 days */}
-      {dailyChart.length > 0 && (
+      {/* A7: Revenue chart với tab Ngày / Tháng / Năm */}
+      {currentChart.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <ChartBarIcon className="h-5 w-5 text-primary-500" />
               <h3 className="text-body-lg font-bold text-gray-900">
-                Doanh thu 30 ngày
+                {chartTitle}
               </h3>
             </div>
-            <div className="flex items-center gap-3 text-caption">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-primary-500" />
-                Bán chương
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-rose-400" />
-                Xu ủng hộ
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-teal-400" />
-                Lượt xem
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-caption">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-primary-500" />
+                  Bán chương
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-rose-400" />
+                  Xu ủng hộ
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-teal-400" />
+                  Lượt xem
+                </span>
+              </div>
+              <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
+                {([
+                  { v: "day" as const, label: "Ngày" },
+                  { v: "month" as const, label: "Tháng" },
+                  { v: "year" as const, label: "Năm" },
+                ]).map((tab) => (
+                  <button
+                    key={tab.v}
+                    onClick={() => setChartMode(tab.v)}
+                    className={`rounded-md px-3 py-1.5 text-caption font-medium transition-colors ${
+                      chartMode === tab.v ? "bg-white text-primary-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="mt-6 flex items-end gap-1" style={{ height: 180 }}>
-            {dailyChart.map((d: any, i: number) => (
-              <div key={i} className="group flex flex-1 flex-col items-center gap-1 relative">
+            {currentChart.map((d: any, i: number) => (
+              <div key={`${chartMode}-${i}`} className="group flex flex-1 flex-col items-center gap-1 relative">
                 <div className="pointer-events-none absolute -top-12 hidden rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block whitespace-nowrap z-10">
-                  {d.day}: {d.total.toLocaleString("vi-VN")} xu
+                  {d[chartLabelKey]}: {d.total.toLocaleString("vi-VN")} xu
                   {d.purchases > 0 && ` (bán: ${d.purchases.toLocaleString("vi-VN")})`}
                   {d.tips > 0 && ` (tip: ${d.tips.toLocaleString("vi-VN")})`}
                   {d.views > 0 && ` (view: ${d.views.toLocaleString("vi-VN")})`}
@@ -268,8 +305,8 @@ export default function RevenuePage() {
                     <div className="w-full min-h-[3px] rounded-t-sm bg-gray-200" />
                   )}
                 </div>
-                {i % 5 === 0 && (
-                  <span className="hidden text-[8px] text-gray-400 sm:block">{d.day}</span>
+                {(chartMode === "day" ? i % 5 === 0 : true) && (
+                  <span className="hidden text-[8px] text-gray-400 sm:block">{d[chartLabelKey]}</span>
                 )}
               </div>
             ))}
@@ -369,6 +406,64 @@ export default function RevenuePage() {
           </div>
         )}
       </div>
+
+      {/* Per-chapter breakdown */}
+      {revenueByChapter.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-6 py-4">
+            <h3 className="text-body-lg font-semibold text-gray-900">
+              Doanh thu theo chương
+            </h3>
+            <p className="mt-1 text-caption text-gray-500">
+              Tổng hợp thu nhập từ bán chương + ủng hộ của từng chương
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="px-6 py-3 text-left text-caption font-semibold uppercase tracking-wider text-gray-500">
+                    Chương
+                  </th>
+                  <th className="px-6 py-3 text-left text-caption font-semibold uppercase tracking-wider text-gray-500">
+                    Truyện
+                  </th>
+                  <th className="px-6 py-3 text-right text-caption font-semibold uppercase tracking-wider text-gray-500">
+                    Bán chương
+                  </th>
+                  <th className="px-6 py-3 text-right text-caption font-semibold uppercase tracking-wider text-gray-500">
+                    Ủng hộ
+                  </th>
+                  <th className="px-6 py-3 text-right text-caption font-semibold uppercase tracking-wider text-gray-500">
+                    Tổng
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {revenueByChapter.slice(0, 50).map((ch: any) => (
+                  <tr key={ch.chapterId} className="hover:bg-gray-50">
+                    <td className="px-6 py-3.5 text-body-sm text-gray-700">
+                      {ch.chapterTitle || ch.chapterId.slice(0, 8)}
+                    </td>
+                    <td className="px-6 py-3.5 text-body-sm text-gray-600">
+                      {ch.storyTitle}
+                    </td>
+                    <td className="px-6 py-3.5 text-right text-body-sm text-gray-600">
+                      {formatXu(ch.purchases)}
+                    </td>
+                    <td className="px-6 py-3.5 text-right text-body-sm text-gray-600">
+                      {formatXu(ch.tips)}
+                    </td>
+                    <td className="px-6 py-3.5 text-right text-body-sm font-semibold text-emerald-600">
+                      +{formatXu(ch.total)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Top stories */}
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">

@@ -1,62 +1,19 @@
-const withPWA = require("next-pwa")({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-  runtimeCaching: [
-    // Cache API responses — NetworkFirst ensures fresh data (coverUrl etc.)
-    {
-      urlPattern: /\/api\/(stories|ranking|authors)/,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "api-cache",
-        networkTimeoutSeconds: 8,
-        expiration: { maxEntries: 100, maxAgeSeconds: 300 },
-      },
-    },
-    // Cache chapter content for offline reading
-    {
-      urlPattern: /\/api\/chapters\/.+/,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "chapter-cache",
-        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 7 }, // 7 days
-      },
-    },
-    // Cache cover images from backend (fallback path)
-    {
-      urlPattern: /\/api\/stories\/.+\/cover/,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "cover-cache",
-        cacheableResponse: { statuses: [200] },
-        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 7 },
-      },
-    },
-    // Cache cover images from any Supabase project CDN (direct path)
-    {
-      urlPattern: /[a-z0-9-]+\.supabase\.co\/storage\/.+/,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "supabase-cover-cache",
-        cacheableResponse: { statuses: [200] },
-        expiration: { maxEntries: 300, maxAgeSeconds: 86400 * 30 },
-      },
-    },
-    // Cache static assets — StaleWhileRevalidate ensures new deploys work
-    {
-      urlPattern: /\/_next\/static\/.*/,
-      handler: "StaleWhileRevalidate",
-      options: {
-        cacheName: "static-cache",
-        expiration: { maxEntries: 200, maxAgeSeconds: 86400 * 30 },
-      },
-    },
-  ],
-});
-
-/** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    return [
+      // Proxy cover image requests to the backend server
+      {
+        source: "/storage/:path*",
+        destination: "http://localhost:3001/storage/:path*",
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: "/home", destination: "/", permanent: true },
+      { source: "/library", destination: "/bookshelf", permanent: true },
+    ];
+  },
   async headers() {
     const noIndexHeaders = [
       {
@@ -88,13 +45,20 @@ const nextConfig = {
       { key: "CDN-Cache-Control", value: "no-store" },
     ];
 
-    // Hashed Next.js assets — safe to cache long-term
+    // Hashed Next.js assets — safe to cache long-term in production.
+    // The `production-ready` check uses ASSET_PREFIX/NODE_ENV so dev mode
+    // always sets short max-age to avoid serving stale webpack chunks that
+    // reference modules that have since been edited/hot-reloaded — the
+    // classic "Cannot read properties of undefined (reading 'call')" bug.
+    const isProd = process.env.NODE_ENV === "production";
     const nextStaticAssetHeaders = [
       {
         key: "Cache-Control",
-        value: "public, max-age=31536000, immutable",
+        value: isProd
+          ? "public, max-age=31536000, immutable"
+          : "public, max-age=0, must-revalidate",
       },
-      { key: "CDN-Cache-Control", value: "max-age=31536000, immutable" },
+      { key: "CDN-Cache-Control", value: isProd ? "max-age=31536000, immutable" : "no-store" },
     ];
 
     // NOTE: Avoid caching HTML at the CDN. Any cached HTML can reference old hashed chunks
@@ -143,14 +107,30 @@ const nextConfig = {
     // (/_next/image) depending on plan/quota. Covers are remote images, so we
     // prefer serving them directly rather than through the optimizer.
     unoptimized: process.env.NETLIFY === "true",
+    // Backend /api/stories/:id/cover returns SVG placeholder for stories that
+    // haven't been migrated to Cloudinary yet. Allow SVG to avoid 400 errors
+    // when Next.js Image optimizer hits these URLs.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "backend-4nfb.onrender.com",
-      },
+    // Local dev backend
+    {
+      protocol: "http",
+      hostname: "localhost",
+      port: "5000",
+    },
+    {
+      protocol: "https",
+      hostname: "backend-production-04113.up.railway.app",
+    },
       {
         protocol: "https",
         hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
       {
         protocol: "https",
@@ -168,4 +148,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;

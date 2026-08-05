@@ -254,12 +254,12 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
+                <div role="alert" aria-live="assertive" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-body-sm text-green-600">
+                <div role="status" aria-live="polite" className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-body-sm text-green-600">
                   {success}
                 </div>
               )}
@@ -311,12 +311,12 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
+                <div role="alert" aria-live="assertive" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-body-sm text-green-600">
+                <div role="status" aria-live="polite" className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-body-sm text-green-600">
                   {success}
                 </div>
               )}
@@ -403,7 +403,7 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
+                <div role="alert" aria-live="assertive" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-body-sm text-red-600">
                   {error}
                 </div>
               )}

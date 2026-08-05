@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   ChatBubbleLeftRightIcon,
@@ -256,6 +256,12 @@ export default function CommentSection({ storyId, chapterId, session, token }: P
   const currentUserId = (session?.user as any)?.id || null;
   const isAdmin = (session?.user as any)?.role === "admin";
 
+  // Use a ref to ensure we only kick off the initial fetch once per
+  // storyId/chapterId pair, even when React 18 strict mode runs the effect
+  // twice in development. (Same effect in production under StrictMode + dev
+  // tools, but no duplicate is fired in release builds.)
+  const fetchedKeyRef = useRef<string | null>(null);
+
   // Fetch comments
   const fetchComments = useCallback(async () => {
     setLoading(true);
@@ -273,7 +279,11 @@ export default function CommentSection({ storyId, chapterId, session, token }: P
   }, [storyId, chapterId]);
 
   useEffect(() => {
-    if (storyId || chapterId) fetchComments();
+    const key = `${storyId ?? ""}|${chapterId ?? ""}`;
+    if (!key || key === "|") return;
+    if (fetchedKeyRef.current === key) return;
+    fetchedKeyRef.current = key;
+    fetchComments();
   }, [fetchComments, storyId, chapterId]);
 
   // Fetch liked IDs

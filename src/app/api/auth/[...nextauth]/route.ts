@@ -79,26 +79,28 @@ const handler = NextAuth({
   session: {
     strategy: "jwt",
   },
+  // Cookies chỉ set Secure flag khi chạy production (HTTPS).
+  // Trong dev HTTP, secure=true làm browser không gửi cookie → session fail.
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",
-      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production" },
     },
     callbackUrl: {
       name: "next-auth.callback-url",
-      options: { sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production" },
     },
     csrfToken: {
       name: "next-auth.csrf-token",
-      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.NODE_ENV === "production" },
     },
     pkceCodeVerifier: {
       name: "next-auth.pkce.code_verifier",
-      options: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 900, secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 900, secure: process.env.NODE_ENV === "production" },
     },
     state: {
       name: "next-auth.state",
-      options: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 900, secure: true },
+      options: { httpOnly: true, sameSite: "lax", path: "/", maxAge: 900, secure: process.env.NODE_ENV === "production" },
     },
   },
   callbacks: {

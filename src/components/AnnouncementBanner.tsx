@@ -62,6 +62,13 @@ export default function AnnouncementBanner() {
         .marquee-scroll:hover {
           animation-play-state: paused;
         }
+        /* Pause khi tab ẩn để tiết kiệm CPU/GPU */
+        @media (prefers-reduced-motion: reduce) {
+          .marquee-scroll {
+            animation: none;
+            transform: translateX(0);
+          }
+        }
         @keyframes marquee-move {
           0% {
             transform: translateX(0);

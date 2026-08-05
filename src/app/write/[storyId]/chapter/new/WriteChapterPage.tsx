@@ -51,6 +51,7 @@ export default function WriteChapterPage() {
   }, [token, storyId]);
 
   const handleSubmit = async () => {
+    if (saving) return; // duplicate-submit guard — runs synchronously before any state update
     if (!title.trim()) {
       setError("Vui lòng nhập tiêu đề chương");
       return;
@@ -116,15 +117,16 @@ export default function WriteChapterPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-body-sm text-red-600">
+        <div role="alert" aria-live="assertive" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-body-sm text-red-600">
           {error}
         </div>
       )}
 
       {/* Title */}
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <label className="mb-2 block text-body-sm font-semibold text-gray-700">Tiêu đề chương</label>
+        <label htmlFor="chapter-title" className="mb-2 block text-body-sm font-semibold text-gray-700">Tiêu đề chương</label>
         <input
+          id="chapter-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -136,13 +138,14 @@ export default function WriteChapterPage() {
       {/* Content */}
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <label className="text-body-sm font-semibold text-gray-700">Nội dung</label>
+          <label htmlFor="chapter-content" className="text-body-sm font-semibold text-gray-700">Nội dung</label>
           <span className="flex items-center gap-1 text-caption text-gray-400">
             <DocumentTextIcon className="h-3.5 w-3.5" />
             {wordCount} chữ
           </span>
         </div>
         <textarea
+          id="chapter-content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={24}
@@ -153,10 +156,11 @@ export default function WriteChapterPage() {
 
       {/* Author note */}
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <label className="mb-2 block text-body-sm font-semibold text-gray-700">
+        <label htmlFor="author-note" className="mb-2 block text-body-sm font-semibold text-gray-700">
           Lời tác giả <span className="font-normal text-gray-400">(không bắt buộc)</span>
         </label>
         <textarea
+          id="author-note"
           value={authorNote}
           onChange={(e) => setAuthorNote(e.target.value)}
           rows={3}
@@ -196,6 +200,9 @@ export default function WriteChapterPage() {
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={isLocked}
+                aria-label={isLocked ? "Tắt khóa chương trả phí" : "Bật khóa chương trả phí"}
                 onClick={() => setIsLocked(!isLocked)}
                 className={`relative h-6 w-11 rounded-full transition-colors ${
                   isLocked ? "bg-primary-500" : "bg-gray-200"
@@ -210,8 +217,9 @@ export default function WriteChapterPage() {
             </div>
             {isLocked && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                <label className="mb-1 block text-caption font-medium text-gray-600">Giá (xu) — từ 100 đến 5,000</label>
+                <label htmlFor="chapter-price" className="mb-1 block text-caption font-medium text-gray-600">Giá (xu) — từ 100 đến 5,000</label>
                 <input
+                  id="chapter-price"
                   type="number"
                   min={100}
                   max={5000}

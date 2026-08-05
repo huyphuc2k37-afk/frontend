@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ExplorePage from "./ExplorePage";
+import Header from "@/components/Header";
+import { CardSkeleton } from "@/components/LoadingState";
 
 export const revalidate = 3600; // ISR — regenerate at most every 1 hour
 
@@ -64,7 +67,18 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ExplorePage />
+      <Suspense
+        fallback={
+          <div className="min-h-screen">
+            <Header />
+            <div className="section-container py-12">
+              <CardSkeleton count={24} />
+            </div>
+          </div>
+        }
+      >
+        <ExplorePage />
+      </Suspense>
     </>
   );
 }

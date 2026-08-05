@@ -38,6 +38,7 @@ export default function WithdrawPage() {
   const [bankHolder, setBankHolder] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [availableBalance, setAvailableBalance] = useState(0);
   const [withdrawHistory, setWithdrawHistory] = useState<WithdrawRecord[]>([]);
   const minWithdraw = 50000;
@@ -53,7 +54,9 @@ export default function WithdrawPage() {
         setAvailableBalance(data.balance || 0);
         setWithdrawHistory(data.withdrawals || []);
       }
-    } catch {}
+    } catch (err) {
+      console.error("Error fetching withdraw data:", err);
+    }
   }, [token]);
 
   useEffect(() => {
@@ -66,7 +69,9 @@ export default function WithdrawPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || Number(amount) < minWithdraw || !token) return;
+    if (submitting) return; // duplicate-submit guard
     setSubmitting(true);
+    setSubmitError("");
     try {
       const res = await fetch(`${API_BASE_URL}/api/revenue/withdraw`, {
         method: "POST",
@@ -89,8 +94,14 @@ export default function WithdrawPage() {
         setBankAccount("");
         setBankHolder("");
         fetchData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSubmitError(data.error || "Không thể tạo yêu cầu rút tiền");
       }
-    } catch {}
+    } catch (err) {
+      console.error("Error submitting withdraw:", err);
+      setSubmitError("Lỗi kết nối server");
+    }
     setSubmitting(false);
   };
 
@@ -150,11 +161,18 @@ export default function WithdrawPage() {
       </div>
 
       {success && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+        <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
           <p className="text-body-sm text-emerald-700">
             Yêu cầu rút tiền đã được gửi! Chúng tôi sẽ xử lý trong 1-3 ngày làm việc.
           </p>
+        </div>
+      )}
+
+      {submitError && (
+        <div role="alert" aria-live="assertive" className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <XCircleIcon className="h-5 w-5 text-red-500" />
+          <p className="text-body-sm text-red-700">{submitError}</p>
         </div>
       )}
 

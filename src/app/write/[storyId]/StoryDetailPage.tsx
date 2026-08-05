@@ -236,8 +236,13 @@ export default function StoryDetailPage() {
         setEditCoverImage(updated.coverImage || null);
         setCoverChanged(false);
         setEditingInfo(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể lưu thông tin truyện");
       }
-    } catch {}
+    } catch {
+      alert("Không thể kết nối server");
+    }
     setSaving(false);
   };
 
@@ -245,10 +250,16 @@ export default function StoryDetailPage() {
     if (!token) return;
     setDeleting(true);
     try {
-      await fetch(`${API_BASE_URL}/api/manage/chapters/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/manage/chapters/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể xóa chương");
+        setDeleting(false);
+        return;
+      }
       setStory((prev) =>
         prev ? { ...prev, chapters: prev.chapters.filter((c) => c.id !== id) } : prev
       );

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
-import ExploreFilters from "@/components/ExploreFilters";
-import Carousel from "@/components/Carousel";
-import SectionsGrid from "@/components/SectionsGrid";
+import ExploreFilters, { FilterSidebar, FilterDrawer, ActiveFilterChips } from "@/components/ExploreFilters";
 import Footer from "@/components/Footer";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
+import EmptyState from "@/components/EmptyState";
+import { CardSkeleton } from "@/components/LoadingState";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ApiCategory {
@@ -15,7 +15,7 @@ interface ApiCategory {
   slug: string;
   icon: string;
   color: string;
-  _count: { stories: number };
+  storyCount: number;
 }
 
 interface ApiStory {
@@ -38,18 +38,35 @@ interface ApiStory {
   category?: { name: string; slug: string } | null;
 }
 
-export default function ExplorePage() {
-  const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [activeOrigin, setActiveOrigin] = useState<string>("all");
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
-  const [activeStatus, setActiveStatus] = useState<string>("all");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [allStories, setAllStories] = useState<ApiStory[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
-  // Fetch categories once
+interface ExploreState {
+  stories: ApiStory[];
+  pagination: Pagination | null;
+}
+
+function ExploreContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [state, setState] = useState<ExploreState>({ stories: [], pagination: null });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  // Read filters from URL — this IS the single source of truth.
+  const origin = searchParams.get("origin") || "all";
+  const category = searchParams.get("category");
+  const status = searchParams.get("status") || "all";
+  const search = searchParams.get("q") || searchParams.get("search") || "";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+
+  // Fetch categories once (they don't change often).
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/categories`)
       .then((r) => r.json())
@@ -57,124 +74,303 @@ export default function ExplorePage() {
       .catch(() => {});
   }, []);
 
-  // Read URL params on mount
+  // Fetch stories whenever URL params change.
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const q = urlParams.get("q") || "";
-    const genre = urlParams.get("genre") || "";
-    const tag = urlParams.get("tag") || "";
-    const origin = urlParams.get("origin") || "";
-    const search = urlParams.get("search") || "";
-    if (q || search) setSearchQuery(q || search);
-    if (genre) setActiveGenre(genre);
-    if (tag) setActiveTags(tag.split(",").filter(Boolean));
-    if (origin === "translated" || origin === "original") setActiveOrigin(origin);
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    params.set("limit", "40");
-    if (activeOrigin !== "all") params.set("story_origin", activeOrigin);
-    if (activeCategory) params.set("category", activeCategory);
-    if (activeGenre) params.set("genre", activeGenre);
-    if (activeStatus !== "all") params.set("status", activeStatus);
-    if (activeTags.length > 0) params.set("tags", activeTags.join(","));
-    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    let cancelled = false;
+    const controller = new AbortController();
 
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/stories?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.stories) setAllStories(data.stories);
-        setLoading(false);
+    setError(false);
+
+    const params = new URLSearchParams();
+    params.set("limit", "36");
+    params.set("page", String(page));
+    if (origin !== "all") params.set("story_origin", origin);
+    if (category) params.set("category", category);
+    if (status !== "all") params.set("status", status);
+    if (search.trim()) params.set("search", search.trim());
+
+    const url = `${API_BASE_URL}/api/stories?${params.toString()}`;
+
+    fetch(url, { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch(() => setLoading(false));
-  }, [activeOrigin, activeCategory, activeGenre, activeStatus, activeTags, searchQuery]);
+      .then((data) => {
+        if (cancelled) return;
+        setState({
+          stories: data?.stories || [],
+          pagination: data?.pagination || null,
+        });
+      })
+      .catch((err) => {
+        if (cancelled || err.name === "AbortError") return;
+        setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  const pageTitle = activeOrigin === "translated" ? "Khám phá truyện dịch" : "Khám phá truyện";
-  const pageDescription = activeOrigin === "translated"
-    ? "Tìm truyện dịch theo thể loại, xuất xứ, hashtag và trạng thái cập nhật."
-    : "Tìm câu chuyện yêu thích của bạn trong hàng nghìn tựa truyện.";
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [origin, category, status, search, page]);
 
-  // Since backend already filters by genre/status, allStories IS the filtered result
-  const featured = allStories.slice(0, 8);
-  const newUpdated = [...allStories]
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-    )
-    .slice(0, 4);
-  const recommended = [...allStories].reverse().slice(0, 4);
-  const weeklyHot = [...allStories]
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 4);
+  // ── Filter helpers ───────────────────────────────────────────────
+  const setFilter = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "all") {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    params.delete("page"); // Reset to page 1 on filter change
+    router.replace(`/explore?${params.toString()}`, { scroll: false });
+  };
+
+  const setSearch = (q: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (q.trim()) {
+      params.set("q", q.trim());
+    } else {
+      params.delete("q");
+      params.delete("search");
+    }
+    params.delete("page");
+    router.replace(`/explore?${params.toString()}`, { scroll: false });
+  };
+
+  const setPage = (p: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(p));
+    router.replace(`/explore?${params.toString()}`, { scroll: false });
+  };
+
+  const clearAll = () => {
+    router.replace("/explore", { scroll: false });
+  };
+
+  const activeFiltersCount = [
+    origin !== "all",
+    !!category,
+    status !== "all",
+    !!search,
+  ].filter(Boolean).length;
+
+  // Page title adapts to the active filter.
+  const pageTitle = useMemo(() => {
+    if (origin === "translated") return "Khám phá truyện dịch";
+    if (origin === "original") return "Khám phá truyện nguyên tác";
+    if (category) {
+      const cat = categories.find((c) => c.slug === category);
+      return cat ? cat.name : "Khám phá truyện";
+    }
+    return "Khám phá truyện";
+  }, [origin, category, categories]);
+
+  const { stories, pagination } = state;
 
   return (
     <>
       <Header />
 
       <main>
-        {/* Page title */}
+        {/* ── Page header ── */}
         <section className="pb-4 pt-8 sm:pt-12">
           <div className="section-container">
             <h1 className="text-display-sm text-gray-900 sm:text-display-md">
               {pageTitle}
             </h1>
-            <p className="mt-2 text-body-lg text-gray-500">
-              {pageDescription}
-            </p>
+            {pagination && (
+              <p className="mt-1 text-body-sm text-gray-500">
+                {pagination.total.toLocaleString("vi-VN")} truyện
+                {search ? ` cho "${search}"` : ""}
+              </p>
+            )}
           </div>
         </section>
 
-        {/* Unified search + filters */}
-        <ExploreFilters
-          stories={allStories}
-          categories={categories}
-          activeOrigin={activeOrigin}
-          onOriginChange={setActiveOrigin}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          activeStatus={activeStatus}
-          onStatusChange={setActiveStatus}
-          activeTags={activeTags}
-          onTagsChange={setActiveTags}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-
-        {/* Featured carousel */}
-        <Carousel title="Truyện nổi bật" stories={featured} />
-
-        {/* Story grids */}
-        {newUpdated.length > 0 && (
-          <SectionsGrid title="Mới cập nhật" stories={newUpdated} />
-        )}
-
-        {recommended.length > 0 && (
-          <SectionsGrid title="Đề xuất cho bạn" stories={recommended} />
-        )}
-
-        {/* Ad between sections */}
-        <div className="section-container py-4">
-          <AdsterraNativeBanner />
+        {/* ── Search bar + chips (mobile: also show filter drawer button) ── */}
+        <div className="pb-6">
+          <div className="section-container">
+            <div className="flex max-w-2xl items-start gap-4">
+              <div className="flex-1">
+                <ExploreFilters
+                  categories={categories}
+                  activeOrigin={origin}
+                  onOriginChange={(v) => setFilter("origin", v)}
+                  activeCategory={category}
+                  onCategoryChange={(v) => setFilter("category", v)}
+                  activeStatus={status}
+                  onStatusChange={(v) => setFilter("status", v)}
+                  searchQuery={search}
+                  onSearchChange={setSearch}
+                />
+                <ActiveFilterChips
+                  activeOrigin={origin}
+                  activeCategory={category}
+                  categories={categories}
+                  activeStatus={status}
+                  onOriginChange={(v) => setFilter("origin", v)}
+                  onCategoryChange={(v) => setFilter("category", v)}
+                  onStatusChange={(v) => setFilter("status", v)}
+                />
+              </div>
+              {/* Mobile filter drawer toggle */}
+              <div className="mt-2 lg:hidden">
+                <FilterDrawer
+                  categories={categories}
+                  activeOrigin={origin}
+                  onOriginChange={(v) => setFilter("origin", v)}
+                  activeCategory={category}
+                  onCategoryChange={(v) => setFilter("category", v)}
+                  activeStatus={status}
+                  onStatusChange={(v) => setFilter("status", v)}
+                  searchQuery={search}
+                  onSearchChange={setSearch}
+                  hasActiveFilters={activeFiltersCount > 0}
+                  onClearAll={clearAll}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {weeklyHot.length > 0 && (
-          <SectionsGrid title="Nổi bật tuần" stories={weeklyHot} />
-        )}
+        {/* ── Story grid ── */}
+        <section className="pb-12">
+          <div className="section-container">
+            {/* Desktop: sidebar + grid in same container */}
+            <div className="hidden items-start gap-6 lg:flex">
+              <FilterSidebar
+                categories={categories}
+                activeOrigin={origin}
+                onOriginChange={(v) => setFilter("origin", v)}
+                activeCategory={category}
+                onCategoryChange={(v) => setFilter("category", v)}
+                activeStatus={status}
+                onStatusChange={(v) => setFilter("status", v)}
+                hasActiveFilters={activeFiltersCount > 0}
+                onClearAll={clearAll}
+              />
+              <div className="min-w-0 flex-1">
+                <StoryGrid
+                  stories={stories}
+                  loading={loading}
+                  error={error}
+                  pagination={pagination}
+                  page={page}
+                  search={search}
+                  activeFiltersCount={activeFiltersCount}
+                  onPageChange={setPage}
+                  onClearAll={clearAll}
+                />
+              </div>
+            </div>
 
-        {!loading && allStories.length === 0 && (
-          <div className="section-container py-20 text-center">
-            <p className="text-body-lg text-gray-400">
-              Không tìm thấy truyện phù hợp. Thử chọn thể loại khác?
-            </p>
+            {/* Mobile: full-width grid */}
+            <div className="lg:hidden">
+              <StoryGrid
+                stories={stories}
+                loading={loading}
+                error={error}
+                pagination={pagination}
+                page={page}
+                search={search}
+                activeFiltersCount={activeFiltersCount}
+                onPageChange={setPage}
+                onClearAll={clearAll}
+              />
+            </div>
           </div>
-        )}
+        </section>
       </main>
 
       <Footer />
     </>
   );
+}
+
+function StoryGrid({
+  stories,
+  loading,
+  error,
+  pagination,
+  page,
+  search,
+  activeFiltersCount,
+  onPageChange,
+  onClearAll,
+}: {
+  stories: ApiStory[];
+  loading: boolean;
+  error: boolean;
+  pagination: Pagination | null;
+  page: number;
+  search: string;
+  activeFiltersCount: number;
+  onPageChange: (p: number) => void;
+  onClearAll: () => void;
+}) {
+  if (loading) return <CardSkeleton count={36} />;
+  if (error)
+    return (
+      <EmptyState
+        title="Không thể tải dữ liệu"
+        description="Máy chủ đang bận. Vui lòng thử lại."
+        action={{ label: "Thử lại", onClick: () => onPageChange(1) }}
+      />
+    );
+  if (stories.length === 0)
+    return (
+      <EmptyState
+        title="Không tìm thấy truyện phù hợp"
+        description="Thử bỏ bộ lọc hoặc từ khóa tìm kiếm khác."
+        action={activeFiltersCount > 0 ? { label: "Xóa bộ lọc", onClick: onClearAll } : undefined}
+      />
+    );
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {stories.map((story) => (
+          <StoryCardMemo key={story.id} story={story} />
+        ))}
+      </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-10 flex items-center justify-center gap-2">
+          <button
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="rounded-full border border-gray-200 px-4 py-2 text-body-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+          >
+            ← Trước
+          </button>
+          <span className="px-4 text-body-sm text-gray-500">
+            Trang {page} / {pagination.totalPages}
+          </span>
+          <button
+            disabled={page >= pagination.totalPages}
+            onClick={() => onPageChange(page + 1)}
+            className="rounded-full border border-gray-200 px-4 py-2 text-body-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+          >
+            Tiếp →
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Lazy-loaded story card — avoids re-creating the entire card list component
+// tree on filter changes. Since the grid itself is stable, memo here gives
+// the biggest win.
+import { memo } from "react";
+import StoryCard from "@/components/StoryCard";
+const StoryCardMemo = memo(StoryCard);
+
+export default function ExplorePage() {
+  return <ExploreContent />;
 }

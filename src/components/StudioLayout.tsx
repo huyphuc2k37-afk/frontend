@@ -22,6 +22,7 @@ import {
   CurrencyDollarIcon,
   BanknotesIcon,
   ChatBubbleLeftRightIcon,
+  MegaphoneIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL, authFetch } from "@/lib/api";
@@ -51,6 +52,7 @@ const sidebarItems = [
   { id: "new", label: "Viết truyện mới", href: "/write/new", icon: PencilSquareIcon },
   { id: "stats", label: "Thống kê", href: "/write/stats", icon: ChartBarIcon },
   { id: "revenue", label: "Doanh thu", href: "/write/revenue", icon: CurrencyDollarIcon },
+  { id: "ads", label: "Quảng cáo", href: "/author/ads", icon: MegaphoneIcon },
   { id: "withdraw", label: "Rút tiền", href: "/write/withdraw", icon: BanknotesIcon },
   { id: "notifications", label: "Thông báo", href: "/write/notifications", icon: BellAlertIcon },
   { id: "messages", label: "Tin nhắn", href: "/write/messages", icon: ChatBubbleLeftRightIcon },
@@ -294,7 +296,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
               <h1 className="text-body-md font-semibold text-gray-900">
                 {sidebarItems.find((i) => isActive(i.href))?.label ||
                   sidebarBottom.find((i) => isActive(i.href))?.label ||
-                  "Studio"}
+                  (pathname === "/author/ads" ? "Quảng cáo" : "Studio")}
               </h1>
             </div>
             <div className="flex items-center gap-2">

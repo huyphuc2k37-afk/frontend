@@ -96,6 +96,10 @@ export default function ModStoriesPage() {
   const [editCoverBase64, setEditCoverBase64] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
 
+  // Chapter list filter in detail panel
+  const [chapterFilter, setChapterFilter] = useState("all");
+  const [chapterSort, setChapterSort] = useState<"asc" | "desc">("asc");
+
   const openEditModal = () => {
     if (!selectedStory) return;
     setEditTitle(selectedStory.title);
@@ -573,33 +577,85 @@ export default function ModStoriesPage() {
                     {/* Chapters list */}
                     {selectedStory.chapters && selectedStory.chapters.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-gray-400">Danh sách chương ({selectedStory.chapters.length})</p>
-                        <div className="mt-1 max-h-40 overflow-y-auto rounded-xl border border-gray-100">
-                          {selectedStory.chapters.map((ch) => (
-                            <div key={ch.id} className="flex items-center justify-between border-b border-gray-50 px-3 py-2 last:border-0">
-                              <span className="text-[12px] text-gray-700">
-                                <span className="font-medium">Chương {ch.number}:</span> {ch.title}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                {ch.approvalStatus === "pending" && (
-                                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">Chờ</span>
-                                )}
-                                {ch.approvalStatus === "approved" && (
-                                  <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">Duyệt</span>
-                                )}
-                                {ch.approvalStatus === "rejected" && (
-                                  <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-700">Từ chối</span>
-                                )}
-                                {ch.reviewerName && (
-                                  <span className="text-[9px] text-indigo-500" title={ch.reviewedAt ? formatDate(ch.reviewedAt) : ''}>{ch.reviewerName}</span>
-                                )}
-                                {ch.reviewedAt && (
-                                  <span className="text-[9px] text-gray-400">{formatDate(ch.reviewedAt)}</span>
-                                )}
-                                <span className="text-[10px] text-gray-400">{ch.wordCount} từ</span>
-                              </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] font-medium text-gray-400">
+                            Danh sách chương ({selectedStory.chapters.length})
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {/* Filter by status */}
+                            <select
+                              value={chapterFilter}
+                              onChange={(e) => setChapterFilter(e.target.value)}
+                              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-600 focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                            >
+                              <option value="all">Tất cả</option>
+                              <option value="pending">Chờ duyệt</option>
+                              <option value="approved">Đã duyệt</option>
+                              <option value="rejected">Từ chối</option>
+                            </select>
+                            {/* Sort by number */}
+                            <button
+                              onClick={() => setChapterSort((s) => s === "asc" ? "desc" : "asc")}
+                              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                              title={chapterSort === "asc" ? "Đang: tăng dần (1→n)" : "Đang: giảm dần (n→1)"}
+                            >
+                              <span>Chương</span>
+                              <svg className={`h-3 w-3 transition-transform ${chapterSort === "desc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        {/* Chapter summary badges */}
+                        {(() => {
+                          const pending = selectedStory.chapters.filter((c: any) => c.approvalStatus === "pending").length;
+                          const approved = selectedStory.chapters.filter((c: any) => c.approvalStatus === "approved").length;
+                          const rejected = selectedStory.chapters.filter((c: any) => c.approvalStatus === "rejected").length;
+                          return (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {pending > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{pending} chờ duyệt</span>}
+                              {approved > 0 && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{approved} đã duyệt</span>}
+                              {rejected > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">{rejected} từ chối</span>}
                             </div>
-                          ))}
+                          );
+                        })()}
+                        <div className="mt-2 max-h-52 overflow-y-auto rounded-xl border border-gray-100">
+                          {(() => {
+                            const filtered = selectedStory.chapters
+                              .filter((c: any) => chapterFilter === "all" || c.approvalStatus === chapterFilter)
+                              .sort((a: any, b: any) => chapterSort === "asc" ? a.number - b.number : b.number - a.number);
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="py-6 text-center text-[11px] text-gray-400">
+                                  Không có chương nào phù hợp bộ lọc.
+                                </div>
+                              );
+                            }
+                            return filtered.map((ch: any) => (
+                              <div key={ch.id} className="flex items-center justify-between border-b border-gray-50 px-3 py-2 last:border-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {ch.approvalStatus === "pending" && (
+                                    <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 flex-shrink-0">Chờ</span>
+                                  )}
+                                  {ch.approvalStatus === "approved" && (
+                                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700 flex-shrink-0">Duyệt</span>
+                                  )}
+                                  {ch.approvalStatus === "rejected" && (
+                                    <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-700 flex-shrink-0">Từ chối</span>
+                                  )}
+                                  <span className="truncate text-[12px] font-medium text-gray-700" title={ch.title}>
+                                    Chương {ch.number}: {ch.title}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                  {ch.reviewerName && (
+                                    <span className="text-[9px] text-indigo-500" title={ch.reviewedAt ? formatDate(ch.reviewedAt) : ""}>{ch.reviewerName}</span>
+                                  )}
+                                  <span className="text-[10px] text-gray-400">{ch.wordCount} từ</span>
+                                </div>
+                              </div>
+                            ));
+                          })()}
                         </div>
                       </div>
                     )}

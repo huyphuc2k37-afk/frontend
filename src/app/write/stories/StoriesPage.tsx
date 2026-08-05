@@ -68,10 +68,16 @@ export default function StoriesPage() {
   const handleDelete = async (id: string) => {
     setDeleting(true);
     try {
-      await fetch(`${API_BASE_URL}/api/manage/stories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/manage/stories/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể xóa truyện");
+        setDeleting(false);
+        return;
+      }
       setStories((prev) => prev.filter((s) => s.id !== id));
       setDeleteId(null);
     } catch {

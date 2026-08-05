@@ -40,6 +40,7 @@ export default function AdminDepositsPage() {
 
   const handleAction = async (id: string, status: "approved" | "rejected") => {
     if (!token) return;
+    if (status === "approved" && !confirm("Duyệt yêu cầu nạp xu này? Hành động không thể hoàn tác.")) return;
     const note = actionNote[id] || "";
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/deposits/${id}`, {
@@ -50,9 +51,11 @@ export default function AdminDepositsPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Lỗi không xác định" }));
         alert(data.error || "Thao tác thất bại");
+        return; // Don't refresh on error — preserves operator context
       }
     } catch {
       alert("Lỗi kết nối server");
+      return;
     }
     fetchDeposits();
   };

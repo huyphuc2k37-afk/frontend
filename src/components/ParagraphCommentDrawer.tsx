@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   XMarkIcon,
@@ -347,13 +347,57 @@ export default function ParagraphCommentDrawer({
     } catch {}
   };
 
-  // Close on Escape key
+  // Close on Escape key + focus trap inside drawer (WCAG 2.1.2 No Keyboard Trap)
+  const drawerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (isOpen) document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
+    document.addEventListener("keydown", handleEsc);
+
+    // Move focus into the drawer so keyboard users can interact with it.
+    // Save the previously focused element so we can restore on close.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusableSelector =
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    const trapFocus = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const root = drawerRef.current;
+      if (!root) return;
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>(focusableSelector)
+      ).filter((el) => !el.hasAttribute("aria-hidden"));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+
+    // Focus the close button (or first focusable) when drawer opens
+    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(focusableSelector);
+    if (firstFocusable) {
+      // Use a microtask to wait for the drawer to be rendered
+      setTimeout(() => firstFocusable.focus(), 0);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("keydown", trapFocus);
+      // Restore focus to the element that opened the drawer
+      if (previouslyFocused && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus();
+      }
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -364,10 +408,18 @@ export default function ParagraphCommentDrawer({
       <div
         className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 animate-slideInRight">
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Bình luận đoạn văn"
+        className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 animate-slideInRight focus:outline-none"
+        tabIndex={-1}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <h3 className="flex items-center gap-2 text-body-sm font-bold text-gray-900">

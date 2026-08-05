@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [noticeResult, setNoticeResult] = useState<string | null>(null);
   const [resettingRevenue, setResettingRevenue] = useState(false);
   const [revenueResult, setRevenueResult] = useState<string | null>(null);
+  const [storyStats, setStoryStats] = useState<any>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -57,6 +58,16 @@ export default function AdminDashboard() {
           _error: true,
         })
       );
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/api/admin/stories/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then(setStoryStats)
+      .catch(() => setStoryStats(null));
   }, [token]);
 
   if (!stats) {
@@ -108,6 +119,95 @@ export default function AdminDashboard() {
         <h2 className="text-heading-md font-bold text-gray-900">Tổng quan hệ thống</h2>
         <p className="mt-1 text-body-sm text-gray-500">Quản lý toàn bộ dữ liệu VStory</p>
       </div>
+
+      {/* Story Origin Stats */}
+      {storyStats && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <h3 className="text-body-lg font-semibold text-gray-900">Thống kê truyện</h3>
+          <p className="mt-1 text-body-sm text-gray-500">Phân chia theo loại truyện sáng tác và dịch</p>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="rounded-xl bg-blue-50 p-4">
+              <p className="text-caption text-blue-600">Tổng truyện</p>
+              <p className="mt-1 text-heading-md font-bold text-blue-700">{storyStats.overview?.total || 0}</p>
+            </div>
+            <div className="rounded-xl bg-emerald-50 p-4">
+              <p className="text-caption text-emerald-600">Sáng tác</p>
+              <p className="mt-1 text-heading-md font-bold text-emerald-700">{storyStats.overview?.original || 0}</p>
+              <p className="mt-0.5 text-caption text-emerald-500">
+                {((storyStats.overview?.original || 0) / (storyStats.overview?.total || 1) * 100).toFixed(1)}%
+              </p>
+            </div>
+            <div className="rounded-xl bg-purple-50 p-4">
+              <p className="text-caption text-purple-600">Truyện dịch</p>
+              <p className="mt-1 text-heading-md font-bold text-purple-700">{storyStats.overview?.translated || 0}</p>
+              <p className="mt-0.5 text-caption text-purple-500">
+                {((storyStats.overview?.translated || 0) / (storyStats.overview?.total || 1) * 100).toFixed(1)}%
+              </p>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-4">
+              <p className="text-caption text-amber-600">Chờ duyệt</p>
+              <p className="mt-1 text-heading-md font-bold text-amber-700">{storyStats.overview?.pending || 0}</p>
+            </div>
+          </div>
+
+          {/* Top Translators */}
+          {storyStats.topTranslators && storyStats.topTranslators.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-body-sm font-semibold text-gray-700">Top dịch giả</h4>
+              <div className="mt-2 space-y-2">
+                {storyStats.topTranslators.slice(0, 5).map((t: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                    <div>
+                      <span className="text-body-sm font-medium text-gray-800">{t.name}</span>
+                      <span className="ml-2 text-caption text-gray-500">{t.storyCount} truyện</span>
+                    </div>
+                    <span className="text-caption text-gray-500">
+                      {t.totalViews >= 1000 ? `${(t.totalViews / 1000).toFixed(1)}K views` : `${t.totalViews} views`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Stats */}
+          {storyStats.monthlyStats && storyStats.monthlyStats.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-body-sm font-semibold text-gray-700">Biến động 6 tháng gần nhất</h4>
+              <div className="mt-2 overflow-x-auto">
+                <table className="w-full text-body-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-2 text-left font-medium text-gray-500">Tháng</th>
+                      <th className="py-2 text-right font-medium text-gray-500">Sáng tác</th>
+                      <th className="py-2 text-right font-medium text-gray-500">Dịch</th>
+                      <th className="py-2 text-right font-medium text-gray-500">Tổng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {storyStats.monthlyStats.map((m: any, i: number) => (
+                      <tr key={i} className="border-b border-gray-100">
+                        <td className="py-2 text-gray-700">{m.month}</td>
+                        <td className="py-2 text-right text-emerald-600">{m.original}</td>
+                        <td className="py-2 text-right text-purple-600">{m.translated}</td>
+                        <td className="py-2 text-right font-medium text-gray-800">{m.original + m.translated}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <Link
+            href="/admin/stories"
+            className="mt-4 inline-block text-body-sm font-medium text-primary-600 hover:text-primary-700"
+          >
+            Xem danh sách truyện →
+          </Link>
+        </div>
+      )}
 
       {/* Broadcast notification */}
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 import StoryDetailClient from "./StoryDetailClient";
@@ -9,7 +10,11 @@ const SITE_URL = "https://vstory.vn";
 
 type Props = { params: { slug: string } };
 
-async function getStory(slug: string) {
+// Memoize the fetch so page.tsx (metadata) and any other server-side caller
+// share one request per render pass. Client-side StoryDetailClient does its
+// own fetch with X-Count-View for view-counting; that fetch is intentionally
+// separate (and goes to a different endpoint path on the backend).
+const getStory = cache(async (slug: string) => {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(API_BASE_URL + "/api/stories/" + slug, {
@@ -24,7 +29,7 @@ async function getStory(slug: string) {
     }
   }
   return null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const story = await getStory(params.slug);

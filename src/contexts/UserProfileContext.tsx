@@ -1,15 +1,16 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { API_BASE_URL } from "@/lib/api";
+import { useCachedFetch, invalidateCacheKey } from "@/lib/useCachedFetch";
 
 export interface UserProfile {
   name: string;
   email: string;
   image?: string;
-  role: string; // "reader" | "author" | "admin"
+  role: string; // "reader" | "author" | "admin" | "moderator"
   bio?: string;
+  coinBalance?: number;
 }
 
 interface UserProfileContextType {
@@ -29,46 +30,42 @@ export const useUserProfile = () => useContext(UserProfileContext);
 
 export function UserProfileProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const token = (session as any)?.accessToken as string | undefined;
+  const email = (session?.user?.email as string | undefined)?.toLowerCase();
 
-  const fetchProfile = () => {
-    if (status !== "authenticated" || !token) return;
-    setLoading(true);
-    fetch(`${API_BASE_URL}/api/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        setProfile({
-          name: data.name,
-          email: data.email,
-          image: data.image,
-          role: data.role,
-          bio: data.bio,
-        });
-      })
-      .catch(() => setProfile(null))
-      .finally(() => setLoading(false));
-  };
+  // Cache key is per-user, so multiple components share 1 fetch.
+  const cacheKey = email ? `profile:${email}` : "profile:none";
+  const { data, mutate } = useCachedFetch<UserProfile>(
+    cacheKey,
+    "/api/profile",
+    token,
+    { revalidateMs: 60_000, revalidateOnFocus: true, skip: status !== "authenticated" || !token },
+  );
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-    if (status === "loading") {
-      return;
-    }
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, token]);
+  // Map backend response → UI shape. Backend may return role and coinBalance.
+  const profile: UserProfile | null = useMemo(() => {
+    if (!data) return null;
+    return {
+      name: (data as any).name,
+      email: (data as any).email,
+      image: (data as any).image,
+      role: (data as any).role,
+      bio: (data as any).bio,
+    };
+  }, [data]);
+
+  const loading = status === "loading" || (status === "authenticated" && profile === null && !data);
+
+  // Memoize the context value. Without this, every render creates a new object
+  // which retriggers consumers' useSyncExternalStore selectors and produces the
+  // "getServerSnapshot should be cached" infinite-loop warning.
+  const ctxValue = useMemo<UserProfileContextType>(
+    () => ({ profile, loading, refresh: mutate }),
+    [profile, loading, mutate]
+  );
 
   return (
-    <UserProfileContext.Provider value={{ profile, loading, refresh: fetchProfile }}>
+    <UserProfileContext.Provider value={ctxValue}>
       {children}
     </UserProfileContext.Provider>
   );

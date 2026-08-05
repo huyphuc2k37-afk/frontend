@@ -73,15 +73,25 @@ export default function ProfilePage() {
       fetch(`${API_BASE_URL}/api/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then((data) => {
+          if (!data || typeof data !== "object") {
+            setLoading(false);
+            return;
+          }
           setProfile(data);
-          setEditName(data.name);
+          setEditName(data.name || "");
           setEditBio(data.bio || "");
           setEditImage(data.image || null);
           setLoading(false);
         })
-        .catch(() => setLoading(false));
+        .catch((err) => {
+          console.error("Error loading profile:", err);
+          setLoading(false);
+        });
     }
   }, [status, router, session]);
 
@@ -205,7 +215,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">
                     <span className="text-display-sm font-bold text-white">
-                      {profile.name[0]}
+                      {(profile.name || profile.email || "U")[0]}
                     </span>
                   </div>
                 )}
@@ -224,7 +234,7 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-primary">
                           <span className="text-display-sm font-bold text-white">
-                            {editName?.[0] || profile.name[0]}
+                            {(editName?.[0] || profile.name?.[0] || profile.email?.[0] || "U").toUpperCase()}
                           </span>
                         </div>
                       )}
@@ -318,9 +328,9 @@ export default function ProfilePage() {
               {/* Stats */}
               <div className="mt-6 grid grid-cols-3 gap-4 border-t border-gray-100 pt-6">
                 {[
-                  { icon: BookOpenIcon, label: "Truyện", value: profile._count.stories },
-                  { icon: BookmarkIcon, label: "Đã lưu", value: profile._count.bookmarks },
-                  { icon: ChatBubbleLeftIcon, label: "Bình luận", value: profile._count.comments },
+                  { icon: BookOpenIcon, label: "Truyện", value: profile._count?.stories ?? 0 },
+                  { icon: BookmarkIcon, label: "Đã lưu", value: profile._count?.bookmarks ?? 0 },
+                  { icon: ChatBubbleLeftIcon, label: "Bình luận", value: profile._count?.comments ?? 0 },
                 ].map((s) => (
                   <div key={s.label} className="text-center">
                     <s.icon className="mx-auto h-5 w-5 text-gray-400" />
@@ -420,7 +430,7 @@ export default function ProfilePage() {
             {/* Right — content */}
             <div className="lg:col-span-2">
               {/* My stories */}
-              {profile.stories.length > 0 && (
+              {profile.stories && profile.stories.length > 0 && (
                 <motion.section
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

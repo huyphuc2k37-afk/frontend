@@ -56,9 +56,11 @@ export default function AdminWithdrawalsPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Lỗi không xác định" }));
         alert(data.error || "Thao tác thất bại");
+        return;
       }
     } catch {
       alert("Lỗi kết nối server");
+      return;
     }
     fetchWithdrawals();
   };

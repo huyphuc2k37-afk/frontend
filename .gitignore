@@ -15,3 +15,4 @@ public/worker-*.js.map
 
 .vercel
 .env*.local
+.env*

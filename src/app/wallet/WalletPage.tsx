@@ -1,12 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL } from "@/lib/api";
+import { authFetch } from "@/lib/api";
+import { useWalletBalance } from "@/contexts/WalletBalanceContext";
+import { useCachedFetch } from "@/lib/useCachedFetch";
+
+/** Helper component: calls router.push in useEffect (avoids "setState in render" warning) */
+function RedirectToLogin() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/login?callbackUrl=/wallet");
+  }, [router]);
+  return null;
+}
 import {
   CurrencyDollarIcon,
   CreditCardIcon,
@@ -85,9 +96,10 @@ export default function WalletPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [balance, setBalance] = useState(0);
-  const [deposits, setDeposits] = useState<any[]>([]);
   const [codeKey, setCodeKey] = useState(0);
+
+  // Shared wallet balance via context — same value the Header badge reads.
+  const { balance: sharedBalance, refresh: refreshBalance } = useWalletBalance();
 
   // Generate unique transfer code (VS + 6 alphanumeric)
   const transferCode = useMemo(() => {
@@ -100,23 +112,14 @@ export default function WalletPage() {
 
   const token = (session as any)?.accessToken as string | undefined;
 
-  const fetchWallet = useCallback(async () => {
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/wallet`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setBalance(data.balance);
-        setDeposits(data.deposits || []);
-      }
-    } catch {}
-  }, [token]);
-
-  useEffect(() => {
-    if (token) fetchWallet();
-  }, [token, fetchWallet]);
+  // Fetch deposits history via shared cache. Invalidates on focus after a new deposit.
+  const history = useCachedFetch<{ deposits: any[]; purchases: any[]; purchasedChapterIds: string[] }>(
+    session?.user?.email ? `wallet:history:${session.user.email}` : "wallet:history:none",
+    "/api/wallet/history",
+    token,
+    { revalidateMs: 60_000, skip: !token, revalidateOnFocus: true },
+  );
+  const deposits = history.data?.deposits || [];
 
   const handleDeposit = async () => {
     if (!selectedPack || !selectedMethod || !token) return;
@@ -124,15 +127,11 @@ export default function WalletPage() {
     if (!pack) return;
     setProcessing(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallet/deposit`, {
+      const res = await authFetch("/api/wallet/deposit", token, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           amount: pack.price,
-            coins: pack.coins,
+          coins: pack.coins,
           method: selectedMethod,
           transferCode,
           transferNote: `${transferCode} - Nap ${pack.label} - ${session?.user?.email}`,
@@ -143,7 +142,7 @@ export default function WalletPage() {
         setSelectedPack(null);
         setSelectedMethod(null);
         setCodeKey((k) => k + 1); // regenerate code for next deposit
-        fetchWallet();
+        history.mutate(); // re-fetch deposits
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(errData.error || "Nạp xu thất bại, vui lòng thử lại.");
@@ -166,8 +165,15 @@ export default function WalletPage() {
   }
 
   if (status === "unauthenticated") {
-    router.push("/login?callbackUrl=/wallet");
-    return null;
+    return (
+      <>
+        <Header />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+        </div>
+        <RedirectToLogin />
+      </>
+    );
   }
 
   const selectedPackData = coinPackages.find((p) => p.id === selectedPack);
@@ -208,7 +214,7 @@ export default function WalletPage() {
             <div className="relative">
               <p className="text-body-sm font-medium text-white/80">Số dư hiện tại</p>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-4xl font-bold">{balance.toLocaleString()}</span>
+                <span className="text-4xl font-bold">{(sharedBalance ?? 0).toLocaleString()}</span>
                 <span className="text-lg font-medium text-white/80">xu</span>
               </div>
               <p className="mt-2 text-caption text-white/60">

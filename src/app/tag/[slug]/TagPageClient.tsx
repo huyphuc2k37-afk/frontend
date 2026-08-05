@@ -9,8 +9,8 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
-import { API_BASE_URL } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
+import { API_BASE_URL, PLACEHOLDER_COVER, resolveCoverSrc } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface ApiTag {
@@ -55,8 +55,8 @@ const tagTypeLabels: Record<string, string> = {
 
 function StoryCard({ story }: { story: ApiStory }) {
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
-  const coverUrl = story.coverUrl || fallbackUrl;
-  const [src, setSrc] = useState(coverUrl);
+  const [src, setSrc] = useState(resolveCoverSrc(story));
+  const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
@@ -67,7 +67,13 @@ function StoryCard({ story }: { story: ApiStory }) {
           fill
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setSrc(PLACEHOLDER)}
+          onError={() => {
+            if (hasValidCover && src !== fallbackUrl) {
+              setSrc(fallbackUrl);
+              return;
+            }
+            setSrc(PLACEHOLDER_COVER);
+          }}
         />
         {story.status === "completed" && (
           <span className="absolute left-2 top-2 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
@@ -214,11 +220,6 @@ export default function TagPageClient({
                 ))}
               </div>
 
-              {/* Ad after story grid */}
-              <div className="py-4">
-                <AdsterraNativeBanner />
-              </div>
-
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
@@ -244,10 +245,12 @@ export default function TagPageClient({
             </div>
           </section>
         ) : (
-          <div className="section-container py-20 text-center">
-            <p className="text-body-lg text-gray-400">
-              Chưa có truyện nào với tag này.
-            </p>
+          <div className="section-container py-16">
+            <EmptyState
+              title={`Chưa có truyện nào gắn tag "${tag.name}"`}
+              description="Hãy quay lại sau hoặc khám phá các thể loại truyện khác nhé."
+              action={{ label: "Khám phá truyện", href: "/explore" }}
+            />
           </div>
         )}
       </main>

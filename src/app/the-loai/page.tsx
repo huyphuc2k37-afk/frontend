@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
 import { API_BASE_URL } from "@/lib/api";
 
 const SITE_URL = "https://vstory.vn";
@@ -51,7 +50,8 @@ interface ApiCategory {
   icon: string;
   color: string;
   displayOrder: number;
-  _count: { stories: number };
+  storyCount?: number;
+  _count?: { stories: number };
 }
 
 async function getCategories(): Promise<ApiCategory[]> {
@@ -133,7 +133,7 @@ export default async function GenreIndexPage() {
                     {cat.description || cat.seoDescription}
                   </p>
                   <p className="mt-2 text-caption text-gray-400">
-                    {cat._count?.stories ?? 0} truyện
+                    {(cat.storyCount ?? cat._count?.stories ?? 0)} truyện
                   </p>
                 </Link>
               ))}
@@ -142,9 +142,6 @@ export default async function GenreIndexPage() {
         </section>
 
         {/* SEO text block */}
-        <div className="section-container py-4">
-          <AdsterraNativeBanner />
-        </div>
         <section className="border-t border-gray-100 bg-gray-50/50 py-8">
           <div className="section-container max-w-3xl">
             <h2 className="mb-3 text-heading-sm font-bold text-gray-800">

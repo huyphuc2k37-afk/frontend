@@ -17,15 +17,26 @@ import {
   SunIcon,
   MoonIcon,
   ChatBubbleLeftIcon,
+  AdjustmentsHorizontalIcon,
+  MegaphoneIcon,
+  GiftIcon as GiftOutlineIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import { sanitizeHtml } from "@/lib/sanitize";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
 import ParagraphCommentDrawer from "@/components/ParagraphCommentDrawer";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
-import AdSenseInArticle from "@/components/ads/AdSenseInArticle";
+import VirtualGiftPicker from "@/components/VirtualGiftPicker";
+import GiftAnimation, { useGiftAnimation } from "@/components/GiftAnimation";
 import { API_BASE_URL, authFetch } from "@/lib/api";
+import { QualityTracker } from "@/lib/fingerprint";
+import ReadingSettingsPanel, { useReadingSettings } from "@/components/ReadingSettings";
+import { useReaderStore, READER_FONT_CSS } from "@/stores/readerStore";
+import { ReaderProgressBar } from "@/components/ReaderProgressBar";
+import { useChapterKeyboard } from "@/hooks/useChapterKeyboard";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
+import { cn } from "@/lib/utils";
+import { READER_THEMES, PAGE_BG } from "@/lib/readerThemes";
 
 interface ChapterData {
   id: string;
@@ -59,15 +70,45 @@ export default function ReadChapterPage() {
   const [tipping, setTipping] = useState(false);
   const [tipSuccess, setTipSuccess] = useState(false);
   const [tipError, setTipError] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const [giftPickerOpen, setGiftPickerOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const token = (session as any)?.accessToken as string | undefined;
+  // Legacy hook kept for any consumers; the primary source of truth is the store below
+  useReadingSettings();
+  const { settings: readingSettings } = useReaderStore();
+  const readerTheme = READER_THEMES[readingSettings.theme];
+  // Track keyboard shortcuts status (state for ui hints if needed)
+  const isDark = readingSettings.theme === "dark";
 
   // ─── Inline paragraph comment state ───
   const [paragraphDrawerOpen, setParagraphDrawerOpen] = useState(false);
   const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(0);
   const [activeParagraphText, setActiveParagraphText] = useState("");
   const [paragraphCounts, setParagraphCounts] = useState<Record<number, number>>({});
+
+  // Quality tracking for view analytics
+  const [qualityTracker, setQualityTracker] = useState<QualityTracker | null>(null);
+
+  // Gift animation
+  const { animations, addAnimation, removeAnimation } = useGiftAnimation(chapter?.story?.id);
+
+  // Keyboard shortcuts
+  useChapterKeyboard({
+    enabled: !loading && !needsPurchase,
+    prevChapterId: chapter?.prev?.id,
+    nextChapterId: chapter?.next?.id,
+    storySlug: slug,
+    toggleSettings: () => setSettingsPanelOpen((v) => !v),
+  });
+
+  // Reading history (anonymous users only — logged-in users tracked via /api/read-history)
+  const { addEntry: addHistoryEntry } = useReadingHistory();
+
+  // Author ad state
+  const [showAuthorAd, setShowAuthorAd] = useState(false);
+  const [adFrequency, setAdFrequency] = useState<number | null>(null);
+  const [adDismissed, setAdDismissed] = useState(false);
 
   // Split chapter content into paragraphs for inline commenting
   const paragraphs = useMemo(() => {
@@ -90,6 +131,38 @@ export default function ReadChapterPage() {
       .catch(() => {});
   }, [chapterId, chapter, paragraphs.length]);
 
+  // Check if author ad should be shown
+  useEffect(() => {
+    if (!chapter?.story?.id || !chapter?.number || needsPurchase) return;
+    fetch(`${API_BASE_URL}/api/author/ads/check?storyId=${chapter.story.id}&chapterNumber=${chapter.number}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.shouldShowAd) {
+          setShowAuthorAd(true);
+          setAdFrequency(data.adFrequency);
+        }
+      })
+      .catch(() => {});
+  }, [chapter?.story?.id, chapter?.number, needsPurchase]);
+
+  // Record ad impression when shown and dismissed
+  const handleDismissAd = useCallback(async () => {
+    if (!token || !chapter?.story?.id || !chapter?.id) return;
+    // Record impression
+    authFetch("/api/author/ads/record", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        storyId: chapter.story.id,
+        chapterId: chapter.id,
+        chapterNumber: chapter.number,
+        showAd: true,
+      }),
+    }).catch(() => {});
+    setAdDismissed(true);
+    setShowAuthorAd(false);
+  }, [token, chapter]);
+
   const openParagraphDrawer = (index: number, text: string) => {
     setActiveParagraphIndex(index);
     setActiveParagraphText(text);
@@ -105,49 +178,15 @@ export default function ReadChapterPage() {
       .catch(() => {});
   };
 
-  // ─── Copy protection for chapter content ───
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
+  // NOTE: Copy protection is intentionally NOT enforced. The previous implementation
+  // blocked copy/cut/select/Ctrl+C/Ctrl+A/Ctrl+U/Ctrl+S/PrintScreen on the entire
+  // chapter content area, which also made the content inaccessible to screen readers
+  // and keyboard-only users (WCAG 2.1.1 Keyboard, 4.1.2 Name/Role/Value — Critical).
+  // Chapter text is rendered as visible text; legitimate users have full access.
+  // If anti-piracy is needed in the future, it must be implemented in a way that
+  // does not interfere with assistive technology (e.g. invisible watermarking).
 
-    const prevent = (e: Event) => e.preventDefault();
-
-    // Block right-click, copy, cut, select on content area
-    el.addEventListener("contextmenu", prevent);
-    el.addEventListener("copy", prevent);
-    el.addEventListener("cut", prevent);
-    el.addEventListener("selectstart", prevent);
-
-    // Block Ctrl+C, Ctrl+A, Ctrl+U, Ctrl+S, PrintScreen
-    const handleKey = (e: KeyboardEvent) => {
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        ["c", "a", "u", "s", "p"].includes(e.key.toLowerCase())
-      ) {
-        e.preventDefault();
-      }
-      // Block PrintScreen
-      if (e.key === "PrintScreen") {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("keydown", handleKey);
-
-    return () => {
-      el.removeEventListener("contextmenu", prevent);
-      el.removeEventListener("copy", prevent);
-      el.removeEventListener("cut", prevent);
-      el.removeEventListener("selectstart", prevent);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [chapter]);
-
-  // Load dark mode preference from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("reader-dark-mode");
-    if (saved === "true") setDarkMode(true);
-  }, []);
+  // Load dark mode preference from reading settings
 
   // Track reading time for daily quest (1 minute intervals)
   useEffect(() => {
@@ -158,14 +197,19 @@ export default function ReadChapterPage() {
         body: JSON.stringify({ minutes: 1 }),
       }).catch(() => {});
     }, 60_000); // every 1 minute
-    return () => clearInterval(interval);
-  }, [token]);
+    return () => {
+      clearInterval(interval);
+      // Cleanup quality tracker
+      if (qualityTracker) {
+        qualityTracker.destroy();
+      }
+    };
+  }, [token, qualityTracker]);
 
   const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      localStorage.setItem("reader-dark-mode", String(!prev));
-      return !prev;
-    });
+    const next: "light" | "sepia" | "gray" | "dark" =
+      readingSettings.theme === "dark" ? "light" : "dark";
+    useReaderStore.getState().setSetting("theme", next);
   };
 
   // Re-fetch chapter data helper (used by useEffect and after purchase)
@@ -197,6 +241,33 @@ export default function ReadChapterPage() {
       .then(async (data) => {
         if (cancelled) return;
         setChapter(data);
+
+        // Initialize quality tracker for this story
+        if (data.story?.id) {
+          const tracker = new QualityTracker(data.story.id);
+          tracker.recordChapter(chapterId);
+          setQualityTracker(tracker);
+
+          // Track read history (so recommendation engine has data)
+          if (token) {
+            fetch("/api/read-history", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ storyId: data.story.id, chapterId }),
+            }).catch(() => {});
+          } else if (data.story?.slug && data.story?.genre) {
+            // Anonymous fallback — localStorage so recommendations still work.
+            addHistoryEntry({
+              storyId: data.story.id,
+              title: data.story.title || data.story.slug,
+              slug: data.story.slug,
+              genre: data.story.genre,
+            });
+          }
+        }
 
         // Backend already strips content for unauthorized access
         if (data.requiresLogin || data.requiresPurchase) {
@@ -324,43 +395,51 @@ export default function ReadChapterPage() {
   return (
     <>
       <Header />
-      <main className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1a1a2e]' : 'bg-gray-50'}`}>
+      <ReaderProgressBar />
+      <main className={cn("min-h-screen transition-colors duration-300", PAGE_BG[readingSettings.theme])}>
         {/* Chapter header */}
-        <div className={`border-b transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#16213e]' : 'border-gray-200 bg-white'}`}>
+        <div className={cn("border-b transition-colors duration-300", isDark ? "border-gray-700 bg-[#16213e]" : "border-border bg-card")}>
           <div className="section-container flex items-center justify-between py-4">
             <div className="flex items-center gap-3 min-w-0">
               <Link
                 href={`/story/${slug}`}
-                className={`flex-shrink-0 rounded-lg p-2 transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+                className={`flex-shrink-0 rounded-lg p-2 transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </Link>
               <div className="min-w-0">
                 <Link
                   href={`/story/${slug}`}
-                  className={`block text-caption truncate ${darkMode ? 'text-gray-400 hover:text-primary-400' : 'text-gray-500 hover:text-primary-600'}`}
+                  className={`block text-caption truncate ${isDark ? 'text-gray-400 hover:text-primary-400' : 'text-gray-500 hover:text-primary-600'}`}
                 >
                   {chapter.story.title}
                 </Link>
-                <h1 className={`text-body-md font-bold truncate ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                <h1 className={`text-body-md font-bold truncate ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
                   Chương {chapter.number}: {chapter.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                 </h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`text-caption ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>{chapter.wordCount.toLocaleString()} chữ</span>
+              <span className={`text-caption ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{chapter.wordCount.toLocaleString()} chữ</span>
+              <button
+                onClick={() => setSettingsPanelOpen(true)}
+                className={`rounded-lg p-2 transition-all duration-300 ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
+                title="Cài đặt đọc truyện"
+              >
+                <AdjustmentsHorizontalIcon className="h-5 w-5" />
+              </button>
               <button
                 onClick={toggleDarkMode}
-                className={`rounded-lg p-2 transition-all duration-300 ${darkMode ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
-                title={darkMode ? 'Chế độ sáng' : 'Chế độ tối'}
+                className={`rounded-lg p-2 transition-all duration-300 ${isDark ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'}`}
+                title={isDark ? 'Chế độ sáng' : 'Chế độ tối'}
               >
-                {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+                {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Content area */}
+            {/* Content area */}
         <div className="section-container py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -369,12 +448,12 @@ export default function ReadChapterPage() {
           >
             {needsPurchase ? (
               /* Locked chapter purchase prompt */
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-700 dark:bg-amber-900/20">
                 <LockClosedIcon className="mx-auto h-16 w-16 text-amber-500" />
-                <h2 className="mt-4 text-heading-md font-bold text-gray-900">
+                <h2 className="mt-4 text-heading-md font-bold text-gray-900 dark:text-gray-100">
                   Chương trả phí
                 </h2>
-                <p className="mt-2 text-body-md text-gray-600">
+                <p className="mt-2 text-body-md text-gray-600 dark:text-gray-400">
                   Chương này cần <span className="font-bold text-amber-600">{chapter.price} xu</span> để đọc
                 </p>
 
@@ -389,8 +468,8 @@ export default function ReadChapterPage() {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-3">
-                    <p className="text-body-sm text-gray-500">
-                      Số dư hiện tại: <span className="font-semibold text-gray-700">{userBalance} xu</span>
+                    <p className="text-body-sm text-gray-500 dark:text-gray-400">
+                      Số dư hiện tại: <span className="font-semibold text-gray-700 dark:text-gray-300">{userBalance} xu</span>
                     </p>
                     <button
                       onClick={handlePurchase}
@@ -420,10 +499,46 @@ export default function ReadChapterPage() {
               /* Chapter content */
               <div
                 ref={contentRef}
-                className={`rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300 select-none ${darkMode ? 'border-gray-700 bg-[#1e2746]' : 'border-gray-100 bg-white'}`}
-                style={{ WebkitUserSelect: "none", MozUserSelect: "none", msUserSelect: "none", userSelect: "none" } as React.CSSProperties}
+                id="chapter-content"
+                className={cn(
+                  "rounded-2xl border p-8 shadow-sm md:p-12 transition-colors duration-300",
+                  readerTheme.bg,
+                  readerTheme.border
+                )}
+                style={{
+                  fontFamily: READER_FONT_CSS[readingSettings.fontFamily],
+                  fontSize: `${readingSettings.fontSize}px`,
+                  lineHeight: readingSettings.lineHeight,
+                  maxWidth: `${readingSettings.maxWidth}px`,
+                  margin: "0 auto",
+                }}
               >
                 <div className="prose prose-lg max-w-none">
+                  {/* Author Ad Banner - shown after first paragraph if scheduled */}
+                  {showAuthorAd && !adDismissed && paragraphs.length > 1 && (
+                    <div className="my-6 rounded-xl border-2 border-primary-200 bg-gradient-to-r from-primary-50 to-accent-50 p-4 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <MegaphoneIcon className="h-5 w-5 text-primary-600" />
+                        <span className="text-body-sm font-semibold text-primary-700">
+                          Ủng hộ tác giả
+                        </span>
+                      </div>
+                      <p className="text-caption text-primary-600 mb-3">
+                        Quảng cáo giúp tác giả có thêm thu nhập để tiếp tục sáng tác
+                      </p>
+                      <div className="bg-white/80 rounded-lg p-3 mb-3 text-caption text-gray-500">
+                        {/* Simulated ad content - in production this would be actual ad network */}
+                        <p className="text-gray-400">[Quảng cáo được hiển thị tự động]</p>
+                      </div>
+                      <button
+                        onClick={handleDismissAd}
+                        className="text-caption text-primary-600 hover:text-primary-700 hover:underline"
+                      >
+                        Đóng quảng cáo này
+                      </button>
+                    </div>
+                  )}
+
                   {/* Paragraph-by-paragraph rendering with inline comment badges */}
                   {paragraphs.map((para, idx) => {
                     // Extract plain text for the drawer
@@ -431,43 +546,16 @@ export default function ReadChapterPage() {
                     if (!plainText) return null;
                     const count = paragraphCounts[idx] || 0;
 
-                    // Ad 1: after first paragraph
-                    const showAdTop = paragraphs.length >= 2 ? idx === 1 : idx === 0;
-                    const adTopPosition = paragraphs.length >= 2 ? "before" : "after";
-                    // Ad 2: around midpoint for medium/long chapters
-                    const midpoint = Math.floor(paragraphs.length / 2);
-                    const showAdMid =
-                      paragraphs.length >= 6 &&
-                      idx === midpoint &&
-                      !showAdTop;
-                    // Ad 3: late-content placement for long chapters
-                    const latePoint = Math.floor(paragraphs.length * 0.75);
-                    const showAdLate =
-                      paragraphs.length >= 12 &&
-                      idx === latePoint &&
-                      !showAdTop &&
-                      !showAdMid;
                     return (
                       <div key={idx} className="group/para relative">
-                        {showAdTop && adTopPosition === "before" && (
-                          <div className="my-6 flex justify-center">
-                            <AdsterraBanner />
-                          </div>
-                        )}
-                        {showAdMid && (
-                          <div className="my-6 flex justify-center">
-                            <AdSenseInArticle />
-                          </div>
-                        )}
-                        {showAdLate && (
-                          <div className="my-6 flex justify-center">
-                            <AdsterraBanner />
-                          </div>
-                        )}
                         <div className="flex items-start gap-0">
                           {/* Paragraph content */}
                           <div
-                            className={`flex-1 whitespace-pre-line text-body-md leading-[1.9] transition-colors duration-300 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                            className={cn(
+                              "flex-1 whitespace-pre-line text-body-md transition-colors duration-300",
+                              readerTheme.text
+                            )}
+                            style={{ lineHeight: readingSettings.lineHeight }}
                             dangerouslySetInnerHTML={{ __html: para }}
                           />
 
@@ -476,11 +564,11 @@ export default function ReadChapterPage() {
                             onClick={() => openParagraphDrawer(idx, plainText)}
                             className={`flex-shrink-0 ml-2 mt-1 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 ${
                               count > 0
-                                ? darkMode
+                                ? isDark
                                   ? 'bg-primary-900/50 text-primary-300 hover:bg-primary-800/60'
                                   : 'bg-primary-50 text-primary-600 hover:bg-primary-100'
                                 : `opacity-0 group-hover/para:opacity-100 ${
-                                    darkMode
+                                    isDark
                                       ? 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-300'
                                       : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
                                   }`
@@ -491,11 +579,6 @@ export default function ReadChapterPage() {
                             {count > 0 && <span>{count}</span>}
                           </button>
                         </div>
-                        {showAdTop && adTopPosition === "after" && (
-                          <div className="my-6 flex justify-center">
-                            <AdsterraBanner />
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -503,9 +586,21 @@ export default function ReadChapterPage() {
 
                 {/* Author note */}
                 {chapter.authorNote && (
-                  <div className={`mt-8 rounded-xl border p-5 transition-colors duration-300 ${darkMode ? 'border-primary-800 bg-primary-900/30' : 'border-primary-100 bg-primary-50'}`}>
-                    <p className={`mb-2 text-caption font-semibold ${darkMode ? 'text-primary-400' : 'text-primary-700'}`}>Lời tác giả</p>
-                    <p className={`whitespace-pre-line text-body-sm ${darkMode ? 'text-primary-200/80' : 'text-primary-900/80'}`}>
+                  <div className={`mt-8 rounded-xl border p-5 transition-colors duration-300 ${
+                    readingSettings.theme === 'dark'
+                      ? 'border-primary-800 bg-primary-900/30 text-primary-200'
+                      : readingSettings.theme === 'sepia'
+                      ? 'border-[#d4c5a9] bg-[#ebe3d5] text-[#5c4a32]'
+                      : 'border-primary-100 bg-primary-50 text-primary-900'
+                  }`}>
+                    <p className={`mb-2 text-caption font-semibold ${
+                      readingSettings.theme === 'dark'
+                        ? 'text-primary-400'
+                        : readingSettings.theme === 'sepia'
+                        ? 'text-[#7a6347]'
+                        : 'text-primary-700'
+                    }`}>Lời tác giả</p>
+                    <p className="whitespace-pre-line text-body-sm opacity-80">
                       {chapter.authorNote}
                     </p>
                   </div>
@@ -519,7 +614,7 @@ export default function ReadChapterPage() {
                       <p className="text-body-sm font-semibold text-amber-800">Ủng hộ tác giả</p>
                     </div>
                     <p className="text-caption text-amber-700 mb-3">
-                      Tặng xu để ủng hộ tác giả tiếp tục sáng tác!
+                      Tặng xu hoặc quà để ủng hộ tác giả tiếp tục sáng tác!
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       {[100, 200, 500, 1000].map((amt) => (
@@ -551,6 +646,13 @@ export default function ReadChapterPage() {
                         <GiftIcon className="h-4 w-4" />
                         {tipping ? "Đang tặng..." : "Tặng xu"}
                       </button>
+                      <button
+                        onClick={() => setGiftPickerOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 px-4 py-1.5 text-caption font-semibold text-white shadow hover:from-pink-600 hover:to-rose-600"
+                      >
+                        <GiftOutlineIcon className="h-4 w-4" />
+                        Tặng quà
+                      </button>
                     </div>
                     {tipSuccess && (
                       <p className="mt-2 text-caption font-medium text-emerald-600">
@@ -564,11 +666,6 @@ export default function ReadChapterPage() {
                 )}
               </div>
             )}
-
-            {/* Ad before comments */}
-            <div className="mt-6 flex justify-center">
-              <AdsterraBanner />
-            </div>
 
             {/* Chapter comments */}
             {!needsPurchase && (
@@ -586,7 +683,8 @@ export default function ReadChapterPage() {
               {chapter.prev ? (
                 <Link
                   href={`/story/${slug}/chapter/${chapter.prev.id}`}
-                  className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+                  onClick={() => qualityTracker?.recordChapter(chapter.prev?.id || "")}
+                  className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${isDark ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
                 >
                   <ChevronLeftIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Chương {chapter.prev.number}</span>
@@ -598,7 +696,7 @@ export default function ReadChapterPage() {
 
               <Link
                 href={`/story/${slug}`}
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${isDark ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
               >
                 <ListBulletIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Mục lục</span>
@@ -607,6 +705,7 @@ export default function ReadChapterPage() {
               {chapter.next ? (
                 <Link
                   href={`/story/${slug}/chapter/${chapter.next.id}`}
+                  onClick={() => qualityTracker?.recordChapter(chapter.next?.id || "")}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-primary-600"
                 >
                   <span className="hidden sm:inline">Chương {chapter.next.number}</span>
@@ -614,7 +713,7 @@ export default function ReadChapterPage() {
                   <ChevronRightIcon className="h-4 w-4" />
                 </Link>
               ) : (
-                <div className={`rounded-xl border px-5 py-3 text-body-sm transition-colors duration-300 ${darkMode ? 'border-gray-700 bg-[#1e2746] text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
+                <div className={`rounded-xl border px-5 py-3 text-body-sm transition-colors duration-300 ${isDark ? 'border-gray-700 bg-[#1e2746] text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
                   Hết truyện
                 </div>
               )}
@@ -634,6 +733,38 @@ export default function ReadChapterPage() {
         session={session}
         token={token}
       />
+
+      {/* Reading settings panel */}
+      <ReadingSettingsPanel
+        isOpen={settingsPanelOpen}
+        onClose={() => setSettingsPanelOpen(false)}
+      />
+
+      {/* Gift Picker Modal */}
+      {chapter && session && token && (
+        <VirtualGiftPicker
+          isOpen={giftPickerOpen}
+          onClose={() => setGiftPickerOpen(false)}
+          authorId={chapter.story.authorId}
+            authorName={(chapter.story as any).author?.name || "Tác giả"}
+          storyId={chapter.story.id}
+          storySlug={slug}
+          token={token}
+          onGiftSent={(gift) => {
+            addAnimation({
+              id: `local-${Date.now()}`,
+              emoji: gift.emoji,
+              name: gift.name,
+              senderName: "Bạn",
+              message: undefined,
+              quantity: gift.quantity,
+            });
+          }}
+        />
+      )}
+
+      {/* Gift Animations */}
+      <GiftAnimation animations={animations} onRemove={removeAnimation} />
     </>
   );
 }

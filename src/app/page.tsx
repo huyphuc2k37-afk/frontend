@@ -146,6 +146,20 @@ export default async function Page() {
 
       <HomePage initialStories={initialStories} initialFeaturedStories={initialFeaturedStories} />
 
+      {/* Preload 5 featured covers — eliminates image LCP delay */}
+      {initialFeaturedStories.slice(0, 5).map((s: any) =>
+        s.coverUrl && /^https?:\/\//.test(s.coverUrl) ? (
+          <link
+            key={`preload-${s.id}`}
+            rel="preload"
+            as="image"
+            href={s.coverUrl}
+            // @ts-expect-error fetchPriority is a valid attribute on <link>
+            fetchpriority="high"
+          />
+        ) : null
+      )}
+
       {/* ── SSR SEO content ── */}
       <section className="border-t border-gray-100 bg-gray-50/50 py-10">
         <div className="section-container max-w-4xl">

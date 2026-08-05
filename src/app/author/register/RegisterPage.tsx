@@ -76,6 +76,13 @@ export default function AuthorRegisterPage() {
     }
   }, [status, profileLoading, profile, router]);
 
+  // Move "redirect if not logged in" into useEffect to avoid setState in render
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login?callbackUrl=/author/register");
+    }
+  }, [status, router]);
+
   if (status === "loading" || (status === "authenticated" && profileLoading)) {
     return (
       <>
@@ -88,8 +95,14 @@ export default function AuthorRegisterPage() {
   }
 
   if (status === "unauthenticated") {
-    router.push("/login?callbackUrl=/author/register");
-    return null;
+    return (
+      <>
+        <Header />
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+        </div>
+      </>
+    );
   }
 
   const handleToggleGenre = (g: string) => {
@@ -145,12 +158,17 @@ export default function AuthorRegisterPage() {
         } catch {
           // ignore
         }
+        // Fallback for other non-OK responses — reset submitting so user can retry
+        setSubmitting(false);
+        return;
       }
 
       refresh();
       setStep(3);
     } catch {
       alert("Có lỗi xảy ra. Vui lòng thử lại.");
+      setSubmitting(false);
+      return;
     }
     setSubmitting(false);
   };

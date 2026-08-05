@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useRef, memo } from "react";
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
   AdjustmentsHorizontalIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from "framer-motion";
-import type { Story } from "@/types";
-import { genreGroups } from "@/data/genres";
-import { API_BASE_URL } from "@/lib/api";
+import { AnimatePresence, motion } from "framer-motion";
 import { STORY_ORIGIN_OPTIONS, getStoryOriginLabel } from "@/lib/storyOrigin";
 
 interface ApiCategory {
@@ -19,30 +17,17 @@ interface ApiCategory {
   slug: string;
   icon: string;
   color: string;
-  _count: { stories: number };
-}
-
-interface ApiTag {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
   storyCount: number;
 }
 
 interface ExploreFiltersProps {
-  stories: Story[];
   categories: ApiCategory[];
   activeOrigin: string;
   onOriginChange: (origin: string) => void;
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
-  activeGenre: string | null;
-  onGenreChange: (genre: string | null) => void;
   activeStatus: string;
   onStatusChange: (status: string) => void;
-  activeTags: string[];
-  onTagsChange: (tags: string[]) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
 }
@@ -53,521 +38,367 @@ const statusOptions = [
   { value: "completed", label: "Hoàn thành" },
 ];
 
-// Tag type labels for UI grouping
-const tagTypeLabels: Record<string, string> = {
-  genre: "Thể loại chi tiết",
-  origin: "Xuất xứ",
-  relation: "Tuyến tình cảm",
-  ending: "Kết thúc",
-  tone: "Phong cách",
-  perspective: "Góc nhìn",
-  content: "Nội dung",
-  form: "Hình thức",
-};
+// ── Collapsible section ────────────────────────────────────────────────────────
+function FilterSection({
+  label,
+  defaultOpen = true,
+  children,
+}: {
+  label: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-gray-100 last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between py-3 text-body-sm font-semibold text-gray-800 hover:text-gray-900"
+      >
+        {label}
+        {open ? (
+          <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+        ) : (
+          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+        )}
+      </button>
+      {open && <div className="pb-4">{children}</div>}
+    </div>
+  );
+}
 
-// Display order for tag type groups
-const tagTypeOrder = ["genre", "origin", "relation", "ending", "tone", "perspective", "content", "form"];
-
-export default function ExploreFilters({
-  stories,
+// ── Sidebar (desktop) ─────────────────────────────────────────────────────────
+export function FilterSidebar({
   categories,
   activeOrigin,
   onOriginChange,
   activeCategory,
   onCategoryChange,
-  activeGenre,
-  onGenreChange,
   activeStatus,
   onStatusChange,
-  activeTags,
-  onTagsChange,
-  searchQuery,
-  onSearchChange,
-}: ExploreFiltersProps) {
-  const [query, setQuery] = useState(searchQuery || "");
-  const [tagGroups, setTagGroups] = useState<Record<string, ApiTag[]>>({});
+  hasActiveFilters,
+  onClearAll,
+}: ExploreFiltersProps & { hasActiveFilters: boolean; onClearAll: () => void }) {
+  return (
+    <aside className="w-56 flex-shrink-0 rounded-2xl border border-gray-100 bg-white p-5 shadow-card">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-body-md font-bold text-gray-900">Bộ lọc</span>
+        {hasActiveFilters && (
+          <button
+            onClick={onClearAll}
+            className="text-caption font-medium text-primary-600 hover:text-primary-700"
+          >
+            Xóa
+          </button>
+        )}
+      </div>
 
-  // Fetch tags from API
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/api/tags`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.tags) setTagGroups(data.tags);
-      })
-      .catch(() => {});
-  }, []);
+      <div>
+        <FilterSection label="Loại truyện" defaultOpen>
+          <div className="flex flex-col gap-1">
+            {[{ value: "all", label: "Tất cả" }, ...STORY_ORIGIN_OPTIONS].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onOriginChange(opt.value)}
+                className={`rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                  activeOrigin === opt.value
+                    ? "bg-primary-600 text-white"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
 
-  // Sync controlled searchQuery prop
-  useEffect(() => {
-    if (searchQuery !== undefined && searchQuery !== query) {
-      setQuery(searchQuery);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+        <FilterSection label="Thể loại" defaultOpen>
+          <div className="flex flex-col gap-1">
+            {categories.map((cat) => (
+              <button
+                key={cat.slug}
+                onClick={() => onCategoryChange(activeCategory === cat.slug ? null : cat.slug)}
+                className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                  activeCategory === cat.slug
+                    ? "bg-primary-600 text-white"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span className="flex-1">{cat.name}</span>
+                <span className={`text-caption ${activeCategory === cat.slug ? "text-white/60" : "text-gray-400"}`}>
+                  {cat.storyCount}
+                </span>
+              </button>
+            ))}
+          </div>
+        </FilterSection>
 
-  // Debounce search: notify parent after user stops typing
-  useEffect(() => {
-    if (!onSearchChange) return;
-    const timer = setTimeout(() => {
-      onSearchChange(query);
-    }, 400);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-  const [isFocused, setIsFocused] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+        <FilterSection label="Trạng thái" defaultOpen>
+          <div className="flex flex-col gap-1">
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onStatusChange(opt.value)}
+                className={`rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                  activeStatus === opt.value
+                    ? "bg-primary-600 text-white"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      </div>
+    </aside>
+  );
+}
 
-  const suggestions = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return stories
-      .filter(
-        (s) =>
-          s.title.toLowerCase().includes(q) ||
-          (s.author?.name || "").toLowerCase().includes(q) ||
-          s.genre.toLowerCase().includes(q) ||
-          (s.storyTagList || []).some((t) => t.name.toLowerCase().includes(q)),
-      )
-      .slice(0, 5);
-  }, [query, stories]);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsFocused(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const toggleTag = (slug: string) => {
-    if (activeTags.includes(slug)) {
-      onTagsChange(activeTags.filter((t) => t !== slug));
-    } else {
-      onTagsChange([...activeTags, slug]);
-    }
-  };
-
-  const activeFiltersCount =
-    (activeOrigin !== "all" ? 1 : 0) + (activeCategory ? 1 : 0) + (activeGenre ? 1 : 0) + activeTags.length + (activeStatus !== "all" ? 1 : 0);
+// ── Mobile: Drawer overlay ──────────────────────────────────────────────────────
+export function FilterDrawer({
+  categories,
+  activeOrigin,
+  onOriginChange,
+  activeCategory,
+  onCategoryChange,
+  activeStatus,
+  onStatusChange,
+  onClearAll,
+  hasActiveFilters,
+}: ExploreFiltersProps & { onClearAll: () => void; hasActiveFilters: boolean }) {
+  const [open, setOpen] = useState(false);
 
   return (
-    <section className="py-6 sm:py-8" aria-label="Bộ lọc">
-      <div className="section-container">
-        <div className="mx-auto max-w-3xl" ref={containerRef}>
-          {/* Search input row */}
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                ref={inputRef}
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                placeholder="Tìm truyện, tác giả, thể loại..."
-                className="w-full rounded-2xl border border-gray-200 bg-white py-3.5 pl-12 pr-12 text-body-md shadow-card transition-all focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
-                aria-label="Tìm kiếm truyện"
-                aria-autocomplete="list"
-                role="combobox"
-                aria-controls="search-listbox"
-                aria-expanded={isFocused && suggestions.length > 0}
-              />
-              {query && (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-body-sm font-medium transition-all ${
+          hasActiveFilters
+            ? "border-primary-300 bg-primary-50 text-primary-700"
+            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+        }`}
+        aria-label="Mở bộ lọc"
+      >
+        <AdjustmentsHorizontalIcon className="h-5 w-5" />
+        <span>Bộ lọc</span>
+        {hasActiveFilters && (
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[11px] font-bold text-white">
+            {[activeOrigin !== "all", !!activeCategory, activeStatus !== "all"].filter(Boolean).length}
+          </span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/40"
+              onClick={() => setOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed bottom-0 left-0 top-0 z-50 w-72 overflow-y-auto bg-white shadow-xl"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <span className="text-body-md font-bold text-gray-900">Bộ lọc</span>
                 <button
-                  onClick={() => {
-                    setQuery("");
-                    inputRef.current?.focus();
-                  }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label="Xóa tìm kiếm"
+                  onClick={() => setOpen(false)}
+                  className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="Đóng"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
-              )}
+              </div>
 
-              {/* Autocomplete dropdown */}
-              <AnimatePresence>
-                {isFocused && suggestions.length > 0 && (
-                  <motion.ul
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
-                    id="search-listbox"
-                    role="listbox"
-                  >
-                    {suggestions.map((s) => {
-                      const coverSrc = s.coverUrl || `${API_BASE_URL}/api/stories/${s.id}/cover?v=${encodeURIComponent(s.updatedAt || "2")}`;
-                      return (
-                      <li
-                        key={s.id}
-                        className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-primary-50"
-                        role="option"
-                        aria-selected={false}
-                        onClick={() => {
-                          setIsFocused(false);
-                          window.location.href = `/story/${s.slug}`;
-                        }}
-                      >
-                        <div className="relative h-10 w-8 flex-shrink-0 overflow-hidden rounded bg-gray-100">
-                          <Image
-                            src={coverSrc}
-                            alt=""
-                            fill
-                            sizes="32px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-body-sm font-medium text-gray-900">
-                            {s.title}
-                          </div>
-                          <div className="text-caption text-gray-500">
-                            {s.author?.name} &middot; {s.genre}
-                          </div>
-                        </div>
-                      </li>
-                      );
-                    })}
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Filter toggle button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`relative flex items-center gap-2 rounded-2xl border px-4 py-3.5 text-body-sm font-medium transition-all ${
-                showFilters || activeFiltersCount > 0
-                  ? "border-primary-300 bg-primary-50 text-primary-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-              }`}
-              aria-label="Bộ lọc"
-              aria-expanded={showFilters}
-            >
-              <AdjustmentsHorizontalIcon className="h-5 w-5" />
-              <span className="hidden sm:inline">Bộ lọc</span>
-              {activeFiltersCount > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[11px] font-bold text-white">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Filters panel */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-card sm:p-5">
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-body-sm font-semibold text-gray-700">
-                        Loại truyện
-                      </span>
-                      {activeOrigin !== "all" && (
-                        <button
-                          onClick={() => onOriginChange("all")}
-                          className="text-caption font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          Xóa bộ lọc
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+              <div className="px-5 py-2">
+                <FilterSection label="Loại truyện" defaultOpen>
+                  <div className="flex flex-col gap-1.5">
+                    {[{ value: "all", label: "Tất cả" }, ...STORY_ORIGIN_OPTIONS].map((opt) => (
                       <button
-                        onClick={() => onOriginChange("all")}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                          activeOrigin === "all"
-                            ? "bg-primary-600 text-white shadow-md"
-                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                        key={opt.value}
+                        onClick={() => { onOriginChange(opt.value); setOpen(false); }}
+                        className={`rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                          activeOrigin === opt.value
+                            ? "bg-primary-50 text-primary-700"
+                            : "text-gray-600 hover:bg-gray-50"
                         }`}
                       >
-                        Tất cả
+                        {opt.label}
                       </button>
-                      {STORY_ORIGIN_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => onOriginChange(option.value)}
-                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                            activeOrigin === option.value
-                              ? "bg-primary-600 text-white shadow-md"
-                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
+                    ))}
                   </div>
+                </FilterSection>
 
-                  <div className="my-4 border-t border-gray-100" />
-
-                  {/* Thể loại */}
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-body-sm font-semibold text-gray-700">
-                        Thể loại
-                      </span>
-                      {activeCategory && (
-                        <button
-                          onClick={() => onCategoryChange(null)}
-                          className="text-caption font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          Xóa bộ lọc
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.slug}
-                          onClick={() =>
-                            onCategoryChange(
-                              activeCategory === cat.slug ? null : cat.slug,
-                            )
-                          }
-                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                            activeCategory === cat.slug
-                              ? "bg-primary-600 text-white shadow-md"
-                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                          }`}
-                          aria-pressed={activeCategory === cat.slug}
-                        >
-                          {cat.icon} {cat.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="my-4 border-t border-gray-100" />
-
-                  {/* Thể loại chi tiết (genre from hardcoded list) */}
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-body-sm font-semibold text-gray-700">
-                        Thể loại chi tiết
-                      </span>
-                      {activeGenre && (
-                        <button
-                          onClick={() => onGenreChange(null)}
-                          className="text-caption font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          Xóa bộ lọc
-                        </button>
-                      )}
-                    </div>
-                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
-                      {genreGroups.map((group) => (
-                        <div key={group.label}>
-                          <p className="mb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                            {group.label}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {group.genres.map((g) => (
-                              <button
-                                key={g}
-                                onClick={() =>
-                                  onGenreChange(
-                                    activeGenre === g ? null : g,
-                                  )
-                                }
-                                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                                  activeGenre === g
-                                    ? "bg-primary-600 text-white shadow-md"
-                                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                }`}
-                                aria-pressed={activeGenre === g}
-                              >
-                                {g}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="my-4 border-t border-gray-100" />
-
-                  {/* Tags from database (relation, ending, tone, etc.) */}
-                  {tagTypeOrder
-                    .filter((type) => type !== "genre" && tagGroups[type]?.length > 0)
-                    .map((type) => (
-                    <div key={type}>
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-body-sm font-semibold text-gray-700">
-                          {tagTypeLabels[type] || type}
-                        </span>
-                        {activeTags.some((s) => tagGroups[type]?.some((t) => t.slug === s)) && (
-                          <button
-                            onClick={() => {
-                              const typeSlugs = tagGroups[type]?.map((t) => t.slug) || [];
-                              onTagsChange(activeTags.filter((s) => !typeSlugs.includes(s)));
-                            }}
-                            className="text-caption font-medium text-primary-600 hover:text-primary-700"
-                          >
-                            Xóa
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {tagGroups[type]!.map((tag) => (
-                          <button
-                            key={tag.slug}
-                            onClick={() => toggleTag(tag.slug)}
-                            className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                              activeTags.includes(tag.slug)
-                                ? "bg-primary-600 text-white shadow-md"
-                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                            }`}
-                            aria-pressed={activeTags.includes(tag.slug)}
-                          >
-                            {tag.name}
-                            {tag.storyCount > 0 && (
-                              <span className="ml-1 text-[10px] opacity-60">({tag.storyCount})</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="my-4 border-t border-gray-100" />
-                    </div>
-                  ))}
-                  <div>
-                    <span className="mb-3 block text-body-sm font-semibold text-gray-700">
-                      Trạng thái
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {statusOptions.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => onStatusChange(opt.value)}
-                          className={`rounded-full px-3.5 py-1.5 text-body-sm font-medium transition-all ${
-                            activeStatus === opt.value
-                              ? "bg-accent-600 text-white shadow-md"
-                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                          }`}
-                          aria-pressed={activeStatus === opt.value}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Clear all */}
-                  {activeFiltersCount > 0 && (
-                    <div className="mt-4 border-t border-gray-100 pt-4">
+                <FilterSection label="Thể loại" defaultOpen>
+                  <div className="flex flex-col gap-1">
+                    {categories.map((cat) => (
                       <button
-                        onClick={() => {
-                          onOriginChange("all");
-                          onCategoryChange(null);
-                          onGenreChange(null);
-                          onTagsChange([]);
-                          onStatusChange("all");
-                        }}
-                        className="text-body-sm font-medium text-red-500 hover:text-red-600"
+                        key={cat.slug}
+                        onClick={() => { onCategoryChange(activeCategory === cat.slug ? null : cat.slug); setOpen(false); }}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                          activeCategory === cat.slug
+                            ? "bg-primary-50 text-primary-700"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
                       >
-                        Xóa tất cả bộ lọc
+                        <span>{cat.icon}</span>
+                        <span className="flex-1">{cat.name}</span>
+                        <span className="text-caption text-gray-400">{cat.storyCount}</span>
                       </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    ))}
+                  </div>
+                </FilterSection>
 
-          {/* Active filter summary (when filters panel is closed) */}
-          {!showFilters && activeFiltersCount > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-caption text-gray-400">Đang lọc:</span>
-              {activeOrigin !== "all" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
-                  {getStoryOriginLabel(activeOrigin)}
-                  <button
-                    onClick={() => onOriginChange("all")}
-                    className="ml-0.5 hover:text-primary-900"
-                    aria-label={`Xóa lọc ${activeOrigin}`}
-                  >
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
-              {activeCategory && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
-                  {categories.find((c) => c.slug === activeCategory)?.name || activeCategory}
-                  <button
-                    onClick={() => onCategoryChange(null)}
-                    className="ml-0.5 hover:text-primary-900"
-                    aria-label={`Xóa lọc ${activeCategory}`}
-                  >
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
-              {activeGenre && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700">
-                  {activeGenre}
-                  <button
-                    onClick={() => onGenreChange(null)}
-                    className="ml-0.5 hover:text-primary-900"
-                    aria-label={`Xóa lọc ${activeGenre}`}
-                  >
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
-              {activeTags.map((slug) => {
-                const allTags = Object.values(tagGroups).flat();
-                const tag = allTags.find((t) => t.slug === slug);
-                return (
-                  <span
-                    key={slug}
-                    className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700"
-                  >
-                    {tag?.name || slug}
+                <FilterSection label="Trạng thái" defaultOpen>
+                  <div className="flex flex-col gap-1.5">
+                    {statusOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { onStatusChange(opt.value); setOpen(false); }}
+                        className={`rounded-xl px-3 py-2.5 text-left text-body-sm font-medium transition-all ${
+                          activeStatus === opt.value
+                            ? "bg-primary-50 text-primary-700"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                {hasActiveFilters && (
+                  <div className="pt-4 pb-2">
                     <button
-                      onClick={() => toggleTag(slug)}
-                      className="ml-0.5 hover:text-primary-900"
-                      aria-label={`Xóa lọc ${tag?.name || slug}`}
+                      onClick={() => { onClearAll(); setOpen(false); }}
+                      className="w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-body-sm font-medium text-red-500 hover:bg-red-100"
                     >
-                      <XMarkIcon className="h-3.5 w-3.5" />
+                      Xóa tất cả
                     </button>
-                  </span>
-                );
-              })}
-              {activeStatus !== "all" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-accent-100 px-3 py-1 text-caption font-medium text-accent-700">
-                  {statusOptions.find((o) => o.value === activeStatus)?.label}
-                  <button
-                    onClick={() => onStatusChange("all")}
-                    className="ml-0.5 hover:text-accent-900"
-                    aria-label="Xóa lọc trạng thái"
-                  >
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
+                  </div>
+                )}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
+
+// ── Search bar ─────────────────────────────────────────────────────────────────
+function SearchInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="relative">
+      <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+      <input
+        ref={inputRef}
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Tìm truyện, tác giả..."
+        className="w-full rounded-2xl border border-gray-200 bg-white py-3 pl-12 pr-4 text-body-md shadow-card transition-all placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:py-3.5"
+      />
+      {value && (
+        <button
+          onClick={() => { onChange(""); inputRef.current?.focus(); }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          aria-label="Xóa tìm kiếm"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Active filter chips ─────────────────────────────────────────────────────────
+export function ActiveFilterChips({
+  activeOrigin,
+  activeCategory,
+  categories,
+  activeStatus,
+  onOriginChange,
+  onCategoryChange,
+  onStatusChange,
+}: {
+  activeOrigin: string;
+  activeCategory: string | null;
+  categories: ApiCategory[];
+  activeStatus: string;
+  onOriginChange: (v: string) => void;
+  onCategoryChange: (v: string | null) => void;
+  onStatusChange: (v: string) => void;
+}) {
+  const chips: { label: string; onRemove: () => void }[] = [];
+  if (activeOrigin !== "all") chips.push({ label: getStoryOriginLabel(activeOrigin), onRemove: () => onOriginChange("all") });
+  if (activeCategory) chips.push({ label: categories.find((c) => c.slug === activeCategory)?.name || activeCategory, onRemove: () => onCategoryChange(null) });
+  if (activeStatus !== "all") chips.push({ label: statusOptions.find((o) => o.value === activeStatus)?.label || "", onRemove: () => onStatusChange("all") });
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {chips.map((chip) => (
+        <span
+          key={chip.label}
+          className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-3 py-1 text-caption font-medium text-primary-700"
+        >
+          {chip.label}
+          <button onClick={chip.onRemove} className="hover:text-primary-900" aria-label="Xóa">
+            <XMarkIcon className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ── Main: search bar + chips (rendered by ExplorePage) ─────────────────────────
+function ExploreFiltersInner({
+  categories,
+  activeOrigin,
+  onOriginChange,
+  activeCategory,
+  onCategoryChange,
+  activeStatus,
+  onStatusChange,
+  searchQuery = "",
+  onSearchChange,
+}: ExploreFiltersProps) {
+  const [query, setQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    if (!onSearchChange) return;
+    const timer = setTimeout(() => onSearchChange(query), 400);
+    return () => clearTimeout(timer);
+  }, [query, onSearchChange]);
+
+  useEffect(() => {
+    if (searchQuery !== undefined && searchQuery !== query) setQuery(searchQuery);
+  }, [searchQuery]);
+
+  return (
+    <div className="max-w-2xl">
+      <SearchInput value={query} onChange={setQuery} />
+    </div>
+  );
+}
+
+export default memo(ExploreFiltersInner);

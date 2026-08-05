@@ -17,16 +17,22 @@ import {
   ShareIcon,
   LinkIcon,
   ClipboardDocumentCheckIcon,
+  GiftIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolidIcon, HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
+import { GiftIcon as GiftSolidIcon } from "@heroicons/react/24/solid";
+import { SparklesIcon as SparklesSolidIcon } from "@heroicons/react/24/solid";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CommentSection from "@/components/CommentSection";
-import AdsterraBanner from "@/components/ads/AdsterraBanner";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
-import AdSenseInArticle from "@/components/ads/AdSenseInArticle";
-import { API_BASE_URL, authFetch } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
+import VirtualGiftPicker from "@/components/VirtualGiftPicker";
+import GiftAnimation, { useGiftAnimation } from "@/components/GiftAnimation";
+import { API_BASE_URL, PLACEHOLDER_COVER, authFetch, resolveCoverSrc, generateViewToken } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
+import { QualityTracker } from "@/lib/fingerprint";
+import { useRealtimeViews } from "@/hooks/useRealtimeViews";
 
 interface Chapter {
   id: string;
@@ -83,10 +89,16 @@ export default function StoryDetailPage() {
   const [story, setStory] = useState<StoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  // A1: realtime view count (poll mỗi 10s, fallback về story.views ban đầu)
+  const displayViews = useRealtimeViews(slug, story?.views ?? 0, 10_000);
   const [bookmarking, setBookmarking] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [liking, setLiking] = useState(false);
+  // B6: Boost (đề cử) state
+  const [boostCount, setBoostCount] = useState(0);
+  const [boosting, setBoosting] = useState(false);
+  const [boostFlash, setBoostFlash] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
@@ -95,6 +107,13 @@ export default function StoryDetailPage() {
   const [copied, setCopied] = useState(false);
   const token = (session as any)?.accessToken as string | undefined;
   const translated = isTranslatedStory(story || {});
+
+  // Gift system
+  const [giftPickerOpen, setGiftPickerOpen] = useState(false);
+  const { animations, addAnimation, removeAnimation } = useGiftAnimation(story?.id);
+
+  // Quality tracking for view analytics
+  const [qualityTracker, setQualityTracker] = useState<QualityTracker | null>(null);
 
   // Close share menu when clicking outside
   useEffect(() => {
@@ -106,22 +125,56 @@ export default function StoryDetailPage() {
 
   // No login redirect — story pages are public. Auth is only needed for interactions (like, rate, bookmark).
 
+  // Fetch story with view-count token (prevents IP-spoofing attacks)
+  // Enhanced with device fingerprint for anti-bot detection
   useEffect(() => {
     if (!slug) return;
     setShowCover(true);
-    fetch(`${API_BASE_URL}/api/stories/${slug}`, {
-      headers: { "X-Count-View": "1" },
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("Not found");
-        return r.json();
-      })
-      .then((data) => {
-        setStory(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+
+    const headers: Record<string, string> = {
+      "X-Count-View": "1",
+    };
+
+    // Generate signed view token if NEXT_PUBLIC_VIEW_TOKEN_SECRET is configured.
+    // ISR renders (Next.js server) skip this — only real browsers reach this code.
+    // Also generate device fingerprint for enhanced bot detection
+    generateViewToken(slug).then((result) => {
+      if (result.token) {
+        headers["X-View-Token"] = result.token;
+      }
+      if (result.fingerprint) {
+        headers["X-Device-Fingerprint"] = result.fingerprint;
+      }
+      fetch(`${API_BASE_URL}/api/stories/${slug}`, { headers, cache: "no-store" })
+        .then((r) => {
+          if (!r.ok) throw new Error("Not found");
+          return r.json();
+        })
+        .then((data) => {
+          setStory(data);
+          setLoading(false);
+          // B6: load boost count for this story
+          fetch(`${API_BASE_URL}/api/suggestions/boost-count/${data.id}`)
+            .then((r) => r.json())
+            .then((bc) => setBoostCount(bc.activeBoostCount ?? 0))
+            .catch(() => {});
+        })
+        .catch(() => setLoading(false));
+    });
   }, [slug]);
+
+  // Initialize quality tracker when story is loaded
+  useEffect(() => {
+    if (!story?.id) return;
+
+    const tracker = new QualityTracker(story.id);
+    setQualityTracker(tracker);
+
+    // Cleanup on unmount or when story changes
+    return () => {
+      tracker.destroy();
+    };
+  }, [story?.id]);
 
   // Check bookmark status
   useEffect(() => {
@@ -181,6 +234,30 @@ export default function StoryDetailPage() {
       setStory((prev) => prev ? { ...prev, likes: prev.likes + (data.liked ? 1 : -1) } : prev);
     } catch {}
     setLiking(false);
+  };
+
+  // B6: Đề cử truyện (50 xu/lần, tối đa 10 lần/user/ngày).
+  // Mỗi lần tăng boostScore → truyện hiện nhiều hơn ở trang chủ.
+  const handleBoost = async () => {
+    if (!session || !story || boosting || !token) return;
+    if (!confirm(`Đề cử truyện này 50 xu để hiển thị nhiều hơn trên trang chủ?\n\nBạn có thể đề cử tối đa 10 lần/ngày cho mỗi truyện.`)) return;
+    setBoosting(true);
+    try {
+      const res = await authFetch(`/api/suggestions/boost/${story.id}`, token, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBoostCount((c) => c + 1);
+        setBoostFlash(true);
+        setTimeout(() => setBoostFlash(false), 1500);
+      } else {
+        alert(data.error || "Không thể đề cử");
+      }
+    } catch {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    }
+    setBoosting(false);
   };
 
   const submitRating = async (score: number) => {
@@ -292,7 +369,7 @@ export default function StoryDetailPage() {
                 <div className="relative mx-auto h-72 w-48 overflow-hidden rounded-2xl shadow-2xl md:mx-0 md:h-80 md:w-56 bg-gray-700">
                   {showCover && (
                     <Image
-                      src={(story as any).coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`}
+                      src={resolveCoverSrc(story)}
                       alt={story.title}
                       fill
                       sizes="224px"
@@ -326,7 +403,7 @@ export default function StoryDetailPage() {
                 <div className="mt-4 flex flex-wrap items-center gap-4 text-body-sm text-gray-300">
                   <span className="flex items-center gap-1.5">
                     <EyeIcon className="h-4 w-4" />
-                    {story.views.toLocaleString()} lượt đọc
+                    {displayViews.toLocaleString()} lượt đọc
                   </span>
                   <span className="flex items-center gap-1.5">
                     <HeartIcon className="h-4 w-4" />
@@ -515,6 +592,34 @@ export default function StoryDetailPage() {
                     </button>
                   )}
 
+                  {/* B6: Nút đề cử 50 xu — boost truyện lên trang chủ */}
+                  {session && (
+                    <button
+                      onClick={handleBoost}
+                      disabled={boosting}
+                      title={`Đề cử truyện — ${boostCount} lượt đề cử`}
+                      className={`relative inline-flex items-center gap-2 rounded-xl px-5 py-3 text-body-sm font-semibold transition-all ${
+                        boostFlash
+                          ? "bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white shadow-lg shadow-purple-500/50 scale-105"
+                          : "bg-white/10 text-white hover:bg-white/20 hover:from-fuchsia-500/10 hover:to-purple-600/10"
+                      } disabled:opacity-60`}
+                    >
+                      {boostFlash ? (
+                        <SparklesSolidIcon className="h-5 w-5 animate-pulse" />
+                      ) : (
+                        <SparklesIcon className="h-5 w-5" />
+                      )}
+                      <span className="flex items-center gap-1.5">
+                        Đề cử 50 xu
+                        {boostCount > 0 && (
+                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-fuchsia-500/30 px-1.5 text-[11px] font-bold text-white">
+                            {boostCount}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )}
+
                   {/* Share / Copy link */}
                   <div className="relative">
                     <button
@@ -569,6 +674,17 @@ export default function StoryDetailPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Gift Button */}
+                  {session && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setGiftPickerOpen(true); }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 px-5 py-3 text-body-sm font-semibold text-white shadow-lg transition-all hover:from-amber-600 hover:to-yellow-600"
+                    >
+                      <GiftSolidIcon className="h-5 w-5" />
+                      Tặng quà
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -614,11 +730,6 @@ export default function StoryDetailPage() {
                 )}
               </div>
 
-              {/* Ad between description and chapter list */}
-              <div className="my-4">
-                <AdSenseInArticle />
-              </div>
-
               {/* Chapter list */}
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
@@ -631,9 +742,12 @@ export default function StoryDetailPage() {
                 </div>
 
                 {story.chapters.length === 0 ? (
-                  <p className="py-8 text-center text-body-md text-gray-400">
-                    Truyện chưa có chương nào
-                  </p>
+                  <div className="py-6">
+                    <EmptyState
+                      title="Truyện chưa có chương nào"
+                      description="Tác giả đang viết. Hãy theo dõi để nhận thông báo khi có chương mới nhé!"
+                    />
+                  </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
                     {story.chapters.map((ch) => (
@@ -744,6 +858,15 @@ export default function StoryDetailPage() {
                         {story.author.bio}
                       </p>
                     )}
+                    {session && story.author.id !== (session.user as any)?.id && (
+                      <button
+                        onClick={() => setGiftPickerOpen(true)}
+                        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 py-2 text-caption font-semibold text-white shadow-sm hover:from-amber-600 hover:to-yellow-600"
+                      >
+                        <GiftIcon className="h-4 w-4" />
+                        Tặng quà
+                      </button>
+                    )}
                   </div>
                 </Link>
               </div>
@@ -779,7 +902,7 @@ export default function StoryDetailPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-500">Lượt đọc</span>
                     <span className="font-medium text-gray-800">
-                      {story.views.toLocaleString()}
+                      {displayViews.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -796,16 +919,37 @@ export default function StoryDetailPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Sidebar ad */}
-              <div className="hidden py-2 lg:block">
-                <AdsterraNativeBanner />
-              </div>
             </div>
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Gift Picker Modal */}
+      {story && session && token && (
+        <VirtualGiftPicker
+          isOpen={giftPickerOpen}
+          onClose={() => setGiftPickerOpen(false)}
+          authorId={story.author.id}
+          authorName={story.author.name}
+          storyId={story.id}
+          storySlug={story.slug}
+          token={token}
+          onGiftSent={(gift) => {
+            addAnimation({
+              id: `local-${Date.now()}`,
+              emoji: gift.emoji,
+              name: gift.name,
+              senderName: "Bạn",
+              message: undefined,
+              quantity: gift.quantity,
+            });
+          }}
+        />
+      )}
+
+      {/* Gift Animations */}
+      <GiftAnimation animations={animations} onRemove={removeAnimation} />
     </>
   );
 }

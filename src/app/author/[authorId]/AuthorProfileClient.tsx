@@ -7,7 +7,9 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL, authFetch } from "@/lib/api";
+import AuthorBadge from "@/components/AuthorBadge";
+import LevelProgress from "@/components/LevelProgress";
+import { API_BASE_URL, PLACEHOLDER_COVER, authFetch, resolveCoverSrc } from "@/lib/api";
 
 export default function AuthorProfileClient() {
   const params = useParams();
@@ -34,7 +36,7 @@ export default function AuthorProfileClient() {
       <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
         {visible ? (
           <Image
-            src={coverUrl || `${API_BASE_URL}/api/stories/${storyId}/cover`}
+            src={resolveCoverSrc({ id: storyId, coverUrl })}
             alt={title}
             width={64}
             height={80}
@@ -170,6 +172,11 @@ export default function AuthorProfileClient() {
                   <h1 className="mt-4 text-heading-md font-bold text-gray-900">{author.name}</h1>
                   {author.bio ? <p className="mt-2 text-body-sm text-gray-600">{author.bio}</p> : null}
 
+                  {/* Level Badge */}
+                  <div className="mt-3 flex justify-center">
+                    <AuthorBadge authorId={authorId} showLevel showBadges size="md" />
+                  </div>
+
                   <p className="mt-2 text-caption text-gray-500">{followerCount} người theo dõi</p>
 
                   {author.referralCode && (
@@ -227,10 +234,31 @@ export default function AuthorProfileClient() {
                       Cần nạp thêm xu? →
                     </Link>
                   </div>
+
+                  {/* Fan Club Card */}
+                  <div className="mt-4 rounded-xl border border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50 p-4 text-left">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-body-sm font-semibold text-purple-700">Fan Club</p>
+                        <p className="text-caption text-purple-500">Tham gia cộng đồng fan của tác giả</p>
+                      </div>
+                      <Link
+                        href={`/fanclub/${authorId}`}
+                        className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 text-caption font-semibold text-white hover:opacity-90"
+                      >
+                        Xem Fan Club
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="lg:col-span-2">
+                {/* Level Progress Card */}
+                <div className="mb-6">
+                  <LevelProgress authorId={authorId} showStats showRequirements={false} />
+                </div>
+
                 <div className="rounded-2xl bg-white p-6 shadow-card">
                   <h2 className="text-heading-md font-bold text-gray-900">Tác phẩm</h2>
                   {stories.length === 0 ? (

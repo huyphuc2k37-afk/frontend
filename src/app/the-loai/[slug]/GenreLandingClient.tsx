@@ -11,8 +11,8 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
-import { API_BASE_URL } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
+import { API_BASE_URL, PLACEHOLDER_COVER, resolveCoverSrc } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface ApiCategory {
@@ -47,8 +47,8 @@ const PLACEHOLDER =
 
 function StoryCard({ story }: { story: ApiStory }) {
   const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
-  const coverUrl = story.coverUrl || fallbackUrl;
-  const [src, setSrc] = useState(coverUrl);
+  const [src, setSrc] = useState(resolveCoverSrc(story));
+  const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
     <Link href={`/story/${story.slug}`} className="group block">
@@ -59,7 +59,13 @@ function StoryCard({ story }: { story: ApiStory }) {
           fill
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setSrc(PLACEHOLDER)}
+          onError={() => {
+            if (hasValidCover && src !== fallbackUrl) {
+              setSrc(fallbackUrl);
+              return;
+            }
+            setSrc(PLACEHOLDER_COVER);
+          }}
         />
         {story.status === "completed" && (
           <span className="absolute left-2 top-2 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
@@ -184,11 +190,6 @@ export default function GenreLandingClient({
               </div>
             </section>
 
-            {/* Ad between sections */}
-            <div className="section-container py-4">
-              <AdsterraNativeBanner />
-            </div>
-
             {/* Hot */}
             {hotStories.length > 0 && (
               <section className="py-6">
@@ -222,18 +223,16 @@ export default function GenreLandingClient({
             )}
           </>
         ) : (
-          <div className="section-container py-20 text-center">
-            <BookOpenIcon className="mx-auto h-12 w-12 text-gray-300" />
-            <p className="mt-4 text-body-lg text-gray-500">
-              Chưa có truyện {category.name.toLowerCase()} nào. Hãy quay lại sau!
-            </p>
+          <div className="section-container py-16">
+            <EmptyState
+              title={`Chưa có truyện ${category.name.toLowerCase()} nào`}
+              description="Thể loại này đang được cập nhật. Hãy quay lại sau nhé!"
+              action={{ label: "Khám phá thể loại khác", href: "/the-loai" }}
+            />
           </div>
         )}
 
         {/* CTA */}
-        <div className="section-container py-4">
-          <AdsterraNativeBanner />
-        </div>
         <section className="py-8">
           <div className="section-container text-center">
             <Link

@@ -3,15 +3,104 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Shadcn UI tokens - Light mode */
+    --background: 35 38% 97%;          /* warm cream #fdf9f0 in HSL */
+    --foreground: 240 10% 4%;          /* near-black */
+
+    --card: 0 0% 100%;                 /* pure white */
+    --card-foreground: 240 10% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    --primary: 263 70% 50%;            /* violet-600 #7c3aed */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 4%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 189 94% 43%;             /* cyan-500 #06b6d4 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 263 70% 50%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 13% 8%;          /* surface-dark #0f0f14 */
+    --foreground: 0 0% 98%;
+
+    --card: 240 13% 12%;               /* surface-dark-card #1a1a24 */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 13% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 263 70% 65%;            /* brighter violet for dark mode */
+    --primary-foreground: 240 13% 8%;
+
+    --secondary: 240 7% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 7% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 189 94% 50%;
+    --accent-foreground: 240 13% 8%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 65% 50%;
+    --success-foreground: 0 0% 98%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 0%;
+
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 0%;
+
+    --border: 240 7% 20%;
+    --input: 240 7% 20%;
+    --ring: 263 70% 65%;
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     font-family: var(--font-jakarta), "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", "Roboto", sans-serif;
-    @apply text-gray-900 antialiased;
-    background-color: #fdf9f0;
+    @apply bg-background text-foreground antialiased;
+    background-color: hsl(var(--background));
+  }
+
+  * {
+    @apply border-border;
   }
 
   /* Custom scrollbar */
@@ -25,21 +114,26 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-300;
+    @apply rounded-full bg-gray-300 dark:bg-gray-700;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    @apply bg-gray-400 dark:bg-gray-600;
+  }
+
+  /* Focus visible for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-700 to-accent-500 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-700 to-accent-500 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary-600 px-6 py-3 font-semibold text-primary-600 transition-all duration-200 hover:bg-primary-50 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary px-6 py-3 font-semibold text-primary transition-all duration-200 hover:bg-primary/10 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .section-container {
@@ -51,7 +145,7 @@
   }
 
   .glass {
-    @apply border border-white/10 bg-white/70 backdrop-blur-xl;
+    @apply border border-white/10 bg-white/70 backdrop-blur-xl dark:bg-black/40;
   }
 }
 
@@ -76,10 +170,10 @@
     @apply bg-transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-200;
+    @apply rounded-full bg-gray-200 dark:bg-gray-700;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-300;
+    @apply bg-gray-300 dark:bg-gray-600;
   }
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -124,4 +218,21 @@
 }
 .animate-in.slide-in-from-bottom-2 {
   animation: fadeInSlideUp 0.2s ease-out both;
+}
+
+/* =========================================================================
+   Hide 3rd-party chat widget (Quickchat AI / Quickley style)
+   Class prefix `qd-*` is not part of VStory — injected by external widget.
+   Hide only inside VStory origin to avoid breaking other sites.
+   ========================================================================= */
+html body [class*="qd-parent-container"],
+html body [class*="qd-open-btn"],
+html body [class*="qd-open-btn-container"],
+html body [class*="qd-tran.ition.-container"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
 }

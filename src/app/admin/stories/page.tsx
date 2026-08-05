@@ -17,6 +17,8 @@ import {
   CheckIcon,
   SparklesIcon,
   ArrowTrendingUpIcon,
+  FunnelIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminChapter {
@@ -31,6 +33,14 @@ interface AdminChapter {
   createdAt: string;
 }
 
+interface AdminStoryFilters {
+  storyOrigin?: string;
+  translatorName?: string;
+  approvalStatus?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
 export default function AdminStoriesPage() {
   const { token } = useAdmin();
   const [stories, setStories] = useState<any[]>([]);
@@ -41,6 +51,10 @@ export default function AdminStoriesPage() {
   const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
   const [chapters, setChapters] = useState<AdminChapter[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(false);
+
+  // New filters state
+  const [filters, setFilters] = useState<AdminStoryFilters>({});
+  const [showFilters, setShowFilters] = useState(false);
 
   // Chapter editing state
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
@@ -137,6 +151,11 @@ export default function AdminStoriesPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
+      if (filters.storyOrigin) params.set("storyOrigin", filters.storyOrigin);
+      if (filters.translatorName) params.set("translatorName", filters.translatorName);
+      if (filters.approvalStatus) params.set("approvalStatus", filters.approvalStatus);
+      if (filters.sortBy) params.set("sortBy", filters.sortBy);
+      if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
       const res = await fetch(`${API_BASE_URL}/api/admin/stories?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -147,7 +166,7 @@ export default function AdminStoriesPage() {
       }
     } catch {}
     setLoading(false);
-  }, [token, page, search]);
+  }, [token, page, search, filters]);
 
   useEffect(() => { fetchStories(); }, [fetchStories]);
 
@@ -278,19 +297,27 @@ export default function AdminStoriesPage() {
   const deleteChapter = async (chapterId: string, title: string) => {
     if (!token) return;
     if (!confirm(`Xóa chương "${title}"? Hành động này không thể hoàn tác.`)) return;
-    await fetch(`${API_BASE_URL}/api/admin/chapters/${chapterId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setChapters((prev) => prev.filter((c) => c.id !== chapterId));
-    // Update chapter count in story list
-    setStories((prev) =>
-      prev.map((s) =>
-        s.id === expandedStoryId
-          ? { ...s, _count: { ...s._count, chapters: (s._count?.chapters || 1) - 1 } }
-          : s
-      )
-    );
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/chapters/${chapterId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể xóa chương");
+        return;
+      }
+      setChapters((prev) => prev.filter((c) => c.id !== chapterId));
+      setStories((prev) =>
+        prev.map((s) =>
+          s.id === expandedStoryId
+            ? { ...s, _count: { ...s._count, chapters: Math.max(0, (s._count?.chapters || 1) - 1) } }
+            : s
+        )
+      );
+    } catch {
+      alert("Không thể xóa chương");
+    }
   };
 
   const [copying, setCopying] = useState<string | null>(null);
@@ -372,6 +399,31 @@ export default function AdminStoriesPage() {
     <div className="space-y-6">
       <h2 className="text-heading-md font-bold text-gray-900">Quản lý truyện</h2>
 
+      {/* A3: Tab nhanh Sáng tác / Dịch / Tất cả */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { label: "Tất cả", value: undefined as string | undefined, color: "bg-gray-100 text-gray-700" },
+          { label: "Sáng tác", value: "original" as string | undefined, color: "bg-emerald-100 text-emerald-700" },
+          { label: "Truyện dịch", value: "translated" as string | undefined, color: "bg-sky-100 text-sky-700" },
+        ].map((tab) => {
+          const active = (filters.storyOrigin || undefined) === tab.value;
+          return (
+            <button
+              key={tab.label}
+              onClick={() => {
+                setFilters({ ...filters, storyOrigin: tab.value });
+                setPage(1);
+              }}
+              className={`rounded-full px-4 py-1.5 text-body-sm font-medium transition-colors ${
+                active ? `${tab.color} ring-2 ring-offset-1` : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Copy result notification */}
       {copyResult && (
         <div className={`rounded-xl p-3 text-body-sm font-medium ${copyResult.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
@@ -384,6 +436,108 @@ export default function AdminStoriesPage() {
           {featureResult.msg}
         </div>
       )}
+
+      {/* Filters */}
+      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 text-body-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            <FunnelIcon className="h-4 w-4" />
+            Bộ lọc
+            {Object.keys(filters).length > 0 && (
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                {Object.keys(filters).filter(k => filters[k as keyof AdminStoryFilters]).length}
+              </span>
+            )}
+          </button>
+          {Object.keys(filters).length > 0 && (
+            <button
+              onClick={() => setFilters({})}
+              className="text-caption text-gray-500 hover:text-gray-700"
+            >
+              Xóa lọc
+            </button>
+          )}
+        </div>
+
+        {showFilters && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Story Origin */}
+            <div>
+              <label className="block text-caption font-medium text-gray-600">Loại truyện</label>
+              <select
+                value={filters.storyOrigin || ""}
+                onChange={(e) => setFilters({ ...filters, storyOrigin: e.target.value || undefined })}
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-red-400 focus:outline-none"
+              >
+                <option value="">Tất cả</option>
+                <option value="original">Sáng tác</option>
+                <option value="translated">Truyện dịch</option>
+              </select>
+            </div>
+
+            {/* Approval Status */}
+            <div>
+              <label className="block text-caption font-medium text-gray-600">Trạng thái duyệt</label>
+              <select
+                value={filters.approvalStatus || ""}
+                onChange={(e) => setFilters({ ...filters, approvalStatus: e.target.value || undefined })}
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-red-400 focus:outline-none"
+              >
+                <option value="">Tất cả</option>
+                <option value="pending">Chờ duyệt</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="rejected">Từ chối</option>
+              </select>
+            </div>
+
+            {/* Sort By */}
+            <div>
+              <label className="block text-caption font-medium text-gray-600">Sắp xếp theo</label>
+              <select
+                value={filters.sortBy || "updatedAt"}
+                onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-red-400 focus:outline-none"
+              >
+                <option value="updatedAt">Ngày cập nhật</option>
+                <option value="createdAt">Ngày tạo</option>
+                <option value="views">Lượt xem</option>
+                <option value="likes">Yêu thích</option>
+                <option value="title">Tên truyện</option>
+              </select>
+            </div>
+
+            {/* Sort Order */}
+            <div>
+              <label className="block text-caption font-medium text-gray-600">Thứ tự</label>
+              <select
+                value={filters.sortOrder || "desc"}
+                onChange={(e) => setFilters({ ...filters, sortOrder: e.target.value })}
+                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-red-400 focus:outline-none"
+              >
+                <option value="desc">Giảm dần</option>
+                <option value="asc">Tăng dần</option>
+              </select>
+            </div>
+
+            {/* Translator Name (for filtered stories) */}
+            {filters.storyOrigin === "translated" && (
+              <div className="sm:col-span-2">
+                <label className="block text-caption font-medium text-gray-600">Tên dịch giả</label>
+                <input
+                  type="text"
+                  placeholder="Tìm theo tên dịch giả..."
+                  value={filters.translatorName || ""}
+                  onChange={(e) => setFilters({ ...filters, translatorName: e.target.value || undefined })}
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-red-400 focus:outline-none"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="relative max-w-md">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -405,6 +559,7 @@ export default function AdminStoriesPage() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Truyện</th>
+                  <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Loại</th>
                   <th className="px-4 py-3 text-left text-caption font-semibold text-gray-500">Tác giả</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Thể loại</th>
                   <th className="px-4 py-3 text-center text-caption font-semibold text-gray-500">Đầu web</th>
@@ -421,6 +576,18 @@ export default function AdminStoriesPage() {
                   <Fragment key={s.id}>
                     <tr className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-body-sm font-medium text-gray-900 max-w-[200px] truncate">{s.title}</td>
+                      <td className="px-4 py-3 text-center">
+                        {s.storyOrigin === "translated" ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+                            Dịch
+                            {s.translatorName && <span className="text-sky-500">({s.translatorName.slice(0, 8)}...)</span>}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                            Sáng tác
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-body-sm text-gray-500">{s.author?.name}</td>
                       <td className="px-4 py-3 text-body-sm text-center text-gray-600">{s.genre}</td>
                       <td className="px-4 py-3 text-center">

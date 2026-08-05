@@ -1,19 +1,49 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Quicksand, Open_Sans, Merriweather, Lora } from "next/font/google";
 import Script from "next/script";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
+import MaintenanceWrapper from "@/components/MaintenanceWrapper";
+import Providers from "@/components/Providers";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 import { UserProfileProvider } from "@/contexts/UserProfileContext";
-// ads disabled
-// import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
-// import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
+import { WalletBalanceProvider } from "@/contexts/WalletBalanceContext";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
-  display: "optional",
+  weight: ["400", "600", "700"],
+  display: "swap",
   variable: "--font-jakarta",
+});
+
+const quicksand = Quicksand({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-quicksand",
+});
+
+const openSans = Open_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-open-sans",
+});
+
+const merriweather = Merriweather({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-merriweather",
+});
+
+const lora = Lora({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-lora",
 });
 
 const SITE_URL = "https://vstory.vn";
@@ -86,22 +116,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={jakarta.variable} suppressHydrationWarning>
+    <html lang="vi" className={`${jakarta.variable} ${quicksand.variable} ${openSans.variable} ${merriweather.variable} ${lora.variable}`} suppressHydrationWarning>
       <head>
-        {/* Google AdSense */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5262734754559750"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-        <meta name="theme-color" content="#667eea" />
+        <meta name="theme-color" content="#7c3aed" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="preconnect" href="https://backend-4nfb.onrender.com" />
-        <link rel="dns-prefetch" href="https://backend-4nfb.onrender.com" />
-        <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" />
+        <Script id="theme-init" strategy="beforeInteractive">{`
+          (function(){
+            try {
+              var stored = localStorage.getItem('vstory-theme');
+              var mode = 'system';
+              if (stored) {
+                var parsed = JSON.parse(stored);
+                mode = (parsed && parsed.state && parsed.state.theme) || 'system';
+              }
+              var resolved = mode;
+              if (mode === 'system') {
+                resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              }
+              document.documentElement.classList.add(resolved);
+              document.documentElement.style.colorScheme = resolved;
+              var meta = document.querySelector('meta[name="theme-color"]');
+              if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0f0f14' : '#fdf9f0');
+            } catch (_) {}
+          })();
+        `}</Script>
+        <link rel="preconnect" href="https://backend-production-04113.up.railway.app" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://backend-production-04113.up.railway.app" />
+        <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" crossOrigin="" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
+        {/* Preconnect to local backend in development */}
+        <link rel="preconnect" href="http://localhost:5000" crossOrigin="" />
+        <link rel="dns-prefetch" href="http://localhost:5000" />
+
+        {/* Build marker — helps debug stale browser cache. Update to bump version. */}
+        <meta name="build-version" content="v4-2026-07-21" />
 
 
 
@@ -161,17 +210,31 @@ export default function RootLayout({
             window.addEventListener('load', function() { sessionStorage.removeItem('chunk_reload'); });
           })();
         `}</Script>
-        {/* monetag scripts disabled */}
       </head>
       <body>
-        <AuthProvider>
-          <UserProfileProvider>
-            <ThemeProvider>
-              {children}
-            </ThemeProvider>
-          </UserProfileProvider>
-        </AuthProvider>
-        {/* ads disabled */}
+        <ServiceWorkerRegistrar />
+        {/* Skip-to-content link for keyboard users (WCAG 2.4.1) */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded focus:bg-primary-500 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg"
+        >
+          Chuyển đến nội dung chính
+        </a>
+        <Providers>
+          <AuthProvider>
+            <UserProfileProvider>
+              <WalletBalanceProvider>
+                <ThemeProvider>
+                  <MaintenanceWrapper />
+                  {children}
+                  <ToastContainer>
+                    <></>
+                  </ToastContainer>
+                </ThemeProvider>
+              </WalletBalanceProvider>
+            </UserProfileProvider>
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

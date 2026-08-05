@@ -74,6 +74,8 @@ export default function ModChaptersPage() {
   const [statusFilter, setStatusFilter] = useState("pending");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [sortBy, setSortBy] = useState<"createdAt" | "number">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Detail panel
   const [selectedChapter, setSelectedChapter] = useState<ChapterDetail | null>(null);
@@ -95,6 +97,8 @@ export default function ModChaptersPage() {
         page: String(page),
         limit: "20",
         status: statusFilter,
+        sortBy,
+        sortOrder,
       });
       if (search) params.set("search", search);
 
@@ -110,7 +114,7 @@ export default function ModChaptersPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, page, statusFilter, search]);
+  }, [token, page, statusFilter, search, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchChapters();
@@ -127,7 +131,7 @@ export default function ModChaptersPage() {
   // Reset selection when filter changes
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [statusFilter, page, search]);
+  }, [statusFilter, page, search, sortBy, sortOrder]);
 
   const viewDetail = async (id: string) => {
     if (!token) return;
@@ -294,6 +298,43 @@ export default function ModChaptersPage() {
             Tìm
           </button>
         </form>
+        {/* Sort controls */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-gray-400">Sắp xếp:</span>
+          <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-0.5">
+            <button
+              onClick={() => { setSortBy("createdAt"); setSortOrder("desc"); }}
+              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                sortBy === "createdAt"
+                  ? "bg-indigo-100 text-indigo-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Mới nhất
+            </button>
+            <button
+              onClick={() => { setSortBy("number"); setSortOrder("asc"); }}
+              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                sortBy === "number"
+                  ? "bg-indigo-100 text-indigo-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Theo số chương
+            </button>
+          </div>
+          {sortBy === "number" && (
+            <button
+              onClick={() => setSortOrder((o) => o === "asc" ? "desc" : "asc")}
+              className="rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 hover:bg-gray-50"
+              title={sortOrder === "asc" ? "Tăng dần (1→n)" : "Giảm dần (n→1)"}
+            >
+              <svg className={`h-3.5 w-3.5 transition-transform ${sortOrder === "desc" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Bulk approve bar */}

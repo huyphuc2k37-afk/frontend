@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, PLACEHOLDER_COVER, resolveCoverSrc } from "@/lib/api";
 
 interface BookmarkItem {
   id: string;
@@ -45,6 +45,16 @@ export default function BookshelfPage() {
     }
     if (status === "authenticated" && session) {
       const token = (session as any).accessToken;
+      // Wait until session has an accessToken (NextAuth session callback is async).
+      // If token is missing, retry shortly — useSession will re-fire the effect when session updates.
+      if (!token) {
+        const t = setTimeout(() => {
+          // Trigger a no-op state change so React re-runs this effect with the
+          // (now-hydrated) session. Without this the spinner sticks forever.
+          setBookmarks((prev) => prev);
+        }, 500);
+        return () => clearTimeout(t);
+      }
       fetch(`${API_BASE_URL}/api/bookmarks`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -62,6 +72,8 @@ export default function BookshelfPage() {
         .finally(() => {
           setLoading(false);
         });
+    } else {
+      setLoading(false);
     }
   }, [status, session, router]);
 
@@ -75,7 +87,10 @@ export default function BookshelfPage() {
         },
       });
       if (res.ok) {
-        setBookmarks((prev) => prev.filter((b) => b.story.id !== storyId));
+        setBookmarks((prev) => prev.filter((b) => b.id !== storyId));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể xóa bookmark");
       }
     } catch (err) {
       console.error("Error removing bookmark:", err);
@@ -141,7 +156,7 @@ export default function BookshelfPage() {
                     <Link href={`/story/${bm.story.slug}`} className="flex gap-4 p-4">
                       <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
                         <Image
-                          src={bm.story.coverUrl || `${API_BASE_URL}/api/stories/${bm.story.id}/cover`}
+                          src={resolveCoverSrc(bm.story)}
                           alt={bm.story.title}
                           fill
                           sizes="88px"

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Story } from "@/types";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, resolveCoverSrc } from "@/lib/api";
 
 interface SearchBarProps {
   stories: Story[];
@@ -106,7 +106,7 @@ export default function SearchBar({
                   role="listbox"
                 >
                   {suggestions.map((s) => {
-                    const coverSrc = s.coverUrl || `${API_BASE_URL}/api/stories/${s.id}/cover?v=${encodeURIComponent(s.updatedAt || "2")}`;
+                    const coverSrc = resolveCoverSrc(s);
                     return (
                     <li
                       key={s.id}

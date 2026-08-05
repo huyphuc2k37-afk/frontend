@@ -1,22 +1,24 @@
-import Link from "next/link";
+"use client";
 
-const footerLinks = {
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
+
+interface FooterCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  storyCount: number;
+  displayOrder: number;
+}
+
+const STATIC_LINKS = {
   explore: [
     { label: "Khám phá truyện", href: "/explore" },
     { label: "Truyện dịch", href: "/truyen-dich" },
     { label: "Bảng xếp hạng", href: "/ranking" },
     { label: "Thể loại truyện", href: "/the-loai" },
-    { label: "Trở thành tác giả", href: "/author" },
-  ],
-  genres: [
-    { label: "Truyện Ngôn Tình", href: "/the-loai/ngon-tinh" },
-    { label: "Truyện Đam Mỹ", href: "/the-loai/dam-my" },
-    { label: "Truyện Xuyên Không", href: "/the-loai/xuyen-khong" },
-    { label: "Truyện Huyền Huyễn", href: "/the-loai/huyen-huyen" },
-    { label: "Truyện Kinh Dị", href: "/the-loai/kinh-di" },
-    { label: "Truyện Học Đường", href: "/the-loai/hoc-duong" },
-    { label: "Light Novel", href: "/the-loai/light-novel" },
-    { label: "Truyện Bách Hợp", href: "/the-loai/bach-hop" },
   ],
   support: [
     { label: "Giới thiệu", href: "/about" },
@@ -31,7 +33,39 @@ const footerLinks = {
   ],
 };
 
+/**
+ * Dedup logic: nếu 2 categories cùng displayOrder, ưu tiên cái có storyCount cao hơn.
+ * (DB có duplicate do lịch sử seed nhiều lần — vd: "Huyền huyễn & Giả tưởng" có 2 version)
+ */
+function dedupByDisplayOrder(list: FooterCategory[]): FooterCategory[] {
+  const byOrder = new Map<number, FooterCategory>();
+  for (const c of list) {
+    const existing = byOrder.get(c.displayOrder);
+    if (!existing || c.storyCount > existing.storyCount) {
+      byOrder.set(c.displayOrder, c);
+    }
+  }
+  return Array.from(byOrder.values()).sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
 export default function Footer() {
+  const [categories, setCategories] = useState<FooterCategory[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const list: FooterCategory[] = data?.categories || [];
+        setCategories(dedupByDisplayOrder(list));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <footer
       className="border-t border-[#f0e6d0]/50 pb-28 pt-12 sm:pb-12"
@@ -55,7 +89,7 @@ export default function Footer() {
               Trang chính
             </h4>
             <ul className="mt-3 space-y-2">
-              {footerLinks.explore.map((link) => (
+              {STATIC_LINKS.explore.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -68,22 +102,28 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Thể loại */}
+          {/* Thể loại (dynamic từ API) */}
           <div>
             <h4 className="text-body-sm font-semibold uppercase tracking-wider text-gray-500">
               Thể loại
             </h4>
             <ul className="mt-3 space-y-2">
-              {footerLinks.genres.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-body-sm text-gray-600 transition-colors hover:text-primary-600"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {categories.length === 0 ? (
+                <li className="text-body-sm text-gray-400">Đang tải…</li>
+              ) : (
+                categories.map((cat) => (
+                  <li key={cat.id}>
+                    <Link
+                      href={`/the-loai/${cat.slug}`}
+                      title={`${cat.storyCount.toLocaleString("vi-VN")} truyện`}
+                      className="text-body-sm text-gray-600 transition-colors hover:text-primary-600"
+                    >
+                      {cat.icon && <span className="mr-1">{cat.icon}</span>}
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 
@@ -93,7 +133,7 @@ export default function Footer() {
               Hỗ trợ
             </h4>
             <ul className="mt-3 space-y-2">
-              {footerLinks.support.map((link) => (
+              {STATIC_LINKS.support.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -112,7 +152,7 @@ export default function Footer() {
               Kết nối
             </h4>
             <ul className="mt-3 space-y-2">
-              {footerLinks.social.map((link) => (
+              {STATIC_LINKS.social.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
