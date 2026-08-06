@@ -17,7 +17,7 @@ const STATIC_LINKS = {
   explore: [
     { label: "Khám phá truyện", href: "/explore" },
     { label: "Truyện dịch", href: "/truyen-dich" },
-    { label: "Bảng xếp hạng", href: "/ranking" },
+    { label: "Bảng xếp hạng", href: "/rankings" },
     { label: "Thể loại truyện", href: "/the-loai" },
   ],
   support: [

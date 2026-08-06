@@ -141,8 +141,8 @@ export default function RootLayout({
             } catch (_) {}
           })();
         `}</Script>
-        <link rel="preconnect" href="https://backend-production-04113.up.railway.app" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://backend-production-04113.up.railway.app" />
+        <link rel="preconnect" href="https://backend-production-73800.up.railway.app" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://backend-production-73800.up.railway.app" />
         <link rel="preconnect" href="https://ydmkavspdccylpnskfsg.supabase.co" crossOrigin="" />
         <link rel="dns-prefetch" href="https://ydmkavspdccylpnskfsg.supabase.co" />
         {/* Preconnect to local backend in development */}

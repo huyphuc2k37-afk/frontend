@@ -16,7 +16,7 @@ const navLinks = [
   { label: "Khám phá", href: "/explore" },
   { label: "Thể loại", href: "/the-loai" },
   { label: "Truyện dịch", href: "/truyen-dich" },
-  { label: "Bảng xếp hạng", href: "/ranking" },
+  { label: "Bảng xếp hạng", href: "/rankings" },
   { label: "Tác giả", href: "/author" },
 ];
 
