@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useCachedFetch, invalidateCacheKey } from "@/lib/useCachedFetch";
 
