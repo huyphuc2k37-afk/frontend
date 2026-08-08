@@ -81,7 +81,7 @@ export default function HomePage({
 
     if (initialFeaturedStories.length === 0) {
       tasks.push(
-        fetch(`${API_BASE_URL}/api/stories?featured=true&limit=5`, {
+        fetch(`${API_BASE_URL}/api/stories?featured=true&limit=10`, {
           cache: "no-store",
           signal: controller.signal,
         })
@@ -181,12 +181,13 @@ export default function HomePage({
           <>
             <FeaturedSection stories={featuredDisplay} />
 
+            {/* Truyện đề cử — directly under featured (paid-promotion feature) */}
+            <SuggestionSection />
+
             {/* Genre explorer — placed prominently right after Featured */}
             <GenreSection />
 
             <StoriesTabSection initialStories={allStories} />
-
-            <SuggestionSection />
 
             {translatedStories.length > 0 && (
               <TranslatedCarousel stories={translatedStories} />

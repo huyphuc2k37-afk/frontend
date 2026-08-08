@@ -47,7 +47,7 @@ export default function FeaturedSection({ stories }: FeaturedSectionProps) {
       <div className="section-container">
         <div className="mb-5 flex items-center gap-2">
           <SparklesIcon className="h-5 w-5 text-amber-500" />
-          <h2 className="text-heading-md font-bold text-gray-900">Nổi bật hôm nay</h2>
+          <h2 className="text-heading-md font-bold text-gray-900">Truyện nổi bật</h2>
         </div>
 
         {/* Mobile horizontal scroll */}

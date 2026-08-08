@@ -17,7 +17,8 @@ interface SuggestedStory {
   title: string;
   slug: string;
   coverImage?: string | null;
-  author: { id: string; name: string };
+  coverUrl?: string | null;
+  author: { id: string; name: string; image?: string | null };
   views: number;
   likes: number;
   genre: string;
@@ -28,14 +29,14 @@ interface SuggestedStory {
 }
 
 interface SuggestionSectionProps {
-  /** Optional: number of stories to show for "Today's pool". Default 5. */
+  /** Optional: number of stories to show for "Today's pool". Default 10. */
   poolLimit?: number;
   /** Optional: number of stories for "Top boost" leaderboard. Default 6. */
   leaderboardLimit?: number;
 }
 
 export default function SuggestionSection({
-  poolLimit = 5,
+  poolLimit = 10,
   leaderboardLimit = 6,
 }: SuggestionSectionProps) {
   const [pool, setPool] = useState<SuggestedStory[]>([]);
