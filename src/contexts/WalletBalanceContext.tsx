@@ -47,6 +47,23 @@ export function WalletBalanceProvider({ children }: { children: React.ReactNode 
     },
   );
 
+  // After login, NextAuth swaps the session from loading→authenticated on the
+  // very next render but the `token` value (and cache key) only stabilizes one
+  // render later. Without this nudge, useCachedFetch's `skip` gate goes from
+  // true to false in the same tick it gets a brand-new token, but the cache
+  // already had a `data: undefined` entry from the anonymous session, so the
+  // initial fetch effect may short-circuit and never trigger a network call.
+  // Force one mutate when status transitions into authenticated so the xu
+  // button never stays blank after a fresh sign-in.
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    if (prevStatusRef.current !== "authenticated" && status === "authenticated" && token) {
+      invalidateCacheKey(cacheKey);
+      mutate();
+    }
+    prevStatusRef.current = status;
+  }, [status, token, cacheKey, mutate]);
+
   const balance = useMemo(() => {
     if (!data) return null;
     if (typeof data.coinBalance === "number") return data.coinBalance;
