@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useSession } from "next-auth/react";
 import { authFetch } from "@/lib/api";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import HeaderSearch from "@/components/header/HeaderSearch";
 import HeaderActions from "@/components/header/HeaderActions";
@@ -62,10 +63,15 @@ export default function Header() {
     [pathname]
   );
 
-  // Unread messages badge — poll every 3 minutes.
+  // Unread messages badge — poll every 3 minutes. Only meaningful for
+  // admin/mod/author (the messaging routes return 403 for plain readers, so
+  // skip the call entirely for them instead of filling the console with
+  // 403s every 3 minutes for every signed-in reader).
+  const { profile } = useUserProfile();
+  const canMessage = profile?.role === "admin" || profile?.role === "moderator" || profile?.role === "author";
   const [unreadMsgCount, setUnreadMsgCount] = useState(0);
   useEffect(() => {
-    if (!token) {
+    if (!token || !canMessage) {
       setUnreadMsgCount(0);
       return;
     }
