@@ -48,6 +48,24 @@ export default function HeaderActions({ unreadMsgCount }: HeaderActionsProps) {
     );
   }
 
+  // While the profile is still loading (first paint after refresh/login),
+  // don't render any role-specific action — otherwise we briefly flash the
+  // "user thường" variant (xu/Studio link) before swapping to Admin/Mod/Author.
+  // Show a neutral skeleton instead.
+  if (!profile) {
+    return (
+      <>
+        <div className="hidden h-9 w-24 animate-pulse rounded-full bg-gray-200 sm:inline-flex sm:items-center sm:justify-center" />
+        <UserMenuDropdown
+          coinBalance={coinBalance}
+          isAuthor={false}
+          isAdmin={false}
+          isMod={false}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {canMessage && (

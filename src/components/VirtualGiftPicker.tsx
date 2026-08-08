@@ -57,6 +57,23 @@ export default function VirtualGiftPicker({
           fetch(`${API_BASE_URL}/api/gifts/types`),
           authFetch("/api/wallet/balance", token),
         ]);
+        // DEBUG: surface actual error from server instead of swallowing it
+        if (!giftsRes.ok) {
+          const body = await giftsRes.text().catch(() => "");
+          console.error("[VirtualGiftPicker] /api/gifts/types failed", {
+            status: giftsRes.status,
+            body: body.slice(0, 200),
+          });
+          throw new Error(`HTTP ${giftsRes.status}: ${body.slice(0, 120)}`);
+        }
+        if (!walletRes.ok) {
+          const body = await walletRes.text().catch(() => "");
+          console.error("[VirtualGiftPicker] /api/wallet/balance failed", {
+            status: walletRes.status,
+            body: body.slice(0, 200),
+          });
+          throw new Error(`HTTP ${walletRes.status}: ${body.slice(0, 120)}`);
+        }
         const giftsData = await giftsRes.json();
         const walletData = await walletRes.json();
         setGiftTypes(giftsData.gifts || []);
@@ -66,8 +83,9 @@ export default function VirtualGiftPicker({
         setMessage("");
         setSuccess(false);
         setError("");
-      } catch {
-        setError("Không thể tải danh sách quà");
+      } catch (err: any) {
+        console.error("[VirtualGiftPicker] fetch error:", err);
+        setError(`Không thể tải danh sách quà: ${err?.message || err}`);
       }
       setLoading(false);
     };
