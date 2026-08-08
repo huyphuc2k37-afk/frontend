@@ -55,10 +55,19 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(
-    urlError === "banned"
-      ? "Tài khoản đã bị chặn hoặc email không phải @gmail.com. Chỉ hỗ trợ đăng nhập bằng Google (@gmail.com)."
-      : null
+  const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    banned_ip:
+      "IP của bạn đã bị chặn do spam. Vui lòng liên hệ admin nếu đây là nhầm lẫn.",
+    banned_email:
+      "Email này đã bị chặn. Vui lòng liên hệ admin nếu đây là nhầm lẫn.",
+    not_gmail:
+      "Chỉ hỗ trợ đăng nhập bằng tài khoản Google cá nhân (@gmail.com). Tài khoản Google Workspace (@your-company.com) hiện không được hỗ trợ.",
+    bad_secret:
+      "Cấu hình máy chủ đang gặp sự cố (mã đồng bộ xác thực không khớp). Vui lòng liên hệ admin.",
+    banned: "Tài khoản đã bị chặn hoặc email không phải @gmail.com. Chỉ hỗ trợ đăng nhập bằng Google (@gmail.com).",
+  };
+  const [error, setError] = useState<string |null>(
+    urlError ? (AUTH_ERROR_MESSAGES[urlError] || AUTH_ERROR_MESSAGES.banned) : null
   );
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);

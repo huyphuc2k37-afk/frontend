@@ -25,6 +25,14 @@ if (!JWT_API_SECRET || !AUTH_SYNC_SECRET) {
   throw new Error("Missing auth secrets: set JWT_API_SECRET and AUTH_SYNC_SECRET (or NEXTAUTH_SECRET fallback)");
 }
 
+console.log("[NextAuth init]", {
+  hasGoogleId: !!process.env.GOOGLE_CLIENT_ID,
+  hasGoogleSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+  googleIdPrefix: process.env.GOOGLE_CLIENT_ID?.slice(0, 12),
+  nextauthUrl: process.env.NEXTAUTH_URL,
+  apiBaseUrl: API_BASE_URL,
+});
+
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -104,7 +112,15 @@ const handler = NextAuth({
     },
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
+      console.log("[NextAuth signIn]", {
+        provider: account?.provider,
+        email: user?.email,
+        hasAccount: !!account,
+        hasProfile: !!profile,
+        accountError: (account as any)?.error,
+        accountErrorDescription: (account as any)?.error_description,
+      });
       // Block banned emails on Google sign-in
       if (account?.provider === "google" && user.email) {
         const normalizedEmail = normalizeEmail(user.email);
@@ -118,7 +134,16 @@ const handler = NextAuth({
             body: JSON.stringify({ email: normalizedEmail, name: user.name, image: user.image }),
           });
           if (res.status === 403) {
-            return "/login?error=banned";
+            // Forward the backend's reason code so the UI can show a specific message.
+            let code = "banned";
+            try {
+              const data = await res.json();
+              if (data?.code) code = String(data.code).toLowerCase();
+              console.warn("[NextAuth signIn] backend 403", { code, email: normalizedEmail });
+            } catch {
+              // ignore JSON parse errors — keep generic code
+            }
+            return `/login?error=${encodeURIComponent(code)}`;
           }
           if (res.ok) {
             const data = await res.json();
@@ -127,10 +152,17 @@ const handler = NextAuth({
               (user as any).role = data.user.role;
             }
           }
+          // Backend returned non-200 non-403 (e.g. 500 from old code, or env mismatch).
+          // Allow login to proceed — user will be created on the fly.
+          // This is a safety net: Google OAuth creates the user session regardless.
+          // The user won't have a DB role until the backend is updated, but the site works.
+          console.warn("[NextAuth signIn] backend sync returned non-success, allowing through", {
+            status: res.status,
+            email: normalizedEmail,
+          });
         } catch (err) {
-          // Backend is down — allow sign-in but log the error
-          console.error("[NextAuth] signIn sync error:", err);
-          return true;
+          // Network error — allow sign-in but log the error
+          console.error("[NextAuth] signIn sync network error:", err);
         }
       }
       return true;
