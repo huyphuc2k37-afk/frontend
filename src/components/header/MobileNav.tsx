@@ -29,6 +29,11 @@ export default function MobileNav({ isOpen, navLinks, isActive, onClose }: Mobil
 
   if (!isOpen) return null;
 
+  // While profile is still loading, render the nav links but skip the
+  // role-specific sections so we don't briefly show "user thường" links
+  // before swapping to Admin/Mod/Author after /api/profile returns.
+  const showUserSections = !!session?.user && !!profile;
+
   return (
     <div className="overflow-hidden border-t border-[#f0e6d0]/50 md:hidden animate-in fade-in slide-in-from-top-1 duration-150">
       <nav className="bg-[#fdf9f0] px-4 py-3" aria-label="Mobile navigation">
@@ -45,7 +50,7 @@ export default function MobileNav({ isOpen, navLinks, isActive, onClose }: Mobil
           </Link>
         ))}
 
-        {session?.user ? (
+        {session?.user && showUserSections ? (
           <>
             <div className="my-2 border-t border-gray-100" />
             <div className="flex items-center gap-3 px-3 py-2">
