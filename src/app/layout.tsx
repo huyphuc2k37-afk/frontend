@@ -150,7 +150,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="http://localhost:5000" />
 
         {/* Build marker — helps debug stale browser cache. Update to bump version. */}
-        <meta name="build-version" content="v4-2026-07-21" />
+        <meta name="build-version" content="v5-2026-08-08-sw-fix" />
 
 
 
