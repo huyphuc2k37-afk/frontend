@@ -206,12 +206,18 @@ export function useCachedFetch<T = unknown>(
     };
   }, [revalidateOnFocus, revalidateOnVisibility, skip]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Stable `mutate` ref. We MUST return the same function reference across
+  // renders; otherwise consumers that put `mutate` in a useMemo/useEffect
+  // dep array (e.g. UserProfileContext) get a fresh ref each render and
+  // cause an infinite re-render loop — which freezes the UI for minutes.
+  const mutate = useCallback(() => mutateRef.current(), []);
+
   return {
     data: entry.data,
     error: entry.error,
     loading: entry.loading && entry.data === undefined,
     fetchedAt: entry.fetchedAt,
-    mutate: () => mutateRef.current(),
+    mutate,
   };
 }
 
