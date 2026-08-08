@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useCachedFetch, invalidateCacheKey } from "@/lib/useCachedFetch";
 
@@ -35,14 +35,38 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
 
   // Cache key is per-user, so multiple components share 1 fetch.
   const cacheKey = email ? `profile:${email}` : "profile:none";
+  // Re-fetch profile every 30s so DB role changes propagate quickly (e.g. admin
+  // promotion) without forcing a full page reload. Focus + token changes also
+  // trigger a fresh fetch.
   const { data, mutate } = useCachedFetch<UserProfile>(
     cacheKey,
     "/api/profile",
     token,
-    { revalidateMs: 60_000, revalidateOnFocus: true, skip: status !== "authenticated" || !token },
+    { revalidateMs: 30_000, revalidateOnFocus: true, skip: status !== "authenticated" || !token },
   );
 
+  // When the session transitions from unauthenticated → authenticated we must
+  // invalidate the cache for the current user, otherwise the previous
+  // (pre-logout) profile is returned instantly from the in-memory cache and
+  // the UI shows a stale role until the next revalidate interval (30s) or
+  // focus event. Same for the token changing — a fresh JWT should fetch a
+  // fresh profile.
+  const prevStatusRef = useRef<string>(status);
+  const prevTokenRef = useRef<string | undefined>(token);
+  useEffect(() => {
+    const statusChanged = prevStatusRef.current !== status;
+    const tokenChanged = prevTokenRef.current !== token;
+    prevStatusRef.current = status;
+    prevTokenRef.current = token;
+    if (status === "authenticated" && token && (statusChanged || tokenChanged)) {
+      invalidateCacheKey(cacheKey);
+      mutate();
+    }
+  }, [status, token, cacheKey, mutate]);
+
   // Map backend response → UI shape. Backend may return role and coinBalance.
+  // The backend is the source of truth for role — we no longer read it from
+  // the NextAuth session/JWT (see [...nextauth]/route.ts jwt callback).
   const profile: UserProfile | null = useMemo(() => {
     if (!data) return null;
     return {

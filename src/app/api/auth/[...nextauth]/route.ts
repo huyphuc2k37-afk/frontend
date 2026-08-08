@@ -168,11 +168,21 @@ const handler = NextAuth({
       return true;
     },
     async jwt({ token, user, account }) {
+      // IMPORTANT: Role is intentionally NOT stored in the JWT.
+      //
+      // Why: JWT cookies last 7 days and NextAuth reads `role` straight from
+      // the cookie on every page load. If the DB role changes (admin promotes
+      // a user, author upgrades, etc.) the UI keeps showing the OLD role until
+      // the user logs out and back in, because the cookie is still valid.
+      //
+      // Instead we only persist the stable identifiers (sub/email/name/picture)
+      // in the JWT. The role is fetched fresh from /api/profile by
+      // UserProfileContext, which keeps the header, dropdown, and admin pages
+      // in sync with the DB immediately after a role change.
       if (user) {
         token.email = user.email ? normalizeEmail(user.email) : user.email;
         token.name = user.name;
         token.picture = user.image;
-        token.role = (user as any).role || "reader";
         if (account?.provider === "credentials") {
           token.sub = user.id;
         }
@@ -180,31 +190,11 @@ const handler = NextAuth({
           token.sub = (user as any).id;
         }
       }
-      // For Google login, fetch role from backend if not set
-      if (!token.role && token.email) {
-        const normalizedEmail = normalizeEmail(token.email);
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auth/sync`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-sync-secret": AUTH_SYNC_SECRET!,
-            },
-            body: JSON.stringify({ email: normalizedEmail, name: token.name, image: token.picture }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.user?.role) token.role = data.user.role;
-            if (data.user?.id) token.sub = data.user.id;
-          }
-        } catch {}
-      }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.sub;
-        (session.user as any).role = token.role || "reader";
       }
       // Create a JWT token that the frontend can send to the backend
       const secret = new TextEncoder().encode(JWT_API_SECRET);
