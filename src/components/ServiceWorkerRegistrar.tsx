@@ -23,6 +23,12 @@ export function ServiceWorkerRegistrar() {
         .catch((err) => {
           // eslint-disable-next-line no-console
           console.warn("Service worker registration failed:", err);
+          // If /sw.js is missing or the server returns a non-2xx response,
+          // unregister any previously-cached broken SW so it stops
+          // intercepting /api/* requests and corrupting the page.
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((r) => r.unregister());
+          });
         });
     };
 

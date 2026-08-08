@@ -91,7 +91,7 @@ export default function HeaderActions({ unreadMsgCount }: HeaderActionsProps) {
           className="hidden items-center gap-1.5 rounded-full bg-amber-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 hover:shadow-md sm:inline-flex"
         >
           <CurrencyDollarIcon className="h-4 w-4" />
-          {coinBalance !== null ? `${coinBalance.toLocaleString("vi-VN")} xu` : "... xu"}
+          {coinBalance !== null ? `${coinBalance.toLocaleString("vi-VN")} xu` : "…"}
         </Link>
       )}
       {isAdmin ? (
