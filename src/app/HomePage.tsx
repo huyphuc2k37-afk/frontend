@@ -23,6 +23,7 @@ import FeaturedSection from "@/components/home/FeaturedSection";
 import StoriesTabSection from "@/components/home/StoriesTabSection";
 import HotRankingSection from "@/components/home/HotRankingSection";
 import GenreSection from "@/components/home/GenreSection";
+import SuggestionSection from "@/components/home/SuggestionSection";
 import { HotByGenreRows } from "@/components/home/HotByGenreSection";
 
 interface HomePageProps {
@@ -184,6 +185,8 @@ export default function HomePage({
             <GenreSection />
 
             <StoriesTabSection initialStories={allStories} />
+
+            <SuggestionSection />
 
             {translatedStories.length > 0 && (
               <TranslatedCarousel stories={translatedStories} />
