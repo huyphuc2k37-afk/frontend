@@ -1,10 +1,23 @@
 const nextConfig = {
   async rewrites() {
+    // Backend base URL — read from env or fall back to Railway default.
+    // Both dev (localhost:5000) and prod (Railway) are supported without code
+    // changes because browser-side calls go through the same-origin /api proxy.
+    const backendBase = (process.env.NEXT_BACKEND_URL || "https://backend-production-1235.up.railway.app").replace(/\/+$/, "");
     return [
-      // Proxy cover image requests to the backend server
+      // Proxy /api/* → backend so the frontend can use relative URLs without
+      // a NEXT_PUBLIC_API_URL env var (and without CORS).
+      {
+        source: "/api/:path*",
+        destination: `${backendBase}/api/:path*`,
+      },
+      // Proxy cover image requests to the backend server.
+      // Dev: http://localhost:3001 (legacy local). Prod: backend host via env or Railway default.
       {
         source: "/storage/:path*",
-        destination: "http://localhost:3001/storage/:path*",
+        destination: process.env.NODE_ENV === "development"
+          ? "http://localhost:3001/storage/:path*"
+          : `${backendBase}/storage/:path*`,
       },
     ];
   },
