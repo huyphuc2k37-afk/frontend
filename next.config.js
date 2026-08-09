@@ -8,11 +8,13 @@ const nextConfig = {
       // Proxy /api/* → backend so the frontend can use relative URLs without
       // a NEXT_PUBLIC_API_URL env var (and without CORS).
       //
-      // IMPORTANT: skip /api/auth/* so NextAuth (handled by the frontend at
-      // /api/auth/[...nextauth]) keeps working. Also skip Next's own
-      // /api/client-ip route used by the view-count token flow.
+      // NextAuth's own routes at /api/auth/* MUST stay on the frontend, and
+      // the view-count token flow uses /api/client-ip internally. Both are
+      // listed explicitly so they take precedence over the catch-all below.
+      { source: "/api/auth/:path*", destination: "/api/auth/:path*" },
+      { source: "/api/client-ip", destination: "/api/client-ip" },
       {
-        source: "/api/:path((?!auth|client-ip).*)",
+        source: "/api/:path*",
         destination: `${backendBase}/api/:path*`,
       },
       // Proxy cover image requests to the backend server.
