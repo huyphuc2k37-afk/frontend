@@ -28,6 +28,8 @@ interface CacheEntry<T> {
 }
 
 const store = new Map<string, CacheEntry<unknown>>();
+/** Snapshot cache: only creates a new wrapper when _v bumps. */
+const snapshotCache = new WeakMap<CacheEntry<unknown>, { _v: number; entry: CacheEntry<unknown> }>();
 
 function getEntry<T>(key: string): CacheEntry<T> {
   let e = store.get(key) as CacheEntry<T> | undefined;
@@ -36,6 +38,15 @@ function getEntry<T>(key: string): CacheEntry<T> {
     store.set(key, e as CacheEntry<unknown>);
   }
   return e;
+}
+
+function getSnapshot<T>(key: string): { _v: number; entry: CacheEntry<T> } {
+  const e = getEntry<T>(key);
+  const cached = snapshotCache.get(e);
+  if (cached && cached._v === e._v) return cached;
+  const snap = { _v: e._v, entry: e };
+  snapshotCache.set(e, snap);
+  return snap;
 }
 
 function notify(e: CacheEntry<unknown>) {
@@ -48,12 +59,6 @@ function subscribe<T>(key: string, listener: () => void): () => void {
   return () => {
     e.listeners.delete(listener);
   };
-}
-
-/** Returns a new object reference every time _v bumps so React re-renders. */
-function getSnapshot<T>(key: string): { _v: number; entry: CacheEntry<T> } {
-  const e = getEntry<T>(key);
-  return { _v: e._v, entry: e };
 }
 
 // IMPORTANT: getServerSnapshot must return a stable reference (same object on
