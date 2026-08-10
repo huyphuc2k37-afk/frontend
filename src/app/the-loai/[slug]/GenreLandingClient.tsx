@@ -42,12 +42,13 @@ interface ApiStory {
   _count: { chapters: number; bookmarks: number };
 }
 
-const PLACEHOLDER = StoryCard({ story }: { story: ApiStory }) {
-  // Build cover URL directly — category API doesn't return coverUrl, but the
-  // /api/stories/:id/cover endpoint works for any story regardless of status.
-  const apiCoverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
-  const coverSrc = story.coverUrl || apiCoverUrl;
-  const [src, setSrc] = useState(coverSrc);
+function StoryCard({ story }: { story: ApiStory }) {
+  // Build cover URL: use Next.js Image optimizer (/_next/image) which caches at CDN edge.
+  // Directly hitting /api/stories/:id/cover goes through Vercel→Railway→Vercel, adding ~1.5-2s latency per image.
+  // The optimizer fetches the origin once and serves cached copies from edge nodes worldwide.
+  const rawCoverUrl = story.coverUrl || `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const optimizedCoverUrl = `/_next/image?url=${encodeURIComponent(rawCoverUrl)}&w=360&q=80`;
+  const [src, setSrc] = useState(optimizedCoverUrl);
   const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
@@ -60,8 +61,8 @@ const PLACEHOLDER = StoryCard({ story }: { story: ApiStory }) {
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => {
-            if (hasValidCover && src !== apiCoverUrl) {
-              setSrc(apiCoverUrl);
+            if (hasValidCover && src !== optimizedCoverUrl) {
+              setSrc(optimizedCoverUrl);
               return;
             }
             setSrc(PLACEHOLDER_COVER);
