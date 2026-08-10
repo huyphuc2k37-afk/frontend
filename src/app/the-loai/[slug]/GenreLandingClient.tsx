@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRightIcon,
   EyeIcon,
@@ -12,8 +11,9 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EmptyState from "@/components/EmptyState";
-import { API_BASE_URL, PLACEHOLDER_COVER } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
+import CoverImage from "@/lib/CoverImage";
 
 interface ApiCategory {
   id: string;
@@ -47,26 +47,16 @@ function StoryCard({ story }: { story: ApiStory }) {
   // /api/stories/:id/cover endpoint works for any story regardless of status.
   const apiCoverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
   const coverSrc = story.coverUrl || apiCoverUrl;
-  const [src, setSrc] = useState(coverSrc);
-  const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
     <Link href={`/truyen/${story.slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
-        <Image
-          src={src}
+        <CoverImage
+          src={coverSrc}
           alt={story.title}
-          fill
           sizes="(max-width: 640px) 50vw, 180px"
+          fallbackUrl={apiCoverUrl}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          unoptimized
-          onError={() => {
-            if (hasValidCover && src !== apiCoverUrl) {
-              setSrc(apiCoverUrl);
-              return;
-            }
-            setSrc(PLACEHOLDER_COVER);
-          }}
         />
         {story.status === "completed" && (
           <span className="absolute left-2 top-2 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
