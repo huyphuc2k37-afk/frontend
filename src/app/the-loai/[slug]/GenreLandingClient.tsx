@@ -12,7 +12,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EmptyState from "@/components/EmptyState";
-import { API_BASE_URL, PLACEHOLDER_COVER, resolveCoverSrc } from "@/lib/api";
+import { API_BASE_URL, PLACEHOLDER_COVER } from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
 
 interface ApiCategory {
@@ -42,12 +42,12 @@ interface ApiStory {
   _count: { chapters: number; bookmarks: number };
 }
 
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23e5e7eb'%3E%3Crect width='300' height='400'/%3E%3C/svg%3E";
-
-function StoryCard({ story }: { story: ApiStory }) {
-  const fallbackUrl = `${API_BASE_URL}/api/stories/${story.id}/cover?v=${encodeURIComponent(story.updatedAt || "2")}`;
-  const [src, setSrc] = useState(resolveCoverSrc(story));
+const PLACEHOLDER = StoryCard({ story }: { story: ApiStory }) {
+  // Build cover URL directly — category API doesn't return coverUrl, but the
+  // /api/stories/:id/cover endpoint works for any story regardless of status.
+  const apiCoverUrl = `${API_BASE_URL}/api/stories/${story.id}/cover`;
+  const coverSrc = story.coverUrl || apiCoverUrl;
+  const [src, setSrc] = useState(coverSrc);
   const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
@@ -60,8 +60,8 @@ function StoryCard({ story }: { story: ApiStory }) {
           sizes="(max-width: 640px) 50vw, 180px"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           onError={() => {
-            if (hasValidCover && src !== fallbackUrl) {
-              setSrc(fallbackUrl);
+            if (hasValidCover && src !== apiCoverUrl) {
+              setSrc(apiCoverUrl);
               return;
             }
             setSrc(PLACEHOLDER_COVER);
