@@ -449,7 +449,7 @@ export default function ProfilePage() {
                     {profile.stories.map((story) => (
                       <Link
                         key={story.id}
-                        href={`/story/${story.slug}`}
+                        href={`/truyen/${story.slug}`}
                         className="flex items-center justify-between rounded-xl border border-gray-100 p-4 transition-colors hover:bg-gray-50"
                       >
                         <div>

@@ -148,7 +148,7 @@ export default function HeaderSearch({ token, variant = "desktop" }: HeaderSearc
           {searchResults.map((s) => (
             <Link
               key={s.id}
-              href={`/story/${s.slug}`}
+              href={`/truyen/${s.slug}`}
               onClick={() => setDropdownOpen(false)}
               role="option"
               aria-selected="false"

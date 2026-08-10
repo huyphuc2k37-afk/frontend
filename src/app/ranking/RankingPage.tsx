@@ -203,7 +203,7 @@ export default function RankingPage() {
                 return (
                   <div key={story.id}>
                     <Link
-                      href={`/story/${story.slug}`}
+                      href={`/truyen/${story.slug}`}
                       className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-card transition-all hover:shadow-card-hover"
                     >
                       {/* Rank number */}

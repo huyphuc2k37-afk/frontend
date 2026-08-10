@@ -66,7 +66,7 @@ export default function HotRankingSection({ stories }: HotRankingSectionProps) {
             return (
               <Link
                 key={story.id}
-                href={`/story/${story.slug}`}
+                href={`/truyen/${story.slug}`}
                 className="flex items-center gap-3 rounded-xl border border-white/50 bg-white/80 p-3 transition-all hover:bg-white hover:shadow-sm"
               >
                 <span

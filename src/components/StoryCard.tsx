@@ -54,7 +54,7 @@ function StoryCardInner({ story, variant = "default", rank }: StoryCardProps) {
   if (isCompact) {
     return (
       <Link
-        href={`/story/${story.slug}`}
+        href={`/truyen/${story.slug}`}
         className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
       >
         <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-muted">
@@ -79,7 +79,7 @@ function StoryCardInner({ story, variant = "default", rank }: StoryCardProps) {
   }
 
   return (
-    <Link href={`/story/${story.slug}`} className="block">
+    <Link href={`/truyen/${story.slug}`} className="block">
       <article
         className={cn(
           "group overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover hover:border-primary/30",

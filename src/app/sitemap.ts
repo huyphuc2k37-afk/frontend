@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const data = (await res.json()) as BackendSitemapResponse;
 
     const storyUrls: MetadataRoute.Sitemap = data.stories.map((s) => ({
-      url: `${SITE_URL}/story/${s.slug}`,
+      url: `${SITE_URL}/truyen/${s.slug}`,
       lastModified: s.updatedAt,
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const chapterUrls: MetadataRoute.Sitemap = data.chapters
       .slice(0, maxChapters)
       .map((c) => ({
-        url: `${SITE_URL}/story/${c.storySlug}/chapter/${c.chapterId}`,
+        url: `${SITE_URL}/truyen/${c.storySlug}/chapter/${c.chapterId}`,
         lastModified: c.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.5,

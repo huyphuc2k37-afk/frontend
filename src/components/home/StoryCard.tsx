@@ -48,7 +48,7 @@ const StoryCard = memo(function StoryCard({ story, index = 99 }: StoryCardProps)
     story.status === "completed" ? "Hoàn thành" : story.status === "paused" ? "Tạm ngưng" : "Đang viết";
 
   return (
-    <Link href={`/story/${story.slug}`} className="group block">
+    <Link href={`/truyen/${story.slug}`} className="group block">
       <div>
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
           <CoverImage

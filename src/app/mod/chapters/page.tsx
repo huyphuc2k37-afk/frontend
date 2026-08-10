@@ -551,7 +551,7 @@ export default function ModChaptersPage() {
                     {/* View on site */}
                     {selectedChapter.approvalStatus === "approved" && (
                       <a
-                        href={`/story/${selectedChapter.story.slug}/chapter/${selectedChapter.id}`}
+                        href={`/truyen/${selectedChapter.story.slug}/chapter/${selectedChapter.id}`}
                         target="_blank"
                         className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
                       >

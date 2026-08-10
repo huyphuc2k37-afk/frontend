@@ -118,7 +118,7 @@ export default function SuggestionSection({
               {pool.map((story, index) => (
                 <Link
                   key={story.id}
-                  href={`/story/${story.slug}`}
+                  href={`/truyen/${story.slug}`}
                   className="group block"
                 >
                   <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
@@ -182,7 +182,7 @@ export default function SuggestionSection({
               {leaderboard.map((story) => (
                 <Link
                   key={story.id}
-                  href={`/story/${story.slug}`}
+                  href={`/truyen/${story.slug}`}
                   className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:border-primary-200 hover:shadow-md"
                 >
                   <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">

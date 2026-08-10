@@ -29,12 +29,12 @@ export function useChapterKeyboard({
       }
       if (e.key === "ArrowLeft" && prevChapterId) {
         e.preventDefault();
-        router.push(`/story/${storySlug}/chapter/${prevChapterId}`);
+        router.push(`/truyen/${storySlug}/chapter/${prevChapterId}`);
       } else if (e.key === "ArrowRight" && nextChapterId) {
         e.preventDefault();
-        router.push(`/story/${storySlug}/chapter/${nextChapterId}`);
+        router.push(`/truyen/${storySlug}/chapter/${nextChapterId}`);
       } else if (e.key === "Escape") {
-        router.push(`/story/${storySlug}`);
+        router.push(`/truyen/${storySlug}`);
       } else if (e.key.toLowerCase() === "s" && toggleSettings) {
         e.preventDefault();
         toggleSettings();

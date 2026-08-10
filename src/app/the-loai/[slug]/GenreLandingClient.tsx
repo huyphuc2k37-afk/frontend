@@ -51,7 +51,7 @@ function StoryCard({ story }: { story: ApiStory }) {
   const hasValidCover = !!story.coverUrl;
   const translated = isTranslatedStory(story);
   return (
-    <Link href={`/story/${story.slug}`} className="group block">
+    <Link href={`/truyen/${story.slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-shadow group-hover:shadow-md">
         <Image
           src={src}

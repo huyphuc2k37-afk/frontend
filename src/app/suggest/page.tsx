@@ -352,7 +352,7 @@ export default function SuggestPage() {
                   {pool.stories.map((story, index) => (
                     <Link
                       key={story.id}
-                      href={`/story/${story.slug}`}
+                      href={`/truyen/${story.slug}`}
                       className="group rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-primary-200 hover:shadow-md"
                     >
                       <div className="flex gap-4">
@@ -571,7 +571,7 @@ export default function SuggestPage() {
                     return (
                       <div key={suggestion.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                         <div className="flex gap-4">
-                          <Link href={`/story/${suggestion.story.slug}`} className="h-16 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                          <Link href={`/truyen/${suggestion.story.slug}`} className="h-16 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {suggestion.story.coverImage && (
                               <Image
                                 src={resolveCoverSrc(suggestion.story)}
@@ -585,7 +585,7 @@ export default function SuggestPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <Link href={`/story/${suggestion.story.slug}`} className="font-semibold text-gray-900 hover:text-primary-600">
+                                <Link href={`/truyen/${suggestion.story.slug}`} className="font-semibold text-gray-900 hover:text-primary-600">
                                   {suggestion.story.title}
                                 </Link>
                                 <p className="mt-0.5 text-caption text-gray-500">

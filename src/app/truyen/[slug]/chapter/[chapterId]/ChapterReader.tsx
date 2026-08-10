@@ -383,7 +383,7 @@ export default function ReadChapterPage() {
           <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
             <BookOpenIcon className="h-16 w-16 text-gray-300" />
             <h2 className="text-heading-md font-bold text-gray-600">Không tìm thấy chương</h2>
-            <Link href={`/story/${slug}`} className="text-primary-600 hover:underline">
+            <Link href={`/truyen/${slug}`} className="text-primary-600 hover:underline">
               ← Quay lại truyện
             </Link>
           </div>
@@ -402,14 +402,14 @@ export default function ReadChapterPage() {
           <div className="section-container flex items-center justify-between py-4">
             <div className="flex items-center gap-3 min-w-0">
               <Link
-                href={`/story/${slug}`}
+                href={`/truyen/${slug}`}
                 className={`flex-shrink-0 rounded-lg p-2 transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </Link>
               <div className="min-w-0">
                 <Link
-                  href={`/story/${slug}`}
+                  href={`/truyen/${slug}`}
                   className={`block text-caption truncate ${isDark ? 'text-gray-400 hover:text-primary-400' : 'text-gray-500 hover:text-primary-600'}`}
                 >
                   {chapter.story.title}
@@ -682,7 +682,7 @@ export default function ReadChapterPage() {
             <div className="mt-8 flex items-center justify-between gap-4">
               {chapter.prev ? (
                 <Link
-                  href={`/story/${slug}/chapter/${chapter.prev.id}`}
+                  href={`/truyen/${slug}/chapter/${chapter.prev.id}`}
                   onClick={() => qualityTracker?.recordChapter(chapter.prev?.id || "")}
                   className={`inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${isDark ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
                 >
@@ -695,7 +695,7 @@ export default function ReadChapterPage() {
               )}
 
               <Link
-                href={`/story/${slug}`}
+                href={`/truyen/${slug}`}
                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-body-sm font-medium shadow-sm transition-colors duration-300 ${isDark ? 'border-gray-700 bg-[#1e2746] text-gray-300 hover:bg-[#253054]' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
               >
                 <ListBulletIcon className="h-4 w-4" />
@@ -704,7 +704,7 @@ export default function ReadChapterPage() {
 
               {chapter.next ? (
                 <Link
-                  href={`/story/${slug}/chapter/${chapter.next.id}`}
+                  href={`/truyen/${slug}/chapter/${chapter.next.id}`}
                   onClick={() => qualityTracker?.recordChapter(chapter.next?.id || "")}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-primary-600"
                 >

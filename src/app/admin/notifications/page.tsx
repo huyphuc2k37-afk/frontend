@@ -326,7 +326,7 @@ export default function AdminNotificationsPage() {
                 <input
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
-                  placeholder="VD: /wallet hoặc /story/ten-truyen"
+                  placeholder="VD: /wallet hoặc /truyen/ten-truyen"
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-body-sm focus:border-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
                 />
               </div>

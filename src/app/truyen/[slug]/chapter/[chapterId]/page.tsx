@@ -44,12 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: SITE_URL + "/story/" + params.slug + "/chapter/" + params.chapterId,
+      canonical: SITE_URL + "/truyen/" + params.slug + "/chapter/" + params.chapterId,
     },
     openGraph: {
       title: chapterTitle + " – " + storyTitle,
       description,
-      url: SITE_URL + "/story/" + params.slug + "/chapter/" + params.chapterId,
+      url: SITE_URL + "/truyen/" + params.slug + "/chapter/" + params.chapterId,
       siteName: "VStory",
       type: "article",
       ...(chapter.story?.id
@@ -94,7 +94,7 @@ export default async function ChapterPage({ params }: Props) {
           " trên VStory",
         url:
           SITE_URL +
-          "/story/" +
+          "/truyen/" +
           params.slug +
           "/chapter/" +
           params.chapterId,
@@ -102,7 +102,7 @@ export default async function ChapterPage({ params }: Props) {
         isPartOf: {
           "@type": "Book",
           name: chapter.story?.title,
-          url: SITE_URL + "/story/" + params.slug,
+          url: SITE_URL + "/truyen/" + params.slug,
         },
         wordCount: chapter.wordCount,
         datePublished: chapter.createdAt,

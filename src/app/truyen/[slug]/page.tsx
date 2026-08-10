@@ -60,12 +60,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ...visibleTags,
     ],
     alternates: {
-      canonical: SITE_URL + "/story/" + story.slug,
+      canonical: SITE_URL + "/truyen/" + story.slug,
     },
     openGraph: {
       title: story.title,
       description,
-      url: SITE_URL + "/story/" + story.slug,
+      url: SITE_URL + "/truyen/" + story.slug,
       siteName: "VStory",
       locale: "vi_VN",
       type: "book" as any,
@@ -99,7 +99,7 @@ export default async function StoryPage({ params }: Props) {
           "@type": "Book",
           name: story.title,
           description: story.description?.slice(0, 300),
-          url: SITE_URL + "/story/" + story.slug,
+          url: SITE_URL + "/truyen/" + story.slug,
           image: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
           author: {
             "@type": "Person",
@@ -142,7 +142,7 @@ export default async function StoryPage({ params }: Props) {
               "@type": "ListItem",
               position: 3,
               name: story.title,
-              item: SITE_URL + "/story/" + story.slug,
+              item: SITE_URL + "/truyen/" + story.slug,
             },
           ],
         },

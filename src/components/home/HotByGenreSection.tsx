@@ -54,7 +54,7 @@ export default function HotByGenreSection({ title, tagSlug, stories }: Props) {
           {display.map((story) => (
             <Link
               key={story.id}
-              href={`/story/${story.slug}`}
+              href={`/truyen/${story.slug}`}
               className="group block"
             >
               <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100">

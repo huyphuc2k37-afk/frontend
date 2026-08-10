@@ -268,7 +268,7 @@ export default function AuthorProfileClient() {
                       {stories.map((s) => (
                         <Link
                           key={s.id}
-                          href={`/story/${s.slug}`}
+                          href={`/truyen/${s.slug}`}
                           className="flex items-center gap-4 rounded-xl border border-gray-100 p-4 hover:bg-gray-50"
                         >
                           <StoryCoverThumb storyId={s.id} title={s.title} coverUrl={s.coverUrl} />

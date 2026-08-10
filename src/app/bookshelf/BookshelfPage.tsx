@@ -153,7 +153,7 @@ export default function BookshelfPage() {
                     key={bm.id}
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-card transition-shadow hover:shadow-card-hover"
                   >
-                    <Link href={`/story/${bm.story.slug}`} className="flex gap-4 p-4">
+                    <Link href={`/truyen/${bm.story.slug}`} className="flex gap-4 p-4">
                       <div className="relative h-32 w-22 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
                         <Image
                           src={resolveCoverSrc(bm.story)}

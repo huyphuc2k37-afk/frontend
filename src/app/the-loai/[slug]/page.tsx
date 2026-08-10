@@ -160,7 +160,7 @@ export default async function GenrePage({ params }: Props) {
         item: {
           "@type": "Book",
           name: s.title,
-          url: `${SITE_URL}/story/${s.slug}`,
+          url: `${SITE_URL}/truyen/${s.slug}`,
           author: { "@type": "Person", name: s.author?.name },
           genre: category.name,
         },

@@ -686,7 +686,7 @@ export default function ModStoriesPage() {
                     <div className="flex flex-wrap gap-2">
                       {selectedStory.approvalStatus === "approved" && (
                         <a
-                          href={`/story/${selectedStory.slug}`}
+                          href={`/truyen/${selectedStory.slug}`}
                           target="_blank"
                           className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-body-sm font-medium text-gray-600 hover:bg-gray-50"
                         >

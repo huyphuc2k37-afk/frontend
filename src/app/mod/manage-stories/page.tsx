@@ -375,7 +375,7 @@ export default function ModManageStoriesPage() {
                         <div className="flex items-center justify-center gap-1">
                           {s.slug && (
                             <a
-                              href={`/story/${s.slug}`}
+                              href={`/truyen/${s.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rounded-lg p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50"

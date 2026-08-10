@@ -147,7 +147,7 @@ export default function RecommendedStories({
         {stories.map((story) => (
           <Link
             key={story.id}
-            href={`/story/${story.slug}`}
+            href={`/truyen/${story.slug}`}
             onClick={() => handleClick(story)}
             className="group block"
           >

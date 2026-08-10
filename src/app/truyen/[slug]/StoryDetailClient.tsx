@@ -548,7 +548,7 @@ export default function StoryDetailPage() {
                 <div className="mt-6 flex flex-wrap gap-3">
                   {story.chapters.length > 0 && (
                     <Link
-                      href={`/story/${story.slug}/chapter/${story.chapters[0].id}`}
+                      href={`/truyen/${story.slug}/chapter/${story.chapters[0].id}`}
                       className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-body-sm font-semibold text-white shadow-lg hover:bg-primary-600"
                     >
                       <BookOpenIcon className="h-5 w-5" />
@@ -633,7 +633,7 @@ export default function StoryDetailPage() {
                       <div className="absolute left-0 top-full z-50 mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
                         <button
                           onClick={() => {
-                            const url = `https://vstory.vn/story/${story.slug}`;
+                            const url = `https://vstory.vn/truyen/${story.slug}`;
                             navigator.clipboard.writeText(url).then(() => {
                               setCopied(true);
                               setTimeout(() => setCopied(false), 2000);
@@ -645,7 +645,7 @@ export default function StoryDetailPage() {
                           {copied ? "Đã sao chép!" : "Sao chép liên kết"}
                         </button>
                         <a
-                          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}`}
+                          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://vstory.vn/truyen/${story.slug}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
@@ -654,7 +654,7 @@ export default function StoryDetailPage() {
                           Facebook
                         </a>
                         <a
-                          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
+                          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`https://vstory.vn/truyen/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
@@ -663,7 +663,7 @@ export default function StoryDetailPage() {
                           X (Twitter)
                         </a>
                         <a
-                          href={`https://telegram.me/share/url?url=${encodeURIComponent(`https://vstory.vn/story/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
+                          href={`https://telegram.me/share/url?url=${encodeURIComponent(`https://vstory.vn/truyen/${story.slug}`)}&text=${encodeURIComponent(`Đọc truyện "${story.title}" trên VStory`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-body-sm text-gray-700 hover:bg-gray-50"
@@ -753,7 +753,7 @@ export default function StoryDetailPage() {
                     {story.chapters.map((ch) => (
                       <Link
                         key={ch.id}
-                        href={`/story/${story.slug}/chapter/${ch.id}`}
+                        href={`/truyen/${story.slug}/chapter/${ch.id}`}
                         className="flex items-center justify-between py-3 transition-colors hover:bg-gray-50 px-3 -mx-3 rounded-lg"
                       >
                         <div className="flex items-center gap-3 min-w-0">
