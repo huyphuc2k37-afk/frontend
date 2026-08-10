@@ -67,8 +67,7 @@ export default function CoverImage({
     );
   }
 
-  // next/image for remote URLs (Cloudinary, Supabase, etc.) — optimized mode.
-  // This enables Vercel CDN caching at edge, cutting ~1.5-2s latency per image.
+  // next/image for remote URLs (Cloudinary, Supabase, etc.).
   return (
     <Image
       src={currentSrc}
@@ -77,6 +76,9 @@ export default function CoverImage({
       sizes={sizes}
       priority={priority}
       loading={eager ? "eager" : "lazy"}
+      unoptimized
+      placeholder="blur"
+      blurDataURL={PLACEHOLDER_COVER}
       className={className}
       onError={onError}
     />
