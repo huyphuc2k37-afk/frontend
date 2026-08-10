@@ -20,6 +20,9 @@ interface CacheEntry<T> {
   error: unknown;
   loading: boolean;
   fetchedAt: number;
+  /** Bumped every time data/error/loading changes so useSyncExternalStore
+   *  sees a new reference and triggers a re-render. */
+  _v: number;
   promise?: Promise<void>;
   listeners: Set<() => void>;
 }
@@ -29,7 +32,7 @@ const store = new Map<string, CacheEntry<unknown>>();
 function getEntry<T>(key: string): CacheEntry<T> {
   let e = store.get(key) as CacheEntry<T> | undefined;
   if (!e) {
-    e = { data: undefined, error: undefined, loading: false, fetchedAt: 0, listeners: new Set() };
+    e = { data: undefined, error: undefined, loading: false, fetchedAt: 0, _v: 0, listeners: new Set() };
     store.set(key, e as CacheEntry<unknown>);
   }
   return e;
@@ -47,23 +50,19 @@ function subscribe<T>(key: string, listener: () => void): () => void {
   };
 }
 
-function getSnapshot<T>(key: string): CacheEntry<T> {
-  return getEntry<T>(key);
+/** Returns a new object reference every time _v bumps so React re-renders. */
+function getSnapshot<T>(key: string): { _v: number; entry: CacheEntry<T> } {
+  const e = getEntry<T>(key);
+  return { _v: e._v, entry: e };
 }
 
 // IMPORTANT: getServerSnapshot must return a stable reference (same object on
 // every call). Returning a fresh literal here triggers React's
 // "getServerSnapshot should be cached to avoid an infinite loop" warning AND
 // produces repeated rerenders during SSR. Use a single empty entry.
-const SERVER_SNAPSHOT: CacheEntry<unknown> = {
-  data: undefined,
-  error: undefined,
-  loading: false,
-  fetchedAt: 0,
-  listeners: new Set(),
-};
-function getServerSnapshot<T>(): CacheEntry<T> {
-  return SERVER_SNAPSHOT as CacheEntry<T>;
+const SERVER_SNAPSHOT = { _v: -1, entry: { data: undefined, error: undefined, loading: false, fetchedAt: 0, _v: -1, listeners: new Set() } };
+function getServerSnapshot<T>(): { _v: number; entry: CacheEntry<T> } {
+  return SERVER_SNAPSHOT as { _v: number; entry: CacheEntry<T> };
 }
 
 async function runFetch<T>(
@@ -75,6 +74,7 @@ async function runFetch<T>(
 ): Promise<void> {
   e.loading = true;
   e.error = undefined;
+  e._v++; // bump so subscribers re-render in "loading" state
   notify(e);
   try {
     const res = token
@@ -93,6 +93,7 @@ async function runFetch<T>(
   } finally {
     e.loading = false;
     e.promise = undefined;
+    e._v++; // bump so subscribers re-render with new data / error
     notify(e);
   }
 }
@@ -140,7 +141,9 @@ export function useCachedFetch<T = unknown>(
     ...fetchOptions
   } = options;
 
-  const entry = useSyncExternalStore(
+  // The snapshot wrapper changes reference only when _v bumps — this is what
+  // makes useSyncExternalStore reliably trigger re-renders when data changes.
+  const { _v: _snapV, entry } = useSyncExternalStore(
     (l) => subscribe<T>(key, l),
     () => getSnapshot<T>(key),
     () => getServerSnapshot<T>(),
@@ -202,7 +205,7 @@ export function useCachedFetch<T = unknown>(
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("visibilitychange", onVisibility);
     };
   }, [revalidateOnFocus, revalidateOnVisibility, skip]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -227,6 +230,7 @@ export function invalidateCacheKey(key: string): void {
   if (e) {
     e.fetchedAt = 0;
     e.promise = undefined;
+    e._v++; // bump so consumers re-render with stale data cleared
     notify(e);
   }
 }
