@@ -29,7 +29,7 @@ interface CacheEntry<T> {
 
 const store = new Map<string, CacheEntry<unknown>>();
 /** Snapshot cache: only creates a new wrapper when _v bumps. */
-const snapshotCache = new WeakMap<CacheEntry<unknown>, { _v: number; entry: CacheEntry<unknown> }>();
+const snapshotCache = new Map<string, { _v: number; entry: CacheEntry<unknown> }>();
 
 function getEntry<T>(key: string): CacheEntry<T> {
   let e = store.get(key) as CacheEntry<T> | undefined;
@@ -42,10 +42,10 @@ function getEntry<T>(key: string): CacheEntry<T> {
 
 function getSnapshot<T>(key: string): { _v: number; entry: CacheEntry<T> } {
   const e = getEntry<T>(key);
-  const cached = snapshotCache.get(e);
-  if (cached && cached._v === e._v) return cached;
+  const cached = snapshotCache.get(key);
+  if (cached && cached._v === e._v) return cached as { _v: number; entry: CacheEntry<T> };
   const snap = { _v: e._v, entry: e };
-  snapshotCache.set(e, snap);
+  snapshotCache.set(key, snap);
   return snap;
 }
 
