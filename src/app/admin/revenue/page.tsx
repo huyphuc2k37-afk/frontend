@@ -135,16 +135,16 @@ export default function RevenueDashboard() {
 
     try {
       const [overviewRes, chartRes, typeRes, authorRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/admin/revenue/overview`, {
+        fetch(`${API_BASE_URL}/api/revenue/dashboard/overview`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${API_BASE_URL}/api/admin/revenue/${period}?days=${period === "daily" ? 30 : period === "weekly" ? 12 : period === "monthly" ? 12 : 5}&weeks=${period === "weekly" ? 12 : 12}&months=${period === "monthly" ? 12 : 12}&years=${period === "yearly" ? 5 : 5}`, {
+        fetch(`${API_BASE_URL}/api/revenue/dashboard/${period}?days=${period === "daily" ? 30 : period === "weekly" ? 12 : period === "monthly" ? 12 : 5}&weeks=${period === "weekly" ? 12 : 12}&months=${period === "monthly" ? 12 : 12}&years=${period === "yearly" ? 5 : 5}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${API_BASE_URL}/api/admin/revenue/by-type?period=${revenuePeriod}`, {
+        fetch(`${API_BASE_URL}/api/revenue/dashboard/by-type?period=${revenuePeriod}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${API_BASE_URL}/api/admin/revenue/authors?page=${authorPage}&limit=20&period=${revenuePeriod}`, {
+        fetch(`${API_BASE_URL}/api/revenue/dashboard/authors?page=${authorPage}&limit=20&period=${revenuePeriod}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -177,7 +177,7 @@ export default function RevenueDashboard() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/admin/revenue/export?format=${format}&period=${revenuePeriod}`,
+        `${API_BASE_URL}/api/revenue/dashboard/export?format=${format}&period=${revenuePeriod}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
