@@ -32,6 +32,7 @@ const sidebarItems = [
   { id: "deposits", label: "Nạp xu", href: "/admin/deposits", icon: DollarSign },
   { id: "withdrawals", label: "Rút tiền", href: "/admin/withdrawals", icon: Banknote },
   { id: "announcements", label: "Thông báo", href: "/admin/announcements", icon: Megaphone },
+  { id: "banners", label: "Banner QC", href: "/admin/banners", icon: BarChart3 },
   { id: "notifications", label: "Gửi TB cá nhân", href: "/admin/notifications", icon: Bell },
   { id: "messages", label: "Nhắn tin tác giả", href: "/admin/messages", icon: MessageSquare },
   { id: "banned-ips", label: "Chặn IP spam", href: "/admin/banned-ips", icon: ShieldAlert },

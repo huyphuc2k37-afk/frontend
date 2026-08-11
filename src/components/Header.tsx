@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { authFetch } from "@/lib/api";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import AdBanner from "@/components/AdBanner";
 import HeaderSearch from "@/components/header/HeaderSearch";
 import HeaderActions from "@/components/header/HeaderActions";
 import MobileNav from "@/components/header/MobileNav";
@@ -169,6 +170,7 @@ export default function Header() {
 
       <div className="h-14 sm:h-16" />
       <AnnouncementBanner />
+      <AdBanner />
     </>
   );
 }
