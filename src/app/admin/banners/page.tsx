@@ -84,6 +84,12 @@ export default function AdminBannersPage() {
     isActive: true,
   });
 
+  // File upload state (base64 preview)
+  const [pcPreview, setPcPreview] = useState<string | null>(null);
+  const [mobilePreview, setMobilePreview] = useState<string | null>(null);
+  const [uploadingPc, setUploadingPc] = useState(false);
+  const [uploadingMobile, setUploadingMobile] = useState(false);
+
   const fetchBanners = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -103,6 +109,51 @@ export default function AdminBannersPage() {
 
   const getBanner = (loc: string) => banners.find((b) => b.location === loc);
 
+  // Reset preview when form closes
+  useEffect(() => {
+    if (!expandedLoc) {
+      setPcPreview(null);
+      setMobilePreview(null);
+    }
+  }, [expandedLoc]);
+
+  const uploadBannerImage = async (file: File, variant: "pc" | "mobile") => {
+    if (!token || !expandedLoc) return;
+    const setter = variant === "pc" ? setUploadingPc : setUploadingMobile;
+    setter(true);
+    try {
+      // Convert to base64
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch(`${API_BASE_URL}/api/admin/ads/banners/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ location: expandedLoc, variant, imageData: dataUrl }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        if (variant === "pc") {
+          setForm((f) => ({ ...f, customImageUrl: data.url }));
+          setPcPreview(data.url);
+        } else {
+          setForm((f) => ({ ...f, customImageMobileUrl: data.url }));
+          setMobilePreview(data.url);
+        }
+      } else {
+        alert(data.error || "Upload thất bại");
+      }
+    } catch {
+      alert("Upload thất bại");
+    } finally {
+      setter(false);
+    }
+  };
+
   const openForm = (loc: string) => {
     const existing = getBanner(loc);
     if (existing) {
@@ -120,6 +171,8 @@ export default function AdminBannersPage() {
         isOpenNewTab: existing.isOpenNewTab,
         isActive: existing.isActive,
       });
+      setPcPreview(existing.customImageUrl || null);
+      setMobilePreview(existing.customImageMobileUrl || null);
     } else {
       setForm({
         customImageUrl: "",
@@ -135,6 +188,8 @@ export default function AdminBannersPage() {
         isOpenNewTab: true,
         isActive: true,
       });
+      setPcPreview(null);
+      setMobilePreview(null);
     }
     setExpandedLoc(loc);
     setResult(null);
@@ -267,15 +322,15 @@ export default function AdminBannersPage() {
                 {/* Preview thumbnails */}
                 {isCustom && (
                   <div className="flex items-center gap-2">
-                    {banner?.customImageUrl && (
+                    {(pcPreview || banner?.customImageUrl) && (
                       <div className="relative h-12 w-16 overflow-hidden rounded-lg border border-gray-200">
-                        <Image src={banner.customImageUrl} alt="PC" fill className="object-cover" unoptimized />
+                        <Image src={pcPreview || banner!.customImageUrl!} alt="PC" fill className="object-cover" unoptimized />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[9px] text-white">PC</span>
                       </div>
                     )}
-                    {banner?.customImageMobileUrl && (
+                    {(mobilePreview || banner?.customImageMobileUrl) && (
                       <div className="relative h-12 w-7 overflow-hidden rounded-lg border border-gray-200">
-                        <Image src={banner.customImageMobileUrl} alt="Mobile" fill className="object-cover" unoptimized />
+                        <Image src={mobilePreview || banner!.customImageMobileUrl!} alt="Mobile" fill className="object-cover" unoptimized />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-center text-[8px] text-white">M</span>
                       </div>
                     )}
@@ -336,36 +391,114 @@ export default function AdminBannersPage() {
                   )}
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {/* PC Image URL */}
+                    {/* PC Image Upload */}
                     <div>
                       <label className="mb-1 flex items-center gap-1.5 text-caption font-semibold text-gray-600">
                         <ComputerDesktopIcon className="h-4 w-4" />
                         Ảnh Banner PC <span className="text-red-400 text-[10px]">Khuyến nghị 728×90</span>
                       </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="url"
-                          value={form.customImageUrl}
-                          onChange={(e) => setForm({ ...form, customImageUrl: e.target.value })}
-                          placeholder="https://..."
-                          className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100"
-                        />
+                      <div className="relative flex items-center justify-center w-full">
+                        {pcPreview ? (
+                          <div className="relative group w-full">
+                            <div className="relative h-20 w-full overflow-hidden rounded-lg border-2 border-blue-200 bg-gray-100">
+                              <Image src={pcPreview} alt="PC Preview" fill className="object-contain" unoptimized />
+                              <button
+                                onClick={() => { setPcPreview(null); setForm((f) => ({ ...f, customImageUrl: "" })); }}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                              >
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <label className="mt-1 flex items-center justify-center gap-1 rounded border border-gray-200 bg-white py-1 text-caption text-gray-500 hover:bg-gray-50 cursor-pointer">
+                              <PencilSquareIcon className="h-3 w-3" />
+                              {uploadingPc ? "Đang tải..." : "Đổi ảnh"}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={uploadingPc}
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBannerImage(f, "pc"); }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-20 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors">
+                            {uploadingPc ? (
+                              <div className="flex items-center gap-2 text-blue-500 text-caption">
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                                Đang tải...
+                              </div>
+                            ) : (
+                              <>
+                                <PhotoIcon className="h-6 w-6 text-gray-400 mb-1" />
+                                <span className="text-caption text-gray-400">Tải ảnh lên (PC)</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={uploadingPc}
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBannerImage(f, "pc"); }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
                       </div>
                     </div>
 
-                    {/* Mobile Image URL */}
+                    {/* Mobile Image Upload */}
                     <div>
                       <label className="mb-1 flex items-center gap-1.5 text-caption font-semibold text-gray-600">
                         <DevicePhoneMobileIcon className="h-4 w-4" />
                         Ảnh Banner Mobile <span className="text-red-400 text-[10px]">Khuyến nghị 320×100</span>
                       </label>
-                      <input
-                        type="url"
-                        value={form.customImageMobileUrl}
-                        onChange={(e) => setForm({ ...form, customImageMobileUrl: e.target.value })}
-                        placeholder="https://... (tùy chọn)"
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-body-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100"
-                      />
+                      <div className="relative flex items-center justify-center w-full">
+                        {mobilePreview ? (
+                          <div className="relative group w-full">
+                            <div className="relative h-20 w-full overflow-hidden rounded-lg border-2 border-purple-200 bg-gray-100 flex items-center justify-center">
+                              <Image src={mobilePreview} alt="Mobile Preview" fill className="object-contain" unoptimized />
+                              <button
+                                onClick={() => { setMobilePreview(null); setForm((f) => ({ ...f, customImageMobileUrl: "" })); }}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                              >
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <label className="mt-1 flex items-center justify-center gap-1 rounded border border-gray-200 bg-white py-1 text-caption text-gray-500 hover:bg-gray-50 cursor-pointer">
+                              <PencilSquareIcon className="h-3 w-3" />
+                              {uploadingMobile ? "Đang tải..." : "Đổi ảnh"}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={uploadingMobile}
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBannerImage(f, "mobile"); }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-20 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors">
+                            {uploadingMobile ? (
+                              <div className="flex items-center gap-2 text-purple-500 text-caption">
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+                                Đang tải...
+                              </div>
+                            ) : (
+                              <>
+                                <PhotoIcon className="h-6 w-6 text-gray-400 mb-1" />
+                                <span className="text-caption text-gray-400">Tải ảnh lên (Mobile)</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={uploadingMobile}
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadBannerImage(f, "mobile"); }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
                     </div>
 
                     {/* Click URL */}
