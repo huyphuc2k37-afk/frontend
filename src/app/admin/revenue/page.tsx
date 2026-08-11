@@ -115,6 +115,30 @@ interface AuthorEarnings {
   totalPages: number;
 }
 
+interface RevenueSource {
+  key: string;
+  label: string;
+  icon: string;
+  gross: number;
+  detail: string;
+  count: number;
+  percentage: number;
+  isCost?: boolean;
+}
+
+interface RevenueBySource {
+  period: string;
+  periodLabel: string;
+  totalPlatformRevenue: number;
+  totalUserDeposits: number;
+  totalUserCoins: number;
+  totalContentSpending: number;
+  totalAdRevenue: number;
+  totalAdminCost: number;
+  totalRewardCost: number;
+  sources: RevenueSource[];
+}
+
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function RevenueDashboard() {
@@ -128,13 +152,15 @@ export default function RevenueDashboard() {
   const [authorEarnings, setAuthorEarnings] = useState<AuthorEarnings | null>(null);
   const [authorPage, setAuthorPage] = useState(1);
   const [exporting, setExporting] = useState(false);
+  const [bySource, setBySource] = useState<RevenueBySource | null>(null);
+  const [bySourcePeriod, setBySourcePeriod] = useState<RevenuePeriod>("30d");
 
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
 
     try {
-      const [overviewRes, chartRes, typeRes, authorRes] = await Promise.all([
+      const [overviewRes, chartRes, typeRes, authorRes, sourceRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/revenue/dashboard/overview`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -147,25 +173,30 @@ export default function RevenueDashboard() {
         fetch(`${API_BASE_URL}/api/revenue/dashboard/authors?page=${authorPage}&limit=20&period=${revenuePeriod}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch(`${API_BASE_URL}/api/revenue/dashboard/by-source?period=${bySourcePeriod}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
-      const [overviewData, chartResData, typeResData, authorResData] = await Promise.all([
+      const [overviewData, chartResData, typeResData, authorResData, sourceData] = await Promise.all([
         overviewRes.json(),
         chartRes.json(),
         typeRes.json(),
         authorRes.json(),
+        sourceRes.json(),
       ]);
 
       setOverview(overviewData);
       setChartData(chartResData);
       setRevenueByType(typeResData);
       setAuthorEarnings(authorResData);
+      setBySource(sourceData);
     } catch (error) {
       console.error("Error fetching revenue data:", error);
     } finally {
       setLoading(false);
     }
-  }, [token, period, revenuePeriod, authorPage]);
+  }, [token, period, revenuePeriod, authorPage, bySourcePeriod]);
 
   useEffect(() => {
     fetchData();
@@ -402,6 +433,113 @@ export default function RevenueDashboard() {
           </div>
         )}
       </div>
+
+      {/* Revenue by Source */}
+      {bySource && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-heading-sm font-semibold text-gray-900">Doanh thu theo Nguồn</h3>
+              <p className="text-caption text-gray-500">Phân tích theo nguồn thu chi</p>
+            </div>
+            <select
+              value={bySourcePeriod}
+              onChange={(e) => setBySourcePeriod(e.target.value as RevenuePeriod)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-xs focus:border-red-500 focus:outline-none"
+            >
+              <option value="30d">30 ngày</option>
+              <option value="90d">90 ngày</option>
+              <option value="365d">365 ngày</option>
+              <option value="all">Tất cả</option>
+            </select>
+          </div>
+
+          {/* Summary row */}
+          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="rounded-xl bg-blue-50 p-4 text-center">
+              <p className="text-caption text-blue-600">Tổng doanh thu</p>
+              <p className="mt-1 text-heading-sm font-bold text-blue-700">
+                {formatCurrency(bySource.totalPlatformRevenue)} xu
+              </p>
+            </div>
+            <div className="rounded-xl bg-green-50 p-4 text-center">
+              <p className="text-caption text-green-600">Nạp xu (VND)</p>
+              <p className="mt-1 text-heading-sm font-bold text-green-700">
+                {formatCurrency(bySource.totalUserDeposits)}đ
+              </p>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-4 text-center">
+              <p className="text-caption text-amber-600">Chi tiêu nội dung</p>
+              <p className="mt-1 text-heading-sm font-bold text-amber-700">
+                {formatCurrency(bySource.totalContentSpending)} xu
+              </p>
+            </div>
+            <div className="rounded-xl bg-purple-50 p-4 text-center">
+              <p className="text-caption text-purple-600">Doanh thu quảng cáo</p>
+              <p className="mt-1 text-heading-sm font-bold text-purple-700">
+                {formatCurrency(bySource.totalAdRevenue)} xu
+              </p>
+            </div>
+          </div>
+
+          {/* Sources table */}
+          <div className="space-y-3">
+            {bySource.sources.map((source, idx) => (
+              <div
+                key={source.key}
+                className={`flex items-center justify-between rounded-lg p-4 ${
+                  source.isCost ? "bg-gray-50" : "bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
+                      source.isCost ? "bg-gray-200 text-gray-600" : "bg-blue-100 text-blue-600"
+                    }`}
+                  >
+                    {idx + 1}
+                  </div>
+                  <div>
+                    <p className="text-body-sm font-medium text-gray-900">{source.label}</p>
+                    <p className="text-caption text-gray-500">
+                      {source.detail} &middot; {source.count} giao dịch
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-body-sm font-semibold ${source.isCost ? "text-red-500" : "text-green-600"}`}>
+                    {source.isCost ? "-" : "+"}{formatCurrency(source.gross)} xu
+                  </p>
+                  {source.percentage > 0 && (
+                    <p className="text-caption text-gray-400">{source.percentage}%</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Cost section */}
+          {bySource.totalAdminCost > 0 || bySource.totalRewardCost > 0 ? (
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <p className="mb-3 text-caption font-medium text-gray-500">CHI PHÍ NỀN TẢNG</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-red-50 p-3">
+                  <p className="text-caption text-red-600">Admin cộng xu</p>
+                  <p className="mt-1 text-body-sm font-semibold text-red-700">
+                    -{formatCurrency(bySource.totalAdminCost)} xu
+                  </p>
+                </div>
+                <div className="rounded-lg bg-red-50 p-3">
+                  <p className="text-caption text-red-600">Reward Ads (trả cho user)</p>
+                  <p className="mt-1 text-body-sm font-semibold text-red-700">
+                    -{formatCurrency(bySource.totalRewardCost)} xu
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Revenue by Type & Author Earnings */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
