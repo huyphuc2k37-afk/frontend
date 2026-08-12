@@ -151,7 +151,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="http://localhost:5000" />
 
         {/* Build marker — helps debug stale browser cache. Update to bump version. */}
-        <meta name="build-version" content="v7-2026-08-12-adbanner-hardcoded" />
+        <meta name="build-version" content="v8-2026-08-12-banner-original-size" />
 
 
 
