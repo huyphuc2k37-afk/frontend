@@ -16,6 +16,7 @@ import EmptyState from "@/components/EmptyState";
 import { CardSkeleton } from "@/components/LoadingState";
 import RecommendedStories from "@/components/RecommendedStories";
 import PersonalizedSection from "@/components/home/PersonalizedSection";
+import AdBanner from "@/components/AdBanner";
 import { API_BASE_URL } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import StoryCard, { ApiStory } from "@/components/home/StoryCard";
@@ -151,6 +152,7 @@ export default function HomePage({
   return (
     <>
       <Header />
+      <AdBanner />
       <main id="main-content" className="min-h-screen">
         {loading && (
           <div className="section-container py-10" style={{ minHeight: "1600px" }}>
