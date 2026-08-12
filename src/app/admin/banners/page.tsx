@@ -94,7 +94,7 @@ export default function AdminBannersPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/ads/banners`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/ads/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -130,7 +130,7 @@ export default function AdminBannersPage() {
         reader.readAsDataURL(file);
       });
 
-      const res = await fetch(`${API_BASE_URL}/api/admin/ads/banners/upload`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/ads/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ location: expandedLoc, variant, imageData: dataUrl }),
@@ -200,7 +200,7 @@ export default function AdminBannersPage() {
     setSaving(true);
     setResult(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/ads/banners/${expandedLoc}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/ads/${expandedLoc}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -236,7 +236,7 @@ export default function AdminBannersPage() {
     if (!token) return;
     if (!confirm(`Gỡ banner "${locationLabel(loc)}"? Hệ thống sẽ quay về quảng cáo mạng.`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/ads/banners/${loc}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/ads/${loc}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
