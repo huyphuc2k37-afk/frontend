@@ -122,10 +122,10 @@ const nextConfig = {
     ];
   },
   images: {
-    // Netlify's Next.js runtime can return 402 for the built-in image optimizer
-    // (/_next/image) depending on plan/quota. Covers are remote images, so we
-    // prefer serving them directly rather than through the optimizer.
-    unoptimized: process.env.NETLIFY === "true",
+    // Disable Vercel's built-in image optimizer to save Fast Origin Transfer
+    // (29 GB/month on Hobby plan exceeded quota). Covers are remote images
+    // served directly from Cloudinary/Supabase, no need to proxy through /_next/image.
+    unoptimized: process.env.NETLIFY === "true" || process.env.VERCEL === "1",
     // Backend /api/stories/:id/cover returns SVG placeholder for stories that
     // haven't been migrated to Cloudinary yet. Allow SVG to avoid 400 errors
     // when Next.js Image optimizer hits these URLs.
