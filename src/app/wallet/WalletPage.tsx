@@ -44,7 +44,7 @@ const coinPackages = [
 
 const paymentMethods = [
   { id: "zalopay", label: "ZaloPay", icon: DevicePhoneMobileIcon, color: "bg-blue-50 text-blue-600 border-blue-200" },
-  { id: "bank", label: "Chuyển khoản Agribank", icon: BanknotesIcon, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  { id: "bank", label: "Chuyển khoản Eximbank", icon: BanknotesIcon, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
  ] as const;
 
 type PaymentMethodId = (typeof paymentMethods)[number]["id"];
@@ -68,13 +68,13 @@ const PAYMENT_INFO: Record<PaymentMethodId, PaymentInfo> = {
     fields: [{ label: "Số điện thoại", value: "0584375253" }],
   },
   bank: {
-    title: "Agribank",
+    title: "Eximbank",
     qrSrc: "/qr/qrnganhang.jpg",
     fields: [
-      { label: "Ngân hàng", value: "Agribank" },
-      { label: "Số tài khoản", value: "8888584375253" },
+      { label: "Ngân hàng", value: "Eximbank" },
+      { label: "Số tài khoản", value: "100433212" },
       { label: "Chủ tài khoản", value: "Nguyen Huy Phuc" },
-      { label: "Chi nhánh", value: "Agribank CN Nghi Lộc Nghệ An" },
+      { label: "Chi nhánh", value: "Eximbank" },
     ],
   },
 };
@@ -427,7 +427,7 @@ export default function WalletPage() {
                             src={selectedMethodInfo.qrSrc}
                             alt={
                               selectedMethod === "bank"
-                                ? "QR chuyển khoản Agribank"
+                                ? "QR chuyển khoản Eximbank"
                                 : "QR thanh toán ZaloPay"
                             }
                             width={440}
@@ -545,7 +545,7 @@ export default function WalletPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-body-sm font-medium text-gray-900">
-                            Nạp {d.coins?.toLocaleString()} xu ({d.method === "zalopay" ? "ZaloPay" : "Agribank"})
+                            Nạp {d.coins?.toLocaleString()} xu ({d.method === "zalopay" ? "ZaloPay" : "Eximbank"})
                           </p>
                           <p className="mt-0.5 text-caption text-gray-400">
                             {new Date(d.createdAt).toLocaleDateString("vi-VN")} · {new Intl.NumberFormat("vi-VN").format(d.amount)}đ
