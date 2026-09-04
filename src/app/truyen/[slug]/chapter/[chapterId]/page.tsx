@@ -4,6 +4,30 @@ import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
 
 export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
+export const dynamicParams = true; // New chapters render on-demand, then cached
+
+/**
+ * Pre-render all chapter IDs at build time so most chapter reads are pure
+ * CDN hits. With 1.2K+ chapters this is heavy at build but pays off massively
+ * because chapter reads are by far the heaviest traffic endpoint.
+ *
+ * NOTE: relative URL (see truyen/[slug]/page.tsx generateStaticParams for why).
+ */
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`/api/sitemap`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const params: { slug: string; chapterId: string }[] = (data.chapters || []).map(
+      (c: any) => ({ slug: c.storySlug, chapterId: c.chapterId })
+    );
+    return params;
+  } catch {
+    return [];
+  }
+}
 
 const SITE_URL = "https://vstory.vn";
 

@@ -89,8 +89,10 @@ export default function StoryDetailPage() {
   const [story, setStory] = useState<StoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  // A1: realtime view count (poll mỗi 10s, fallback về story.views ban đầu)
-  const displayViews = useRealtimeViews(slug, story?.views ?? 0, 10_000);
+  // A1: Poll view count mỗi 60s (giảm từ 10s/30s) để tiết kiệm Vercel
+  // function invocations + Railway egress. View count chỉ cần "gần real-time"
+  // chứ không cần chính xác từng giây — 60s vẫn cho cảm giác "đang cập nhật".
+  const displayViews = useRealtimeViews(slug, story?.views ?? 0, 60_000);
   const [bookmarking, setBookmarking] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
