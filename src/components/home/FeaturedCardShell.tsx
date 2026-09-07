@@ -7,22 +7,18 @@
  *   - Gold gradient border matching the LED billboard at the top of the page
  *   - Border-radius tracks the underlying StoryCard's cover (rounded-xl)
  *   - Animated shine: a soft golden glow travels clockwise around the border
- *   - Corner badge "VIP" with "100K/tháng" price to communicate the slot
- *     is a paid promotion, not organic ranking
+ *   - Corner badge "VIP" so visitors understand these are paid promotion slots
  *
  * The inner StoryCard is rendered unchanged — this shell is purely cosmetic.
  */
 
 import { ReactNode } from "react";
-import { StarIcon } from "@heroicons/react/24/solid";
 
 interface FeaturedCardShellProps {
   children: ReactNode;
-  /** Slot position (1..N) shown in the corner badge. */
-  slot?: number;
 }
 
-export default function FeaturedCardShell({ children, slot }: FeaturedCardShellProps) {
+export default function FeaturedCardShell({ children }: FeaturedCardShellProps) {
   return (
     <div className="featured-slot group relative">
       {/* Outer gold frame */}
@@ -36,11 +32,8 @@ export default function FeaturedCardShell({ children, slot }: FeaturedCardShellP
         </div>
 
         {/* VIP badge — top-right corner */}
-        <div className="featured-slot-badge pointer-events-none absolute -right-1 -top-1 z-10 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-950 shadow-[0_2px_8px_rgba(251,191,36,0.55)] ring-1 ring-amber-200 sm:px-2 sm:text-[10px]">
-          <StarIcon className="h-2.5 w-2.5 text-amber-900 sm:h-3 sm:w-3" />
-          <span className="hidden sm:inline">VIP&nbsp;</span>
-          {slot ? `#${slot}` : "HOT"}
-          <span className="hidden text-amber-900/80 sm:inline">&nbsp;• 100K</span>
+        <div className="featured-slot-badge pointer-events-none absolute -right-1 -top-1 z-10 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-950 shadow-[0_2px_8px_rgba(251,191,36,0.55)] ring-1 ring-amber-200">
+          VIP
         </div>
       </div>
 

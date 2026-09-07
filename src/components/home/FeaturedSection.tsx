@@ -63,7 +63,7 @@ export default function FeaturedSection({ stories }: FeaturedSectionProps) {
                 data-featured-card="true"
                 className="w-[40vw] min-w-[40vw] max-w-[160px] flex-shrink-0 snap-start"
               >
-                <FeaturedCardShell slot={i + 1}>
+                <FeaturedCardShell>
                   <StoryCard story={story} index={i} />
                 </FeaturedCardShell>
               </div>
@@ -87,7 +87,7 @@ export default function FeaturedSection({ stories }: FeaturedSectionProps) {
         {/* Desktop grid */}
         <div className="hidden grid-cols-2 gap-5 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-6">
           {stories.map((story, i) => (
-            <FeaturedCardShell key={story.id} slot={i + 1}>
+            <FeaturedCardShell key={story.id}>
               <StoryCard story={story} index={i} />
             </FeaturedCardShell>
           ))}
