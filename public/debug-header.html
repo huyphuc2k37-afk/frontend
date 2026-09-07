@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Header debug</title>
+  <style>
+    body { font: 14px/1.5 monospace; padding: 20px; max-width: 900px; margin: 0 auto; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow: auto; }
+    button { padding: 8px 16px; background: #7c3aed; color: #fff; border: 0; border-radius: 6px; cursor: pointer; margin-right: 8px; }
+    .ok { color: #047857; } .slow { color: #b91c1c; font-weight: bold; } .mid { color: #c2410c; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { padding: 6px 10px; border: 1px solid #e5e7eb; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Header timing debug</h1>
+  <p>Đo latency thật của các endpoint mà Header gọi. Mở DevTools → Network để xem chi tiết.</p>
+
+  <div>
+    <button id="run">▶ Chạy test</button>
+    <button id="run5">▶ Chạy 5 lần liên tiếp (mô phỏng reload)</button>
+    <button id="clear">🗑 Xoá log</button>
+  </div>
+
+  <h2>Kết quả</h2>
+  <div id="out">Bấm "Chạy test" để bắt đầu.</div>
+
+  <script type="module">
+    const API = "https://backend-production-73800.up.railway.app";
+    const $ = (id) => document.getElementById(id);
+    const out = $("out");
+
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      out.innerHTML = `<div>[${t}] ${msg}</div>` + out.innerHTML;
+    }
+
+    async function getToken() {
+      // NextAuth session cookie được attach tự động khi gọi /api/auth/session
+      const r = await fetch("/api/auth/session", { credentials: "include" });
+      const data = await r.json();
+      return { session: data, token: data?.accessToken };
+    }
+
+    async function timeOne(label, url, token) {
+      const t0 = performance.now();
+      let status = "?", size = "?", body = "(none)";
+      try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const r = await fetch(url, { headers, credentials: "include" });
+        status = r.status;
+        const text = await r.text();
+        size = text.length;
+        try { body = JSON.stringify(JSON.parse(text)).slice(0, 200); } catch {}
+      } catch (e) {
+        status = "ERR: " + e.message;
+      }
+      const dt = Math.round(performance.now() - t0);
+      const cls = dt > 20000 ? "slow" : dt > 3000 ? "mid" : "ok";
+      return { label, dt, status, size, body, cls };
+    }
+
+    async function runOnce() {
+      out.innerHTML = "";
+      log("🔑 Bước 1: lấy session từ /api/auth/session…");
+      const t0 = performance.now();
+      const { session, token } = await getToken();
+      const sessionMs = Math.round(performance.now() - t0);
+      log(`✅ session: ${session?.user?.email || "(none)"} (${sessionMs}ms)`);
+      log(`✅ token: ${token ? token.slice(0, 20) + "…" : "❌ KHÔNG CÓ"}`);
+      log("");
+
+      if (!token) {
+        log("⛔ Không có token → không thể gọi /api/* . Hãy đăng nhập trước.");
+        return;
+      }
+
+      log("🌐 Bước 2: gọi 3 endpoint song song (đúng như Header làm)…");
+      const endpoints = [
+        { label: "/api/profile", url: `${API}/api/profile` },
+        { label: "/api/wallet", url: `${API}/api/wallet` },
+        { label: "/api/notifications?limit=10", url: `${API}/api/notifications?limit=10` },
+      ];
+
+      const results = await Promise.all(endpoints.map((e) => timeOne(e.label, e.url, token)));
+      log("");
+
+      let html = "<table><tr><th>Endpoint</th><th>Latency</th><th>HTTP</th><th>Body (200 chars)</th></tr>";
+      for (const r of results) {
+        html += `<tr><td>${r.label}</td><td class="${r.cls}">${r.dt} ms</td><td>${r.status}</td><td><pre>${r.body}</pre></td></tr>`;
+      }
+      html += "</table>";
+      out.innerHTML = html + out.innerHTML;
+
+      const slowest = Math.max(...results.map((r) => r.dt));
+      const total = results.reduce((a, b) => a + b.dt, 0);
+      log(`📊 Tổng parallel: ${Math.max(...results.map(r=>r.dt))}ms | Tổng serial nếu nối tiếp: ${total}ms`);
+      log(`📊 Chậm nhất: ${slowest}ms (${slowest > 30000 ? "🚨 cold start rõ ràng" : slowest > 5000 ? "⚠ chậm" : "✅ OK"})`);
+    }
+
+    async function runFive() {
+      for (let i = 1; i <= 5; i++) {
+        out.innerHTML = `<h2>Lần chạy ${i}/5</h2>` + out.innerHTML;
+        await runOnce();
+        out.innerHTML = `<hr/>` + out.innerHTML;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+
+    $("run").onclick = runOnce;
+    $("run5").onclick = runFive;
+    $("clear").onclick = () => (out.innerHTML = "");
+  </script>
+</body>
+</html>

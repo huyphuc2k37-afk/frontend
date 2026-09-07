@@ -42,7 +42,17 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     cacheKey,
     "/api/profile",
     token,
-    { revalidateMs: 30_000, revalidateOnFocus: true, skip: status !== "authenticated" || !token },
+    {
+      revalidateMs: 30_000,
+      revalidateOnFocus: true,
+      // Railway backend can sleep on the free tier — cold start on /api/profile
+      // may take 30-60s on the first request after idle. Give it generous
+      // timeout + retry budget so the header doesn't sit blank for minutes.
+      timeoutMs: 60_000,
+      retries: 3,
+      retryBackoffMs: 800,
+      skip: status !== "authenticated" || !token,
+    },
   );
 
   // When the session transitions from unauthenticated → authenticated we must
