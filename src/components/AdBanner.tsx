@@ -5,16 +5,21 @@
  *
  * Phong cách: mô phỏng biển LED neon ngoài đời thực — khung viền vàng đồng,
  * nền tối, chữ LED phát sáng có hiệu ứng glow + chạy marquee, hai bóng
- * bulb trang trí, fade-out xuống dưới để liền mạch với trang.
+ * bulb trang trí.
  *
  * Nội dung: cho thuê banner quảng bá — website, MXH, dịch vụ.
  *
+ * Click-to-contact: toàn bộ banner là 1 link mở Zalo của admin
+ * (https://zalo.me/0584375253) trong tab mới.
+ *
  * Full-width (vượt khỏi section-container), responsive:
- *   - Desktop: h ~120 px, chia 3 khối (brand+CTA | marquee | contact+price)
- *   - Mobile:  h ~150 px, xếp dọc gọn
+ *   - Desktop: 3 khối (brand | marquee | contact+price)
+ *   - Mobile:  xếp dọc gọn
  */
 
 import { MegaphoneIcon, PhoneIcon, SparklesIcon } from "@heroicons/react/24/outline";
+
+const ZALO_URL = "https://zalo.me/0584375253";
 
 export default function AdBanner() {
   return (
@@ -22,7 +27,14 @@ export default function AdBanner() {
       className="adboard-wrap relative w-full"
       aria-label="Quảng cáo — Cho thuê banner quảng bá website, MXH, dịch vụ"
     >
-      <div className="adboard relative mx-auto flex w-full items-center justify-center px-3 py-3 sm:px-5 sm:py-4">
+      <a
+        href={ZALO_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="adboard relative mx-auto flex w-full cursor-pointer items-center justify-center px-3 py-3 outline-none transition-transform duration-200 hover:scale-[1.005] focus-visible:scale-[1.005] sm:px-5 sm:py-4"
+        aria-label="Liên hệ tư vấn thuê banner qua Zalo 0584.375.253"
+        title="Nhấn để liên hệ tư vấn qua Zalo"
+      >
         <div className="adboard-frame relative w-full overflow-hidden rounded-md">
           {/* ─── Decorative light bulbs flanking the board ─── */}
           <span className="adboard-bulb adboard-bulb--left" aria-hidden />
@@ -93,7 +105,7 @@ export default function AdBanner() {
             </span>
           </div>
         </div>
-      </div>
+      </a>
 
       {/* ─── Scoped styles ─── */}
       <style jsx>{`
