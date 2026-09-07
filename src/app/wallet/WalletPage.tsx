@@ -93,6 +93,7 @@ export default function WalletPage() {
   const [selectedPack, setSelectedPack] = useState<string | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [depositRequestId, setDepositRequestId] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -125,7 +126,10 @@ export default function WalletPage() {
     if (!selectedPack || !selectedMethod || !token) return;
     const pack = coinPackages.find((p) => p.id === selectedPack);
     if (!pack) return;
+    if (processing) return; // guard against double-click
     setProcessing(true);
+    const reqId = depositRequestId + 1;
+    setDepositRequestId(reqId);
     try {
       const res = await authFetch("/api/wallet/deposit", token, {
         method: "POST",
@@ -137,6 +141,8 @@ export default function WalletPage() {
           transferNote: `${transferCode} - Nap ${pack.label} - ${session?.user?.email}`,
         }),
       });
+      // Ignore stale responses from a previous request
+      if (reqId !== depositRequestId) return;
       if (res.ok) {
         setShowSuccess(true);
         setSelectedPack(null);
@@ -148,8 +154,10 @@ export default function WalletPage() {
         alert(errData.error || "Nạp xu thất bại, vui lòng thử lại.");
       }
     } catch {
+      if (reqId !== depositRequestId) return;
       alert("Lỗi kết nối. Vui lòng thử lại.");
     }
+    if (reqId !== depositRequestId) return;
     setProcessing(false);
   };
 
