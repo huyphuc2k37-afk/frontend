@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -26,6 +26,8 @@ import {
   GiftIcon,
   ClockIcon,
   CheckCircleIcon,
+  XCircleIcon,
+  XMarkIcon,
   ShieldCheckIcon,
   SparklesIcon,
   ClipboardDocumentIcon,
@@ -98,6 +100,7 @@ export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"deposit" | "history">("deposit");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [codeKey, setCodeKey] = useState(0);
+  const [depositStatusMessages, setDepositStatusMessages] = useState<Record<string, { status: string; title: string; message: string }>>({});
 
   // Shared wallet balance via context — same value the Header badge reads.
   const { balance: sharedBalance, refresh: refreshBalance } = useWalletBalance();
@@ -116,11 +119,39 @@ export default function WalletPage() {
   // Fetch deposits history via shared cache. Invalidates on focus after a new deposit.
   const history = useCachedFetch<{ deposits: any[]; purchases: any[]; purchasedChapterIds: string[] }>(
     session?.user?.email ? `wallet:history:${session.user.email}` : "wallet:history:none",
-    "/api/wallet/history",
+    "/api/wallet",
     token,
-    { revalidateMs: 60_000, skip: !token, revalidateOnFocus: true },
+    { revalidateMs: 30_000, skip: !token, revalidateOnFocus: true },
   );
   const deposits = history.data?.deposits || [];
+
+  // ── Detect status changes (pending → approved/rejected) and show inline notice ──
+  const prevStatusRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    if (!deposits.length) return;
+    const updates: Record<string, { status: string; title: string; message: string }> = {};
+    let hasUpdate = false;
+    for (const d of deposits) {
+      const prev = prevStatusRef.current[d.id];
+      if (prev && prev !== d.status && d.status !== "pending") {
+        const isApproved = d.status === "approved";
+        updates[d.id] = {
+          status: d.status,
+          title: isApproved ? "✅ Nạp xu đã được duyệt" : "❌ Yêu cầu nạp xu bị từ chối",
+          message: isApproved
+            ? `Yêu cầu nạp ${d.coins?.toLocaleString()} xu đã được admin duyệt.`
+            : `Yêu cầu nạp ${d.coins?.toLocaleString()} xu đã bị từ chối.`,
+        };
+        hasUpdate = true;
+      }
+      prevStatusRef.current[d.id] = d.status;
+    }
+    if (hasUpdate) {
+      setDepositStatusMessages((prev) => ({ ...prev, ...updates }));
+      // Refresh shared wallet balance (admin approval updates user's coinBalance)
+      refreshBalance();
+    }
+  }, [deposits, refreshBalance]);
 
   const handleDeposit = async () => {
     if (!selectedPack || !selectedMethod || !token) return;
@@ -536,7 +567,68 @@ export default function WalletPage() {
               <div className="border-b border-gray-100 px-6 py-4">
                 <h3 className="text-body-lg font-semibold text-gray-900">Lịch sử nạp xu</h3>
               </div>
-              {deposits.length === 0 ? (
+              {Object.keys(depositStatusMessages).length > 0 && (
+                <div className="space-y-2 border-b border-gray-100 bg-gray-50 px-6 py-3">
+                  {Object.entries(depositStatusMessages).map(([id, msg]) => (
+                    <div
+                      key={id}
+                      className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
+                        msg.status === "approved"
+                          ? "border-emerald-200 bg-emerald-50"
+                          : "border-red-200 bg-red-50"
+                      }`}
+                    >
+                      {msg.status === "approved" ? (
+                        <CheckCircleIcon className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                      ) : (
+                        <XCircleIcon className="h-5 w-5 flex-shrink-0 text-red-600" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-body-sm font-semibold ${msg.status === "approved" ? "text-emerald-900" : "text-red-900"}`}>
+                          {msg.title}
+                        </p>
+                        <p className={`text-caption ${msg.status === "approved" ? "text-emerald-700" : "text-red-700"}`}>
+                          {msg.message}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDepositStatusMessages((prev) => {
+                            const next = { ...prev };
+                            delete next[id];
+                            return next;
+                          })
+                        }
+                        className={`flex-shrink-0 rounded-lg p-1 transition-colors ${
+                          msg.status === "approved"
+                            ? "text-emerald-400 hover:bg-emerald-100 hover:text-emerald-700"
+                            : "text-red-400 hover:bg-red-100 hover:text-red-700"
+                        }`}
+                        aria-label="Đóng thông báo"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {history.loading && deposits.length === 0 ? (
+                <div className="flex items-center justify-center px-6 py-16">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+                </div>
+              ) : history.error && deposits.length === 0 ? (
+                <div className="px-6 py-16 text-center">
+                  <p className="text-body-sm text-red-500">Không thể tải lịch sử nạp xu.</p>
+                  <button
+                    type="button"
+                    onClick={() => history.mutate()}
+                    className="mt-3 rounded-lg bg-primary-500 px-4 py-2 text-caption font-semibold text-white hover:bg-primary-600"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              ) : deposits.length === 0 ? (
                 <div className="px-6 py-16 text-center">
                   <ClockIcon className="mx-auto h-12 w-12 text-gray-200" />
                   <p className="mt-3 text-body-sm text-gray-500">Chưa có giao dịch nào</p>
