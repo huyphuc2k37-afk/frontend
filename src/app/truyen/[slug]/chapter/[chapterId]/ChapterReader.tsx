@@ -356,9 +356,10 @@ export default function ReadChapterPage() {
   const broadcastPurchase = useCallback(() => {
     if (typeof window === "undefined" || !session?.user?.email) return;
     try {
-      // Broadcast to other tabs
+      // Broadcast to other tabs (and to same-tab listeners like StoryDetail)
       const payload = JSON.stringify({
         chapterId: chapter?.id ?? chapterId,
+        storySlug: slug, // so StoryDetail page can decide whether to refetch
         userId: (session.user as { id?: string }).id ?? session.user.email,
         ts: Date.now(),
       });
@@ -366,7 +367,7 @@ export default function ReadChapterPage() {
       // Also dispatch same-tab event so other listeners pick it up
       window.dispatchEvent(new CustomEvent("chapter:purchased", { detail: payload }));
     } catch {}
-  }, [chapter?.id, chapterId, session]);
+  }, [chapter?.id, chapterId, slug, session]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
