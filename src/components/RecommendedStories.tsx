@@ -159,6 +159,7 @@ export default function RecommendedStories({
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_COVER; }}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">

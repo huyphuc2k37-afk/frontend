@@ -95,10 +95,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "VStory",
       locale: "vi_VN",
       type: "book" as any,
-      images: story.id
+      images: story.coverUrl
         ? [
             {
-              url: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
+              url: story.coverUrl,
               width: 400,
               height: 600,
               alt: story.title,
@@ -126,7 +126,7 @@ export default async function StoryPage({ params }: Props) {
           name: story.title,
           description: story.description?.slice(0, 300),
           url: SITE_URL + "/truyen/" + story.slug,
-          image: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
+          ...(story.coverUrl ? { image: story.coverUrl } : {}),
           author: {
             "@type": "Person",
             name: story.author?.name,
