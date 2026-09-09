@@ -51,6 +51,10 @@ interface ChapterData {
   story: { id: string; title: string; slug: string; authorId: string; genre: string; tags?: string | null };
   prev: { id: string; title: string; number: number } | null;
   next: { id: string; title: string; number: number } | null;
+  /** True when user has access (free, author, admin/mod, or already purchased). */
+  purchased?: boolean;
+  requiresLogin?: boolean;
+  requiresPurchase?: boolean;
 }
 
 export default function ReadChapterPage() {
@@ -269,8 +273,10 @@ export default function ReadChapterPage() {
           }
         }
 
-        // Backend already strips content for unauthorized access
-        if (data.requiresLogin || data.requiresPurchase) {
+        // Backend already strips content for unauthorized access.
+        // Use `purchased` flag (authoritative from server) instead of inferring from `requiresPurchase`.
+        const hasAccess = data.purchased === true;
+        if (!hasAccess && (data.requiresLogin || data.requiresPurchase || !data.content)) {
           setNeedsPurchase(true);
           // Fetch balance for purchase UI if logged in
           if (token) {
@@ -292,6 +298,96 @@ export default function ReadChapterPage() {
       abortController.abort();
     };
   }, [chapterId, fetchChapterData, session, token]);
+
+  // ─── FIX: Auto-refetch chapter when user returns to tab ───
+  // This handles the case where user opened a different tab to purchase coins,
+  // or completed a payment in another tab → comes back to this tab expecting
+  // content. Without this, React state would still show "locked".
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    let lastVisibleAt = 0;
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      // Throttle: skip if visibility flipped within 1s (avoid double-fire on focus)
+      if (now - lastVisibleAt < 1000) return;
+      lastVisibleAt = now;
+      // Re-fetch in background; if access changed, UI updates automatically
+      fetchChapterData(token)
+        .then((data) => {
+          if (data.purchased === true && data.content) {
+            setChapter(data);
+            setNeedsPurchase(false);
+          }
+        })
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [fetchChapterData, token]);
+
+  // ─── FIX: Listen for cross-tab purchase events via localStorage ───
+  // When user buys a chapter in tab A then opens chapter URL in tab B,
+  // tab B doesn't know. Use localStorage 'storage' event + a fetch-cache
+  // keyed by user+chapterId to share purchase state.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "chapter:purchased") return;
+      if (!e.newValue) return;
+      try {
+        const payload = JSON.parse(e.newValue) as { chapterId: string; userId: string };
+        if (payload.chapterId === chapterId) {
+          // Re-fetch — another tab confirmed a purchase
+          fetchChapterData(token)
+            .then((data) => {
+              setChapter(data);
+              if (data.purchased === true) setNeedsPurchase(false);
+            })
+            .catch(() => {});
+        }
+      } catch {}
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [chapterId, fetchChapterData, token]);
+
+  // ─── FIX: Listen for in-app purchase success (broadcast from handlePurchase) ───
+  const broadcastPurchase = useCallback(() => {
+    if (typeof window === "undefined" || !session?.user?.email) return;
+    try {
+      // Broadcast to other tabs
+      const payload = JSON.stringify({
+        chapterId: chapter?.id ?? chapterId,
+        userId: (session.user as { id?: string }).id ?? session.user.email,
+        ts: Date.now(),
+      });
+      localStorage.setItem("chapter:purchased", payload);
+      // Also dispatch same-tab event so other listeners pick it up
+      window.dispatchEvent(new CustomEvent("chapter:purchased", { detail: payload }));
+    } catch {}
+  }, [chapter?.id, chapterId, session]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLocal = (e: Event) => {
+      const ce = e as CustomEvent<string>;
+      if (!ce.detail) return;
+      try {
+        const payload = JSON.parse(ce.detail) as { chapterId: string };
+        if (payload.chapterId === chapterId || payload.chapterId === chapter?.id) {
+          fetchChapterData(token)
+            .then((data) => {
+              setChapter(data);
+              if (data.purchased === true) setNeedsPurchase(false);
+            })
+            .catch(() => {});
+        }
+      } catch {}
+    };
+    window.addEventListener("chapter:purchased", onLocal as EventListener);
+    return () => window.removeEventListener("chapter:purchased", onLocal as EventListener);
+  }, [chapterId, chapter?.id, fetchChapterData, token]);
 
   const handlePurchase = async () => {
     if (!session || !chapter || purchasing || !token) return;
@@ -327,7 +423,12 @@ export default function ReadChapterPage() {
       try {
         const chapterData = await fetchChapterData(token);
         setChapter(chapterData);
-        setNeedsPurchase(false);
+        // Trust server-side `purchased` flag to decide whether to unlock UI.
+        if (chapterData.purchased === true) {
+          setNeedsPurchase(false);
+        }
+        // Broadcast to other tabs + custom event
+        broadcastPurchase();
       } catch { /* ignore */ }
       setPurchasing(false);
     } catch {
