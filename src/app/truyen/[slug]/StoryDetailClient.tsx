@@ -29,7 +29,14 @@ import CommentSection from "@/components/CommentSection";
 import EmptyState from "@/components/EmptyState";
 import VirtualGiftPicker from "@/components/VirtualGiftPicker";
 import GiftAnimation, { useGiftAnimation } from "@/components/GiftAnimation";
-import { API_BASE_URL, PLACEHOLDER_COVER, authFetch, resolveCoverSrc, generateViewToken } from "@/lib/api";
+import {
+  API_BASE_URL,
+  PLACEHOLDER_COVER,
+  authFetch,
+  apiFetch,
+  resolveCoverSrc,
+  generateViewToken,
+} from "@/lib/api";
 import { isTranslatedStory } from "@/lib/storyOrigin";
 import { QualityTracker } from "@/lib/fingerprint";
 import { useRealtimeViews } from "@/hooks/useRealtimeViews";
@@ -145,7 +152,16 @@ export default function StoryDetailPage() {
       if (result.fingerprint) {
         headers["X-Device-Fingerprint"] = result.fingerprint;
       }
-      fetch(`${API_BASE_URL}/api/stories/${slug}`, { headers, cache: "no-store" })
+      // Use authFetch when logged in so backend can return purchasedChapterIds.
+      // Otherwise apiFetch — backend treats the request as anonymous and returns [].
+      const path = `/api/stories/${slug}`;
+      const fetcher = token
+        ? fetch(path, {
+            headers: { ...headers, Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          })
+        : fetch(`${API_BASE_URL}${path}`, { headers, cache: "no-store" });
+      fetcher
         .then((r) => {
           if (!r.ok) throw new Error("Not found");
           return r.json();
@@ -161,7 +177,7 @@ export default function StoryDetailPage() {
         })
         .catch(() => setLoading(false));
     });
-  }, [slug]);
+  }, [slug, token]);
 
   // Initialize quality tracker when story is loaded
   useEffect(() => {
