@@ -366,6 +366,19 @@ export default function ReadChapterPage() {
       localStorage.setItem("chapter:purchased", payload);
       // Also dispatch same-tab event so other listeners pick it up
       window.dispatchEvent(new CustomEvent("chapter:purchased", { detail: payload }));
+
+      // ─── FIX: Mark this tab as "just purchased" so the story-detail page,
+      // when next visited (back button, "Mục lục" link, etc.), can refetch
+      // `purchasedChapterIds` and remove the lock icon immediately.
+      // sessionStorage is used (not localStorage) so the flag clears on tab close.
+      try {
+        const flash = JSON.stringify({
+          storySlug: slug,
+          chapterId: chapter?.id ?? chapterId,
+          ts: Date.now(),
+        });
+        sessionStorage.setItem("chapter:purchase-flash", flash);
+      } catch { /* sessionStorage may be disabled — fall back to localStorage path */ }
     } catch {}
   }, [chapter?.id, chapterId, slug, session]);
 
@@ -408,12 +421,14 @@ export default function ReadChapterPage() {
           ? "Bạn đã mua chương này rồi."
           : data.error || "Không thể mua chương"
         );
-        // If already purchased, re-fetch chapter content directly
+        // If already purchased, re-fetch chapter content directly and broadcast
+        // so other tabs (story detail page, etc.) refresh their purchased state.
         if (data.error === "Already purchased") {
           try {
             const chapterData = await fetchChapterData(token);
             setChapter(chapterData);
             setNeedsPurchase(false);
+            broadcastPurchase();
           } catch { /* ignore */ }
         }
         setPurchasing(false);

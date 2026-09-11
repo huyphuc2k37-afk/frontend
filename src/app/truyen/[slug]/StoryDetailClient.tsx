@@ -167,6 +167,34 @@ export default function StoryDetailPage() {
     });
   }, [slug, loadStory]);
 
+  // ─── FIX: Detect "chapter was just purchased in this story, in this tab"
+  // via sessionStorage. ChapterReader.handlePurchase() writes
+  // `chapter:purchase-flash` on every successful purchase (or Already-purchased
+  // recovery). When the user navigates back to /truyen/[slug] from the chapter
+  // reader (Back button, "Mục lục" link), the storage event does NOT fire for
+  // the same tab and the custom event has already passed — so the icon would
+  // stay locked until a full reload. This effect bridges that gap by refetching
+  // the story payload on mount whenever a matching flag is present.
+  useEffect(() => {
+    if (typeof window === "undefined" || !slug) return;
+    let cancelled = false;
+    try {
+      const raw = sessionStorage.getItem("chapter:purchase-flash");
+      if (!raw) return;
+      const flash = JSON.parse(raw) as { storySlug?: string; ts?: number };
+      if (!flash.storySlug || flash.storySlug !== slug) return;
+      if (flash.ts && Date.now() - flash.ts > 30 * 60 * 1000) {
+        sessionStorage.removeItem("chapter:purchase-flash");
+        return;
+      }
+      sessionStorage.removeItem("chapter:purchase-flash");
+      if (cancelled) return;
+      loadStory().catch(() => {});
+    } catch { /* sessionStorage may be unavailable */ }
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
   // ─── FIX: Refetch story on tab focus (handles purchase in another tab) ───
   useEffect(() => {
     if (typeof document === "undefined") return;
