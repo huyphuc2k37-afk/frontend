@@ -145,7 +145,6 @@ export default function StoryDetailPage() {
     const headers: Record<string, string> = {
       "X-Count-View": "1",
     };
-<<<<<<< HEAD
 
     // Generate signed view token if NEXT_PUBLIC_VIEW_TOKEN_SECRET is configured.
     // ISR renders (Next.js server) skip this — only real browsers reach this code.
