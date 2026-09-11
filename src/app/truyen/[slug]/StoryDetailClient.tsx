@@ -173,25 +173,32 @@ export default function StoryDetailPage() {
   // recovery). When the user navigates back to /truyen/[slug] from the chapter
   // reader (Back button, "Mục lục" link), the storage event does NOT fire for
   // the same tab and the custom event has already passed — so the icon would
-  // stay locked until a full reload. This effect bridges that gap by refetching
-  // the story payload on mount whenever a matching flag is present.
+  // stay locked until a full reload. This effect bridges that gap by directly
+  // updating the `purchasedChapterIds` in state, which is faster and more
+  // reliable than a network round-trip.
   useEffect(() => {
     if (typeof window === "undefined" || !slug) return;
-    let cancelled = false;
     try {
       const raw = sessionStorage.getItem("chapter:purchase-flash");
       if (!raw) return;
-      const flash = JSON.parse(raw) as { storySlug?: string; ts?: number };
+      const flash = JSON.parse(raw) as { storySlug?: string; chapterId?: string; ts?: number };
       if (!flash.storySlug || flash.storySlug !== slug) return;
       if (flash.ts && Date.now() - flash.ts > 30 * 60 * 1000) {
         sessionStorage.removeItem("chapter:purchase-flash");
         return;
       }
       sessionStorage.removeItem("chapter:purchase-flash");
-      if (cancelled) return;
-      loadStory().catch(() => {});
+      // Directly append the purchased chapter ID to state — no network call needed.
+      // The icon lock will disappear immediately, before any API response.
+      setStory((prev) => {
+        if (!prev) return prev;
+        if (prev.purchasedChapterIds?.includes(flash.chapterId!)) return prev;
+        return {
+          ...prev,
+          purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), flash.chapterId!],
+        };
+      });
     } catch { /* sessionStorage may be unavailable */ }
-    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
@@ -204,6 +211,9 @@ export default function StoryDetailPage() {
       const now = Date.now();
       if (now - lastVisibleAt < 1000) return;
       lastVisibleAt = now;
+      // For cross-tab focus: fetch is fine since the other tab already has
+      // the updated purchasedChapterIds in DB — but prefer direct state update
+      // if we can read the flash flag (same-tab case handled above).
       loadStory().catch(() => {});
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -218,22 +228,42 @@ export default function StoryDetailPage() {
       if (!e.newValue) return;
       try {
         const payload = JSON.parse(e.newValue) as { storySlug?: string; chapterId: string };
-        // If the broadcast tells us the purchase was for THIS story (slug matches), or
-        // if no slug provided (older broadcast), re-fetch to update purchasedChapterIds.
         if (!payload.storySlug || payload.storySlug === slug) {
-          loadStory().catch(() => {});
+          // Directly append the purchased chapter ID to state — no race condition.
+          setStory((prev) => {
+            if (!prev) return prev;
+            if (prev.purchasedChapterIds?.includes(payload.chapterId)) return prev;
+            return {
+              ...prev,
+              purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), payload.chapterId],
+            };
+          });
         }
       } catch {}
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [slug, loadStory]);
+  }, [slug]);
 
   // ─── FIX: Same-tab CustomEvent for purchase broadcast ───
   useEffect(() => {
     if (typeof window === "undefined" || !slug) return;
-    const onLocal = () => {
-      loadStory().catch(() => {});
+    const onLocal = (e: Event) => {
+      const ce = e as CustomEvent<string>;
+      if (!ce.detail) return;
+      try {
+        const payload = JSON.parse(ce.detail) as { storySlug?: string; chapterId: string };
+        if (!payload.storySlug || payload.storySlug === slug) {
+          setStory((prev) => {
+            if (!prev) return prev;
+            if (prev.purchasedChapterIds?.includes(payload.chapterId)) return prev;
+            return {
+              ...prev,
+              purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), payload.chapterId],
+            };
+          });
+        }
+      } catch {}
     };
     window.addEventListener("chapter:purchased", onLocal as EventListener);
     return () => window.removeEventListener("chapter:purchased", onLocal as EventListener);
