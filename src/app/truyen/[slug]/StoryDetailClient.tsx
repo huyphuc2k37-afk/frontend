@@ -142,45 +142,35 @@ export default function StoryDetailPage() {
   // ─── Story loader (extracted so we can re-call it after purchase events) ───
   const loadStory = useCallback(async (): Promise<StoryDetail | null> => {
     if (!slug) return null;
-    const headers: Record<string, string> = {
-      "X-Count-View": "1",
-    };
 
-    // Generate signed view token if NEXT_PUBLIC_VIEW_TOKEN_SECRET is configured.
-    // ISR renders (Next.js server) skip this — only real browsers reach this code.
-    // Also generate device fingerprint for enhanced bot detection
-    generateViewToken(slug).then((result) => {
-      if (result.token) {
-        headers["X-View-Token"] = result.token;
-      }
-      if (result.fingerprint) {
-        headers["X-Device-Fingerprint"] = result.fingerprint;
-      }
+    try {
+      const headers: Record<string, string> = {
+        "X-Count-View": "1",
+      };
+
+      // Generate signed view token if NEXT_PUBLIC_VIEW_TOKEN_SECRET is configured.
+      // ISR renders (Next.js server) skip this — only real browsers reach this code.
+      // Also generate device fingerprint for enhanced bot detection.
+      const result = await generateViewToken(slug);
+      if (result.token) headers["X-View-Token"] = result.token;
+      if (result.fingerprint) headers["X-Device-Fingerprint"] = result.fingerprint;
+
       // Use authFetch when logged in so backend can return purchasedChapterIds.
       // Otherwise apiFetch — backend treats the request as anonymous and returns [].
       const path = `/api/stories/${slug}`;
-      const fetcher = token
-        ? fetch(path, {
-            headers: { ...headers, Authorization: `Bearer ${token}` },
-            cache: "no-store",
-          })
-        : fetch(`${API_BASE_URL}${path}`, { headers, cache: "no-store" });
-      fetcher
-        .then((r) => {
-          if (!r.ok) throw new Error("Not found");
-          return r.json();
-        })
-        .then((data) => {
-          setStory(data);
-          setLoading(false);
-          // B6: load boost count for this story
-          fetch(`${API_BASE_URL}/api/suggestions/boost-count/${data.id}`)
-            .then((r) => r.json())
-            .then((bc) => setBoostCount(bc.activeBoostCount ?? 0))
-            .catch(() => {});
-        })
-        .catch(() => setLoading(false));
-    });
+      const response = token
+        ? await authFetch(path, token, { headers, cache: "no-store" })
+        : await apiFetch(path, { headers, cache: "no-store" });
+      if (!response.ok) throw new Error("Not found");
+
+      const data: StoryDetail = await response.json();
+      setStory(data);
+      setLoading(false);
+      return data;
+    } catch {
+      setLoading(false);
+      return null;
+    }
   }, [slug, token]);
 
   useEffect(() => {
