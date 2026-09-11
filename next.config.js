@@ -92,6 +92,29 @@ const nextConfig = {
       { key: "CDN-Cache-Control", value: "no-store" },
     ];
 
+    // API GET responses — cache on Vercel CDN so we hit function invocation
+    // quota only on cache misses (the response itself is already a small JSON,
+    // and the backend is in-memory cached too). SWR gives a stale-but-valid
+    // response while revalidating in the background.
+    const apiCacheShort = [
+      { key: "Cache-Control", value: "public, s-maxage=60, stale-while-revalidate=600" },
+      { key: "CDN-Cache-Control", value: "s-maxage=60, stale-while-revalidate=600" },
+    ];
+    const apiCacheMedium = [
+      { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=1800" },
+      { key: "CDN-Cache-Control", value: "s-maxage=300, stale-while-revalidate=1800" },
+    ];
+    const apiCacheLong = [
+      { key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" },
+      { key: "CDN-Cache-Control", value: "s-maxage=3600, stale-while-revalidate=86400" },
+    ];
+    // Chapter content — heaviest endpoint, cache aggressively at the CDN so
+    // most reads never reach the backend (and thus never cost Railway egress).
+    const apiCacheChapter = [
+      { key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" },
+      { key: "CDN-Cache-Control", value: "s-maxage=3600, stale-while-revalidate=86400" },
+    ];
+
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
@@ -107,6 +130,23 @@ const nextConfig = {
           { key: "CDN-Cache-Control", value: "max-age=3600" },
         ],
       },
+      // API GET cache buckets (read-heavy, public). All these endpoints set
+      // Cache-Control themselves too — we add s-maxage here so Vercel's
+      // edge CDN caches them, but s-maxage is ignored by browsers, so the
+      // backend's max-age still controls client behavior.
+      { source: "/api/stories", headers: apiCacheShort },
+      { source: "/api/stories/:path*", headers: apiCacheShort },
+      { source: "/api/chapters/:path*", headers: apiCacheChapter },
+      { source: "/api/ranking", headers: apiCacheMedium },
+      { source: "/api/categories", headers: apiCacheLong },
+      { source: "/api/categories/:path*", headers: apiCacheLong },
+      { source: "/api/tags", headers: apiCacheLong },
+      { source: "/api/tags/:path*", headers: apiCacheLong },
+      { source: "/api/sitemap", headers: apiCacheLong },
+      { source: "/api/recommendations/home", headers: apiCacheMedium },
+      { source: "/api/recommendations/:path*", headers: apiCacheShort },
+      { source: "/api/authors", headers: apiCacheShort },
+      { source: "/api/authors/:path*", headers: apiCacheShort },
       // Auth pages — NEVER cache in CDN (private user data)
       { source: "/profile", headers: [...noIndexHeaders, ...noCacheHeaders] },
       { source: "/wallet", headers: [...noIndexHeaders, ...noCacheHeaders] },
@@ -122,10 +162,10 @@ const nextConfig = {
     ];
   },
   images: {
-    // Netlify's Next.js runtime can return 402 for the built-in image optimizer
-    // (/_next/image) depending on plan/quota. Covers are remote images, so we
-    // prefer serving them directly rather than through the optimizer.
-    unoptimized: process.env.NETLIFY === "true",
+    // Disable Vercel's built-in image optimizer to save Fast Origin Transfer
+    // (29 GB/month on Hobby plan exceeded quota). Covers are remote images
+    // served directly from Cloudinary/Supabase, no need to proxy through /_next/image.
+    unoptimized: process.env.NETLIFY === "true" || process.env.VERCEL === "1",
     // Backend /api/stories/:id/cover returns SVG placeholder for stories that
     // haven't been migrated to Cloudinary yet. Allow SVG to avoid 400 errors
     // when Next.js Image optimizer hits these URLs.

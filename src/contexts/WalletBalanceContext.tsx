@@ -43,6 +43,11 @@ export function WalletBalanceProvider({ children }: { children: React.ReactNode 
       revalidateMs: 30_000,
       revalidateOnFocus: true,
       revalidateOnVisibility: true,
+      // Railway backend cold start can take 30-60s — let the first request
+      // ride through instead of timing out and leaving the xu button blank.
+      timeoutMs: 60_000,
+      retries: 3,
+      retryBackoffMs: 800,
       skip: status !== "authenticated" || !token,
     },
   );

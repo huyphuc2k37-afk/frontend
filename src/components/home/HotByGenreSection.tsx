@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, PLACEHOLDER_COVER } from "@/lib/api";
 
 interface Recommendation {
   id: string;
@@ -58,12 +58,12 @@ export default function HotByGenreSection({ title, tagSlug, stories }: Props) {
               className="group block"
             >
               <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-gray-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={story.coverUrl || story.coverImage || ""}
+                  src={story.coverUrl || ""}
                   alt={story.title}
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_COVER; }}
                 />
               </div>
               <h3 className="mt-2 line-clamp-2 text-body-sm font-medium text-gray-900 group-hover:text-primary-600">

@@ -20,3 +20,10 @@ public/worker-*.js.map
 .vercel
 .env*.local
 .env*
+
+# One-off debug HTML snapshots (never commit)
+/debug-header.html
+/response.html
+/verify.html
+/vstory-live.html
+/vstory.html

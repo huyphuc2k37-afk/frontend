@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import {
   BookmarkIcon,
   ChatBubbleLeftRightIcon,
   LockClosedIcon,
+  CheckBadgeIcon,
   StarIcon,
   ShareIcon,
   LinkIcon,
@@ -78,6 +79,8 @@ interface StoryDetail {
   _count: { bookmarks: number; comments: number; storyLikes: number };
   storyTagList?: { id: string; name: string; slug: string; type: string }[];
   category?: { id: string; name: string; slug: string } | null;
+  /** Server-provided list of chapter IDs the current viewer has already purchased. */
+  purchasedChapterIds?: string[];
 }
 
 interface CommentData {
@@ -96,8 +99,10 @@ export default function StoryDetailPage() {
   const [story, setStory] = useState<StoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  // A1: realtime view count (poll mỗi 10s, fallback về story.views ban đầu)
-  const displayViews = useRealtimeViews(slug, story?.views ?? 0, 10_000);
+  // A1: Poll view count mỗi 60s (giảm từ 10s/30s) để tiết kiệm Vercel
+  // function invocations + Railway egress. View count chỉ cần "gần real-time"
+  // chứ không cần chính xác từng giây — 60s vẫn cho cảm giác "đang cập nhật".
+  const displayViews = useRealtimeViews(slug, story?.views ?? 0, 60_000);
   const [bookmarking, setBookmarking] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -134,13 +139,13 @@ export default function StoryDetailPage() {
 
   // Fetch story with view-count token (prevents IP-spoofing attacks)
   // Enhanced with device fingerprint for anti-bot detection
-  useEffect(() => {
-    if (!slug) return;
-    setShowCover(true);
-
+  // ─── Story loader (extracted so we can re-call it after purchase events) ───
+  const loadStory = useCallback(async (): Promise<StoryDetail | null> => {
+    if (!slug) return null;
     const headers: Record<string, string> = {
       "X-Count-View": "1",
     };
+<<<<<<< HEAD
 
     // Generate signed view token if NEXT_PUBLIC_VIEW_TOKEN_SECRET is configured.
     // ISR renders (Next.js server) skip this — only real browsers reach this code.
@@ -178,6 +183,121 @@ export default function StoryDetailPage() {
         .catch(() => setLoading(false));
     });
   }, [slug, token]);
+
+  useEffect(() => {
+    if (!slug) return;
+    setShowCover(true);
+    loadStory().then((data) => {
+      if (!data) return;
+      // B6: load boost count for this story
+      fetch(`${API_BASE_URL}/api/suggestions/boost-count/${data.id}`)
+        .then((r) => r.json())
+        .then((bc) => setBoostCount(bc.activeBoostCount ?? 0))
+        .catch(() => {});
+    });
+  }, [slug, loadStory]);
+
+  // ─── FIX: Detect "chapter was just purchased in this story, in this tab"
+  // via sessionStorage. ChapterReader.handlePurchase() writes
+  // `chapter:purchase-flash` on every successful purchase (or Already-purchased
+  // recovery). When the user navigates back to /truyen/[slug] from the chapter
+  // reader (Back button, "Mục lục" link), the storage event does NOT fire for
+  // the same tab and the custom event has already passed — so the icon would
+  // stay locked until a full reload. This effect bridges that gap by directly
+  // updating the `purchasedChapterIds` in state, which is faster and more
+  // reliable than a network round-trip.
+  useEffect(() => {
+    if (typeof window === "undefined" || !slug) return;
+    try {
+      const raw = sessionStorage.getItem("chapter:purchase-flash");
+      if (!raw) return;
+      const flash = JSON.parse(raw) as { storySlug?: string; chapterId?: string; ts?: number };
+      if (!flash.storySlug || flash.storySlug !== slug) return;
+      if (flash.ts && Date.now() - flash.ts > 30 * 60 * 1000) {
+        sessionStorage.removeItem("chapter:purchase-flash");
+        return;
+      }
+      sessionStorage.removeItem("chapter:purchase-flash");
+      // Directly append the purchased chapter ID to state — no network call needed.
+      // The icon lock will disappear immediately, before any API response.
+      setStory((prev) => {
+        if (!prev) return prev;
+        if (prev.purchasedChapterIds?.includes(flash.chapterId!)) return prev;
+        return {
+          ...prev,
+          purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), flash.chapterId!],
+        };
+      });
+    } catch { /* sessionStorage may be unavailable */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  // ─── FIX: Refetch story on tab focus (handles purchase in another tab) ───
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    let lastVisibleAt = 0;
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastVisibleAt < 1000) return;
+      lastVisibleAt = now;
+      // For cross-tab focus: fetch is fine since the other tab already has
+      // the updated purchasedChapterIds in DB — but prefer direct state update
+      // if we can read the flash flag (same-tab case handled above).
+      loadStory().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [loadStory]);
+
+  // ─── FIX: Listen for cross-tab purchase events via localStorage ───
+  useEffect(() => {
+    if (typeof window === "undefined" || !slug) return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "chapter:purchased") return;
+      if (!e.newValue) return;
+      try {
+        const payload = JSON.parse(e.newValue) as { storySlug?: string; chapterId: string };
+        if (!payload.storySlug || payload.storySlug === slug) {
+          // Directly append the purchased chapter ID to state — no race condition.
+          setStory((prev) => {
+            if (!prev) return prev;
+            if (prev.purchasedChapterIds?.includes(payload.chapterId)) return prev;
+            return {
+              ...prev,
+              purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), payload.chapterId],
+            };
+          });
+        }
+      } catch {}
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [slug]);
+
+  // ─── FIX: Same-tab CustomEvent for purchase broadcast ───
+  useEffect(() => {
+    if (typeof window === "undefined" || !slug) return;
+    const onLocal = (e: Event) => {
+      const ce = e as CustomEvent<string>;
+      if (!ce.detail) return;
+      try {
+        const payload = JSON.parse(ce.detail) as { storySlug?: string; chapterId: string };
+        if (!payload.storySlug || payload.storySlug === slug) {
+          setStory((prev) => {
+            if (!prev) return prev;
+            if (prev.purchasedChapterIds?.includes(payload.chapterId)) return prev;
+            return {
+              ...prev,
+              purchasedChapterIds: [...(prev.purchasedChapterIds ?? []), payload.chapterId],
+            };
+          });
+        }
+      } catch {}
+    };
+    window.addEventListener("chapter:purchased", onLocal as EventListener);
+    return () => window.removeEventListener("chapter:purchased", onLocal as EventListener);
+  }, [slug, loadStory]);
 
   // Initialize quality tracker when story is loaded
   useEffect(() => {
@@ -766,7 +886,10 @@ export default function StoryDetailPage() {
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {story.chapters.map((ch) => (
+                    {story.chapters.map((ch) => {
+                      const purchased = story.purchasedChapterIds?.includes(ch.id) ?? false;
+                      const stillLocked = ch.isLocked && !purchased;
+                      return (
                       <Link
                         key={ch.id}
                         href={`/truyen/${story.slug}/chapter/${ch.id}`}
@@ -776,15 +899,24 @@ export default function StoryDetailPage() {
                           <span className="flex-shrink-0 text-caption font-bold text-gray-400 w-8">
                             {ch.number}
                           </span>
-                          <span className="text-body-sm font-medium text-gray-800 truncate">
+                          <span className={`text-body-sm truncate ${purchased && ch.isLocked ? 'font-medium text-emerald-700' : 'font-medium text-gray-800'}`}>
                             {ch.title.replace(/^Chương\s*\d+\s*[:：]\s*/i, '')}
                           </span>
-                          {ch.isLocked && (
+                          {ch.isLocked && purchased && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200"
+                              title="Bạn đã mua chương này"
+                            >
+                              <CheckBadgeIcon className="h-3.5 w-3.5" />
+                              Đã mở
+                            </span>
+                          )}
+                          {stillLocked && (
                             <LockClosedIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
                           )}
                         </div>
                         <div className="flex-shrink-0 flex items-center gap-3 text-caption text-gray-400">
-                          {ch.isLocked && (
+                          {stillLocked && (
                             <span className="text-amber-600 font-medium">{ch.price} xu</span>
                           )}
                           <span className="hidden sm:inline">{ch.wordCount.toLocaleString()} chữ</span>
@@ -793,7 +925,8 @@ export default function StoryDetailPage() {
                           </span>
                         </div>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -49,22 +49,13 @@ export default function HeaderActions({ unreadMsgCount }: HeaderActionsProps) {
   }
 
   // While the profile is still loading (first paint after refresh/login),
-  // don't render any role-specific action — otherwise we briefly flash the
-  // "user thường" variant (xu/Studio link) before swapping to Admin/Mod/Author.
-  // Show a neutral skeleton instead.
-  if (!profile) {
-    return (
-      <>
-        <div className="hidden h-9 w-24 animate-pulse rounded-full bg-gray-200 sm:inline-flex sm:items-center sm:justify-center" />
-        <UserMenuDropdown
-          coinBalance={coinBalance}
-          isAuthor={false}
-          isAdmin={false}
-          isMod={false}
-        />
-      </>
-    );
-  }
+  // we still render every chrome element (bell, chat, role button) so the
+  // header doesn't look empty while /api/profile is waking the Railway
+  // backend from sleep. The role-specific button shows a skeleton pulse
+  // until we know the role.
+  // Show a neutral skeleton instead. Other chrome (notifications bell, user
+  // menu, admin/mod/author badge) still render so the header isn't empty.
+  const showRoleSkeleton = !profile;
 
   return (
     <>
@@ -85,7 +76,7 @@ export default function HeaderActions({ unreadMsgCount }: HeaderActionsProps) {
 
       <NotificationsDropdown />
 
-      {!isAdmin && (
+      {!isAdmin && !showRoleSkeleton && (
         <Link
           href="/wallet"
           className="hidden items-center gap-1.5 rounded-full bg-amber-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 hover:shadow-md sm:inline-flex"
@@ -94,7 +85,12 @@ export default function HeaderActions({ unreadMsgCount }: HeaderActionsProps) {
           {coinBalance !== null ? `${coinBalance.toLocaleString("vi-VN")} xu` : "…"}
         </Link>
       )}
-      {isAdmin ? (
+      {showRoleSkeleton ? (
+        // Profile is still loading — render a neutral skeleton in place of
+        // the role button so the user immediately sees "something is coming"
+        // instead of an empty header that lasts minutes while Railway wakes.
+        <div className="hidden h-9 w-24 animate-pulse rounded-full bg-gray-200 sm:inline-flex sm:items-center sm:justify-center" />
+      ) : isAdmin ? (
         <Link
           href="/admin"
           className="hidden items-center gap-1.5 rounded-full bg-red-500 px-4 py-2 text-body-sm font-semibold text-white shadow-sm transition-all hover:bg-red-600 hover:shadow-md sm:inline-flex"

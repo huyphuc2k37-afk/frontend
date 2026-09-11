@@ -5,6 +5,32 @@ import { API_BASE_URL } from "@/lib/api";
 import StoryDetailClient from "./StoryDetailClient";
 
 export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
+export const dynamicParams = true; // Render new slugs on-demand, then cache
+
+/**
+ * Pre-render all approved story slugs at build time. With 306 stories this
+ * turns each story page view into a pure CDN hit (no SSR function invocation
+ * on cache hit, no Railway egress for the story payload). New stories fall
+ * through to dynamicParams → on-demand ISR.
+ *
+ * NOTE: We fetch `/api/sitemap` (relative) instead of the absolute
+ * API_BASE_URL. The relative URL goes through Vercel's rewrite proxy, which
+ * keeps the build environment-agnostic — no need for NEXT_PUBLIC_API_URL to
+ * be set at build time.
+ */
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`/api/sitemap`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const slugs: { slug: string }[] = (data.stories || []).map((s: any) => ({ slug: s.slug }));
+    return slugs;
+  } catch {
+    return [];
+  }
+}
 
 const SITE_URL = "https://vstory.vn";
 
@@ -69,10 +95,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "VStory",
       locale: "vi_VN",
       type: "book" as any,
-      images: story.id
+      images: story.coverUrl
         ? [
             {
-              url: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
+              url: story.coverUrl,
               width: 400,
               height: 600,
               alt: story.title,
@@ -100,7 +126,7 @@ export default async function StoryPage({ params }: Props) {
           name: story.title,
           description: story.description?.slice(0, 300),
           url: SITE_URL + "/truyen/" + story.slug,
-          image: story.coverUrl || (API_BASE_URL + "/api/stories/" + story.id + "/cover"),
+          ...(story.coverUrl ? { image: story.coverUrl } : {}),
           author: {
             "@type": "Person",
             name: story.author?.name,

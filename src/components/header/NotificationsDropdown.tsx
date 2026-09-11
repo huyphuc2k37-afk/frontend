@@ -37,7 +37,14 @@ export default function NotificationsDropdown() {
     if (!token) return;
     setLoading(true);
     try {
-      const res = await authFetch("/api/notifications?limit=10", token);
+      const res = await authFetch("/api/notifications?limit=10", token, {
+        // Railway backend can sleep on the free tier — first hit after idle
+        // may take 30-60s to wake. Give it enough budget so the bell doesn't
+        // silently fail and the dropdown looks empty.
+        timeoutMs: 60_000,
+        retries: 3,
+        retryBackoffMs: 800,
+      });
       const data = await res.json();
       if (res.ok) {
         setList(Array.isArray(data.notifications) ? data.notifications : []);
@@ -66,7 +73,13 @@ export default function NotificationsDropdown() {
     } catch {}
   };
 
-  if (!session?.user || !token) return null;
+  // Render the bell whenever there's a session — notifications API is best
+  // effort, and hiding the bell whenever the access token happens to be
+  // momentarily missing (first paint after login, race between useSession
+  // resolving and the JWT callback completing, etc.) leaves the header
+  // looking empty even though the user is signed in. If the API call fails
+  // we just show an empty list.
+  if (!session?.user) return null;
 
   return (
     <div className="relative" ref={ref}>

@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import StoryCard, { ApiStory } from "@/components/home/StoryCard";
+import FeaturedCardShell from "@/components/home/FeaturedCardShell";
 
 interface FeaturedSectionProps {
   stories: ApiStory[];
@@ -54,15 +55,17 @@ export default function FeaturedSection({ stories }: FeaturedSectionProps) {
         <div className="-mx-4 md:hidden">
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto px-4 pb-4 pt-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {stories.map((story, i) => (
               <div
                 key={story.id}
                 data-featured-card="true"
-                className="w-[40vw] min-w-[40vw] max-w-[160px] snap-start"
+                className="w-[40vw] min-w-[40vw] max-w-[160px] flex-shrink-0 snap-start"
               >
-                <StoryCard story={story} index={i} />
+                <FeaturedCardShell>
+                  <StoryCard story={story} index={i} />
+                </FeaturedCardShell>
               </div>
             ))}
           </div>
@@ -82,9 +85,11 @@ export default function FeaturedSection({ stories }: FeaturedSectionProps) {
         </div>
 
         {/* Desktop grid */}
-        <div className="hidden grid-cols-2 gap-4 md:grid md:grid-cols-3 lg:grid-cols-5">
+        <div className="hidden grid-cols-2 gap-5 md:grid md:grid-cols-3 lg:grid-cols-5 md:gap-6">
           {stories.map((story, i) => (
-            <StoryCard key={story.id} story={story} index={i} />
+            <FeaturedCardShell key={story.id}>
+              <StoryCard story={story} index={i} />
+            </FeaturedCardShell>
           ))}
         </div>
       </div>
