@@ -3,7 +3,13 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SignJWT } from "jose";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Server-side base URL for the backend. Prefer the server-only env var
+// (no NEXT_PUBLIC_ prefix needed), fall back to the legacy public var, then
+// to localhost for development.
+const API_BASE_URL =
+  process.env.NEXT_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
 const JWT_API_SECRET = process.env.JWT_API_SECRET || process.env.NEXTAUTH_SECRET;
 const AUTH_SYNC_SECRET = process.env.AUTH_SYNC_SECRET || process.env.NEXTAUTH_SECRET;
 

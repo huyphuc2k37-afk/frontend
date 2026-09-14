@@ -1,5 +1,16 @@
-// Base URL of the backend API
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Base URL of the backend API.
+//
+// Production (Vercel): use empty string so all client requests become
+// same-origin relative URLs (e.g. `/api/stories`). Next.js's rewrite proxy
+// in next.config.js forwards those to the real backend, so the browser
+// never touches the cross-origin backend directly — no CORS issues, and
+// no `NEXT_PUBLIC_*` env var is required in the build.
+//
+// Development: talk to the local Express server on port 5000.
+const IS_PROD = process.env.NODE_ENV === "production";
+export const API_BASE_URL = IS_PROD
+  ? ""
+  : process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Fingerprint import (lazy loaded to avoid SSR issues)
 let getDeviceFingerprint: () => Promise<string> = async () => "";
