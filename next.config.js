@@ -55,7 +55,9 @@ const nextConfig = {
       },
     ];
 
-    // HTML pages — avoid CDN caching to prevent stale chunk-hash HTML after deploys
+    // Do not cache HTML at the CDN. HTML embeds deployment-specific hashed
+    // chunks and server-rendered story/chapter data; stale HTML can keep
+    // serving an old backend URL after a deployment.
     const htmlNoCdnCacheHeaders = [
       {
         key: "Cache-Control",
@@ -118,7 +120,7 @@ const nextConfig = {
     return [
       // Global security headers for all routes
       { source: "/:path*", headers: securityHeaders },
-      // Public pages — do NOT CDN-cache HTML (prevents stale chunk hashes)
+      // Public pages — do not let Cloudflare/Vercel retain old HTML after deploys.
       { source: "/:path*", headers: htmlNoCdnCacheHeaders },
       // Next.js hashed assets (override the catch-all)
       { source: "/_next/static/:path*", headers: nextStaticAssetHeaders },
@@ -181,7 +183,7 @@ const nextConfig = {
     },
     {
       protocol: "https",
-      hostname: "backend-production-04113.up.railway.app",
+      hostname: "backend-production-05227.up.railway.app",
     },
       {
         protocol: "https",
