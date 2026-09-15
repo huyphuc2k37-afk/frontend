@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
+
+// Server components and metadata cannot use the browser-only relative API base.
+// Keep client requests on /api (the Next.js rewrite), but use the backend URL
+// directly while rendering chapter HTML on Vercel.
+const SERVER_API_BASE_URL = (
+  process.env.NEXT_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://backend-production-05227.up.railway.app"
+).replace(/\/+$/, "");
 
 export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
 export const dynamicParams = true; // New chapters render on-demand, then cached
@@ -15,7 +23,7 @@ export const dynamicParams = true; // New chapters render on-demand, then cached
  */
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`/api/sitemap`, {
+    const res = await fetch(`${SERVER_API_BASE_URL}/api/sitemap`, {
       next: { revalidate: 86400 },
     });
     if (!res.ok) return [];
@@ -36,7 +44,7 @@ type Props = { params: { slug: string; chapterId: string } };
 async function getChapter(chapterId: string) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(API_BASE_URL + "/api/chapters/" + chapterId, {
+      const res = await fetch(SERVER_API_BASE_URL + "/api/chapters/" + chapterId, {
         next: { revalidate: 43200 },
       });
       if (!res.ok) return null;
@@ -80,7 +88,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? {
             images: [
               {
-                url: API_BASE_URL + "/api/stories/" + chapter.story.id + "/cover",
+                url: SERVER_API_BASE_URL + "/api/stories/" + chapter.story.id + "/cover",
                 width: 400,
                 height: 600,
                 alt: storyTitle,
