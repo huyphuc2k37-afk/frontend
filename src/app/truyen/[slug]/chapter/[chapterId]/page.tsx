@@ -11,31 +11,11 @@ const SERVER_API_BASE_URL = (
   "https://backend-production-05227.up.railway.app"
 ).replace(/\/+$/, "");
 
-export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
-export const dynamicParams = true; // New chapters render on-demand, then cached
-
-/**
- * Pre-render all chapter IDs at build time so most chapter reads are pure
- * CDN hits. With 1.2K+ chapters this is heavy at build but pays off massively
- * because chapter reads are by far the heaviest traffic endpoint.
- *
- * NOTE: relative URL (see truyen/[slug]/page.tsx generateStaticParams for why).
- */
-export async function generateStaticParams() {
-  try {
-    const res = await fetch(`${SERVER_API_BASE_URL}/api/sitemap`, {
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const params: { slug: string; chapterId: string }[] = (data.chapters || []).map(
-      (c: any) => ({ slug: c.storySlug, chapterId: c.chapterId })
-    );
-    return params;
-  } catch {
-    return [];
-  }
-}
+// Chapters are rendered on demand. Pre-rendering the full sitemap here made
+// every deployment generate thousands of chapter pages and could exceed the
+// deployment time limit.
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 const SITE_URL = "https://vstory.vn";
 
