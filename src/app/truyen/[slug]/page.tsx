@@ -19,7 +19,7 @@ export const dynamicParams = true; // Render new slugs on-demand, then cache
  */
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`/api/sitemap`, {
+    const res = await fetch(`${SERVER_API_BASE_URL}/api/sitemap`, {
       next: { revalidate: 86400 },
     });
     if (!res.ok) return [];
@@ -32,6 +32,11 @@ export async function generateStaticParams() {
 }
 
 const SITE_URL = "https://vstory.vn";
+const SERVER_API_BASE_URL = (
+  process.env.NEXT_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://backend-production-05227.up.railway.app"
+).replace(/\/+$/, "");
 
 type Props = { params: { slug: string } };
 
@@ -45,7 +50,7 @@ type Props = { params: { slug: string } };
 const getStory = cache(async (slug: string) => {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(`/api/stories/${slug}`, {
+      const res = await fetch(`${SERVER_API_BASE_URL}/api/stories/${encodeURIComponent(slug)}`, {
         next: { revalidate: 43200 },
       });
       if (!res.ok) return null;
