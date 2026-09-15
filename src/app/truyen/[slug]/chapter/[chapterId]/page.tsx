@@ -24,8 +24,9 @@ type Props = { params: { slug: string; chapterId: string } };
 async function getChapter(chapterId: string) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      // Do not cache a transient backend failure as a missing chapter.
       const res = await fetch(SERVER_API_BASE_URL + "/api/chapters/" + chapterId, {
-        next: { revalidate: 43200 },
+        cache: "no-store",
       });
       if (!res.ok) return null;
       return res.json();
