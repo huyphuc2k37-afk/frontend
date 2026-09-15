@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { API_BASE_URL } from "@/lib/api";
 import StoryDetailClient from "./StoryDetailClient";
 
 export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
@@ -40,10 +39,13 @@ type Props = { params: { slug: string } };
 // share one request per render pass. Client-side StoryDetailClient does its
 // own fetch with X-Count-View for view-counting; that fetch is intentionally
 // separate (and goes to a different endpoint path on the backend).
+// Use a server-side fetch URL. Relative URLs (`/api/stories/:slug`) are
+// handled by the Next.js rewrite proxy in next.config.js, so this works in
+// every environment without needing a public env var.
 const getStory = cache(async (slug: string) => {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(API_BASE_URL + "/api/stories/" + slug, {
+      const res = await fetch(`/api/stories/${slug}`, {
         next: { revalidate: 43200 },
       });
       if (!res.ok) return null;
