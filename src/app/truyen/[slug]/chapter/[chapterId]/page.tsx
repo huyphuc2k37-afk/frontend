@@ -1,33 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { API_BASE_URL } from "@/lib/api";
 import ChapterReader from "./ChapterReader";
 
-export const revalidate = 43200; // ISR — regenerate at most every 12 hours (Cloudflare caches HTML)
-export const dynamicParams = true; // New chapters render on-demand, then cached
+// Server components and metadata cannot use the browser-only relative API base.
+// Keep client requests on /api (the Next.js rewrite), but use the backend URL
+// directly while rendering chapter HTML on Vercel.
+const SERVER_API_BASE_URL = (
+  process.env.NEXT_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://backend-production-05227.up.railway.app"
+).replace(/\/+$/, "");
 
-/**
- * Pre-render all chapter IDs at build time so most chapter reads are pure
- * CDN hits. With 1.2K+ chapters this is heavy at build but pays off massively
- * because chapter reads are by far the heaviest traffic endpoint.
- *
- * NOTE: relative URL (see truyen/[slug]/page.tsx generateStaticParams for why).
- */
-export async function generateStaticParams() {
-  try {
-    const res = await fetch(`/api/sitemap`, {
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const params: { slug: string; chapterId: string }[] = (data.chapters || []).map(
-      (c: any) => ({ slug: c.storySlug, chapterId: c.chapterId })
-    );
-    return params;
-  } catch {
-    return [];
-  }
-}
+// Chapters are rendered on demand. Pre-rendering the full sitemap here made
+// every deployment generate thousands of chapter pages and could exceed the
+// deployment time limit.
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 const SITE_URL = "https://vstory.vn";
 
@@ -36,8 +24,9 @@ type Props = { params: { slug: string; chapterId: string } };
 async function getChapter(chapterId: string) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(API_BASE_URL + "/api/chapters/" + chapterId, {
-        next: { revalidate: 43200 },
+      // Do not cache a transient backend failure as a missing chapter.
+      const res = await fetch(SERVER_API_BASE_URL + "/api/chapters/" + chapterId, {
+        cache: "no-store",
       });
       if (!res.ok) return null;
       return res.json();
@@ -80,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? {
             images: [
               {
-                url: API_BASE_URL + "/api/stories/" + chapter.story.id + "/cover",
+                url: SERVER_API_BASE_URL + "/api/stories/" + chapter.story.id + "/cover",
                 width: 400,
                 height: 600,
                 alt: storyTitle,
